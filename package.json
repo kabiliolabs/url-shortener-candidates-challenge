@@ -1,0 +1,14 @@
+{
+  "name": "url-shortener",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck"
+  },
+  "packageManager": "pnpm@10.20.0",
+  "devDependencies": {
+    "turbo": "^2.7.4"
+  }
+}
