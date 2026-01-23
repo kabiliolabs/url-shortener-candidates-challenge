@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ShortUrl {
+  id                    Int       @id @default(autoincrement())
+  code                  String    @unique
+  originalUrl           String    @map("original_url")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  createdByIpHash       String?   @map("created_by_ip_hash")
+  createdByUserAgentHash String?  @map("created_by_user_agent_hash")
+
+  clicks ShortUrlClick[]
+
+  @@map("short_urls")
+}
+
+model ShortUrlClick {
+  id            Int       @id @default(autoincrement())
+  shortUrlId    Int       @map("short_url_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  ipHash        String?   @map("ip_hash")
+  userAgentHash String?   @map("user_agent_hash")
+
+  shortUrl ShortUrl @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+
+  @@index([shortUrlId, createdAt])
+  @@map("short_urls_clicks")
+}

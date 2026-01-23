@@ -6,8 +6,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { Theme } from "@radix-ui/themes";
 
 import type { Route } from "./+types/root";
+import "@radix-ui/themes/styles.css";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -33,7 +35,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <Theme accentColor="teal" grayColor="slate" radius="medium" scaling="100%">
+          {children}
+        </Theme>
         <ScrollRestoration />
         <Scripts />
       </body>

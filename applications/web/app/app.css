@@ -5,11 +5,144 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
-html,
-body {
-  @apply bg-white dark:bg-gray-950;
+/* App Container */
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0d2538 0%, #0a1929 50%, #0d1f30 100%);
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+/* Header Section */
+.header-section {
+  background: linear-gradient(135deg, #0d2538 0%, #0a1929 100%);
+}
+
+.main-title {
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.subtitle {
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* Branding */
+.branding {
+  padding-top: 1rem;
+}
+
+/* Shortener Card */
+.shortener-card {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.shortener-card .rt-CardInner {
+  padding: 1.5rem;
+}
+
+/* Result Section */
+.result-section {
+  background: #f0fdf4;
+  border: 1px solid #10b981;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.result-section .url-card {
+  background: transparent;
+  padding: 0;
+}
+
+.result-section .shortened-url {
+  color: #047857 !important;
+  font-weight: 600;
+}
+
+/* Error Section */
+.error-section {
+  background: #fef2f2;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+}
+
+/* Recent Section */
+.recent-section {
+  background: linear-gradient(135deg, #0a1929 0%, #0d2538 100%);
+}
+
+.recent-section h3 {
+  color: #ffffff;
+}
+
+/* URL Card */
+.url-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.url-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.url-card .shortened-url {
+  color: #5eead4 !important;
+}
+
+.url-card .original-url {
+  color: #64748b;
+}
+
+/* URL List */
+.url-list {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.url-list h3 {
+  color: #ffffff;
+}
+
+.url-list-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+}
+
+/* Radix UI Overrides */
+.rt-Button {
+  font-weight: 500;
+}
+
+.rt-TextFieldRoot {
+  --text-field-focus-color: #14b8a6;
+}
+
+.rt-Separator {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .branding {
+    text-align: center;
+    padding-top: 0;
+  }
+
+  .shortener-card {
+    max-width: 100% !important;
+  }
+
+  .main-title {
+    font-size: 1.75rem !important;
   }
 }
