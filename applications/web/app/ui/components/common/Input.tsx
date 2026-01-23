@@ -1,12 +1,5 @@
 import { TextField } from "@radix-ui/themes";
-import type { ComponentProps } from "react";
-
-interface InputProps extends ComponentProps<typeof TextField.Root> {
-  placeholder?: string;
-  name?: string;
-  required?: boolean;
-  type?: string;
-}
+import type { InputProps } from "./types";
 
 export function Input({
   placeholder,

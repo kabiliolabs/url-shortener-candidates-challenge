@@ -9,6 +9,7 @@ import {
 import { Theme } from "@radix-ui/themes";
 
 import type { Route } from "./+types/root";
+import { ErrorPage } from "~/ui";
 import "@radix-ui/themes/styles.css";
 import "./app.css";
 
@@ -50,30 +51,31 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let statusCode = 500;
+  let title = "Oops!";
+  let message = "An unexpected error occurred.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+    statusCode = error.status;
+    if (error.status === 404) {
+      title = "Page Not Found";
+      message = "The page you're looking for doesn't exist or the short URL is invalid.";
+    } else {
+      title = `Error ${error.status}`;
+      message = error.statusText || message;
+    }
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
+    message = error.message;
     stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <ErrorPage
+      statusCode={statusCode}
+      title={title}
+      message={message}
+      stack={stack}
+    />
   );
 }

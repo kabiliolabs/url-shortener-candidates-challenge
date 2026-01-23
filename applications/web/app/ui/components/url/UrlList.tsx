@@ -1,18 +1,6 @@
 import { Box, Flex, Heading, Text, Separator } from "@radix-ui/themes";
 import { UrlCard } from "./UrlCard";
-
-interface UrlItem {
-  shortCode: string;
-  shortenedUrl: string;
-  originalUrl: string;
-  clicks: number;
-}
-
-interface UrlListProps {
-  urls: UrlItem[];
-  title?: string;
-  emptyMessage?: string;
-}
+import type { UrlListProps } from "./types";
 
 export function UrlList({
   urls,

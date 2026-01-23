@@ -12,6 +12,7 @@ export interface RecordClickOptions {
 export interface UrlRepository {
   save(shortenedUrl: ShortenedUrl): Promise<ShortenedUrl>;
   findByCode(code: string): Promise<ShortenedUrl | null>;
+  findByOriginalUrl(originalUrl: string): Promise<ShortenedUrl | null>;
   findAll(): Promise<ShortenedUrl[]>;
   recordClick(code: string, options?: RecordClickOptions): Promise<void>;
   getClickCount(code: string): Promise<number>;

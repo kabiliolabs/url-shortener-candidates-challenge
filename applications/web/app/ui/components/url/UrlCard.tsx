@@ -1,13 +1,6 @@
 import { Box, Flex, Text, Link, IconButton, Tooltip } from "@radix-ui/themes";
 import * as Icons from "@radix-ui/react-icons";
-
-interface UrlCardProps {
-  shortCode: string;
-  shortenedUrl: string;
-  originalUrl: string;
-  clicks?: number;
-  showActions?: boolean;
-}
+import type { UrlCardProps } from "./types";
 
 export function UrlCard({
   shortenedUrl,
@@ -70,7 +63,7 @@ export function UrlCard({
           {truncateUrl(originalUrl)}
         </Text>
         {clicks > 0 && (
-          <Text size="1" color="gray">
+          <Text size="1" color="green">
             {clicks} click{clicks !== 1 ? "s" : ""}
           </Text>
         )}

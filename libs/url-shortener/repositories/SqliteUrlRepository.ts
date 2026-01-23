@@ -64,6 +64,36 @@ export class SqliteUrlRepository implements UrlRepository {
     });
   }
 
+  async findByOriginalUrl(originalUrl: string): Promise<ShortenedUrl | null> {
+    console.log(`[SqliteUrlRepository] Finding URL by originalUrl: ${originalUrl}`);
+
+    const record = await this.prisma.shortUrl.findFirst({
+      where: { originalUrl },
+      include: {
+        _count: {
+          select: { clicks: true },
+        },
+      },
+    });
+
+    if (!record) {
+      console.log(`[SqliteUrlRepository] No existing short URL found for: ${originalUrl}`);
+      return null;
+    }
+
+    console.log(`[SqliteUrlRepository] Found existing short URL: ${record.code} for ${originalUrl}`);
+
+    return new ShortenedUrl({
+      id: record.id,
+      shortCode: record.code,
+      originalUrl: record.originalUrl,
+      createdAt: record.createdAt,
+      createdByIpHash: record.createdByIpHash,
+      createdByUserAgentHash: record.createdByUserAgentHash,
+      clicks: record._count.clicks,
+    });
+  }
+
   async findAll(): Promise<ShortenedUrl[]> {
     const records = await this.prisma.shortUrl.findMany({
       include: {

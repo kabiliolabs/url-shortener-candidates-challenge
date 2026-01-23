@@ -103,8 +103,9 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.url-list h3 {
-  color: #ffffff;
+.url-list h3,
+.url-list .rt-Heading {
+  color: #ffffff !important;
 }
 
 .url-list-empty {
@@ -116,6 +117,12 @@
 /* Radix UI Overrides */
 .rt-Button {
   font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.rt-Button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .rt-TextFieldRoot {
@@ -124,6 +131,29 @@
 
 .rt-Separator {
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* Error Page */
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
 }
 
 /* Responsive adjustments */

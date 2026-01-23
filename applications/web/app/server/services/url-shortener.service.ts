@@ -28,6 +28,7 @@ export interface CreateUrlOptions {
 export interface UrlShortenerService {
   getBaseUrl(): string;
   shortenUrl(url: string, options?: CreateUrlOptions): Promise<ShortenedUrlResult>;
+  findExistingUrl(originalUrl: string): Promise<ShortenedUrlResult | null>;
   getOriginalUrl(code: string): Promise<string | null>;
   getAllUrls(): Promise<ShortenedUrlResult[]>;
   trackClick(code: string, options?: RecordClickOptions): Promise<void>;
@@ -38,7 +39,26 @@ export const urlShortenerService: UrlShortenerService = {
     return baseUrl ? `${baseUrl}/s/` : "-";
   },
 
+  async findExistingUrl(originalUrl: string): Promise<ShortenedUrlResult | null> {
+    const existing = await urlRepository.findByOriginalUrl(originalUrl);
+    if (!existing) return null;
+
+    return {
+      shortCode: existing.shortCode,
+      shortenedUrl: `${baseUrl}/s/${existing.shortCode}`,
+      originalUrl: existing.originalUrl,
+      clicks: existing.clicks,
+    };
+  },
+
   async shortenUrl(url: string, options?: CreateUrlOptions): Promise<ShortenedUrlResult> {
+    // Check for existing URL first
+    const existing = await this.findExistingUrl(url);
+    if (existing) {
+      console.log(`[url-shortener] Returning existing short URL for: ${url}`);
+      return existing;
+    }
+
     const shortCode = generateShortCode();
     const shortenedUrl = new ShortenedUrl({
       shortCode,
