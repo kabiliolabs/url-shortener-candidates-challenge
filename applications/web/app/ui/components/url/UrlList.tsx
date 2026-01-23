@@ -10,7 +10,7 @@ export function UrlList({
   if (urls.length === 0) {
     return (
       <Box className="url-list-empty">
-        <Text color="gray" size="2">
+        <Text style={{ color: 'white' }} size="2">
           {emptyMessage}
         </Text>
       </Box>

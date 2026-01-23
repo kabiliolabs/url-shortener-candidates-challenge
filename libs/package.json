@@ -5,12 +5,9 @@
   "main": "url-shortener/index.ts",
   "types": "url-shortener/index.ts",
   "scripts": {
-    "build": "prisma generate && tsc",
+    "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "db:generate": "dotenv -v DATABASE_URL=file:./dev.db -- prisma generate",
-    "db:push": "dotenv -v DATABASE_URL=file:./dev.db -- prisma db push",
-    "db:studio": "dotenv -v DATABASE_URL=file:./dev.db -- prisma studio"
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
     ".": "./url-shortener/index.ts"
@@ -20,8 +17,6 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.7",
-    "dotenv-cli": "^8.0.0",
-    "prisma": "^6.2.1",
     "typescript": "^5.9.3"
   }
 }

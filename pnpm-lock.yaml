@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
+      prisma:
+        specifier: ^6.2.1
+        version: 6.19.2(typescript@5.9.3)
       turbo:
         specifier: ^2.7.4
         version: 2.7.4
@@ -79,12 +85,6 @@ importers:
       '@types/node':
         specifier: ^22.19.7
         version: 22.19.7
-      dotenv-cli:
-        specifier: ^8.0.0
-        version: 8.0.0
-      prisma:
-        specifier: ^6.2.1
-        version: 6.19.2(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
