@@ -86,6 +86,28 @@ url-shortener/
 ```bash
 pnpm install
 cp .env.example .env
+```
+
+### Database Setup
+
+Verify your `.env` file has the correct database path:
+
+```env
+DATABASE_URL="file:./dev.db"
+```
+
+Run the Prisma migrations to generate the client and create the database:
+
+```bash
+pnpm db:generate
+pnpm db:push
+```
+
+This will create the SQLite database at `prisma/dev.db`.
+
+### Run the App
+
+```bash
 pnpm dev
 ```
 
