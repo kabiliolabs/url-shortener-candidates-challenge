@@ -11,6 +11,17 @@
     "db:studio": "prisma studio"
   },
   "packageManager": "pnpm@10.20.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild"
+    ]
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1"
+  },
   "devDependencies": {
     "dotenv-cli": "^8.0.0",
     "prisma": "^6.2.1",
