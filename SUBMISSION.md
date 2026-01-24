@@ -22,6 +22,9 @@ Then, after doing some tests in the app and studying a little bit one URL shorte
 - Build a richer analytics page.
 - Add stronger abuse prevention (for example rate limiting per IP, CAPTCHA).
 - Improve UX around errors and edge cases.
+- Decouple even more the types
+- Add states to keep the counter of clicks updated
+- Do something with the order of the last 5 clicked when doing a repetition of URL
 
 ## AI Usage
 
