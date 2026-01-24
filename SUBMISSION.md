@@ -25,6 +25,7 @@ Then, after doing some tests in the app and studying a little bit one URL shorte
 - Decouple even more the types
 - Add states to keep the counter of clicks updated
 - Do something with the order of the last 5 clicked when doing a repetition of URL
+- Add some github action to check the errors before pushing or commiting
 
 ## AI Usage
 
@@ -53,9 +54,13 @@ I used AI as a productivity tool throughout the challenge:
 
   > **Prompt Example:** can you we add radix UI for the FE part to create reusable components? I would like to base on this (image of home page of tinyurl) for the style of the components. 
 
-- Finally, I used AI to help implement basic validation and anti-abuse measures (URL validation, input limits, and debounced submissions).
+- I used AI to help implement basic validation and anti-abuse measures (URL validation, input limits, and debounced submissions).
 
   > **Prompt Example:** Can you help me adding the following validations to the app? 1 Valid http urls 2 add some limit to the string inputs and 3 adding a debounce to avoid multiple calls
+
+- It helped me to create some errors when the DB was not setup correctly (in purpose)
+
+  > **Prompt Example:** When running the app with a bad DB (in purpose) I am getting this: (error). Can you help me to improve the message so we don't show so much info in the FE?
 
 ## Feedback
 

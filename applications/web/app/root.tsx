@@ -65,9 +65,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       title = `Error ${error.status}`;
       message = error.statusText || message;
     }
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    message = error.message;
-    stack = error.stack;
+  } else if (error && error instanceof Error) {
+    // Check for database errors
+    if (error.name === "DatabaseError") {
+      title = "Database Setup Required";
+      message = error.message;
+      statusCode = 503; // Service Unavailable
+    } else if (import.meta.env.DEV) {
+      message = error.message;
+      //stack = error.stack;
+    }
   }
 
   return (

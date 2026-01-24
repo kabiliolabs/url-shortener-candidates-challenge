@@ -13,6 +13,8 @@ export function ErrorPage({ statusCode, title, message, stack }: ErrorPageProps)
             <Box className="error-icon">
               {statusCode === 404 ? (
                 <Icons.MagnifyingGlassIcon width={80} height={80} style={{ color: "#5eead4" }} />
+              ) : statusCode === 503 ? (
+                <Icons.GearIcon width={80} height={80} style={{ color: "#fbbf24" }} />
               ) : (
                 <Icons.ExclamationTriangleIcon width={80} height={80} style={{ color: "#f87171" }} />
               )}
