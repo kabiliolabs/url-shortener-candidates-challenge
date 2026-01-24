@@ -7,6 +7,7 @@ import { getPrismaClient } from "./prisma";
 export class SqliteUrlRepository implements UrlRepository {
   constructor(private prisma: PrismaClient) {}
 
+  // Saves the URL in the database
   async save(shortenedUrl: ShortenedUrl): Promise<ShortenedUrl> {
     console.log(`[SqliteUrlRepository] Saving URL: ${shortenedUrl.shortCode} -> ${shortenedUrl.originalUrl}`);
 
@@ -32,6 +33,7 @@ export class SqliteUrlRepository implements UrlRepository {
     });
   }
 
+  // Finds the URL by the short code
   async findByCode(code: string): Promise<ShortenedUrl | null> {
     console.log(`[SqliteUrlRepository] Finding URL by code: ${code}`);
 
@@ -62,6 +64,7 @@ export class SqliteUrlRepository implements UrlRepository {
     });
   }
 
+  // Finds the URL by the original URL
   async findByOriginalUrl(originalUrl: string): Promise<ShortenedUrl | null> {
     console.log(`[SqliteUrlRepository] Finding URL by originalUrl: ${originalUrl}`);
 
@@ -92,6 +95,7 @@ export class SqliteUrlRepository implements UrlRepository {
     });
   }
 
+  // Finds all the URLs
   async findAll(): Promise<ShortenedUrl[]> {
     const records = await this.prisma.shortUrl.findMany({
       include: {
@@ -116,6 +120,7 @@ export class SqliteUrlRepository implements UrlRepository {
     );
   }
 
+  // Records the click
   async recordClick(code: string, options?: RecordClickOptions): Promise<void> {
     console.log(`[SqliteUrlRepository] Recording click for code: ${code}`);
 
@@ -153,6 +158,7 @@ export class SqliteUrlRepository implements UrlRepository {
     return shortUrl?._count.clicks ?? 0;
   }
 
+  // Gets the clicks
   async getClicks(code: string, limit = 100): Promise<UrlClick[]> {
     const shortUrl = await this.prisma.shortUrl.findUnique({
       where: { code },
@@ -179,6 +185,7 @@ export class SqliteUrlRepository implements UrlRepository {
     );
   }
 
+  // Checks if the URL exists
   async exists(code: string): Promise<boolean> {
     const count = await this.prisma.shortUrl.count({
       where: { code },
@@ -187,5 +194,4 @@ export class SqliteUrlRepository implements UrlRepository {
   }
 }
 
-// Default repository instance
 export const sqliteUrlRepository = new SqliteUrlRepository(getPrismaClient());

@@ -5,10 +5,7 @@ export interface RecordClickOptions {
   userAgentHash?: string | null;
 }
 
-/**
- * URL Repository Interface
- * Contract for URL storage implementations
- */
+// URL Repository Interface
 export interface UrlRepository {
   save(shortenedUrl: ShortenedUrl): Promise<ShortenedUrl>;
   findByCode(code: string): Promise<ShortenedUrl | null>;
