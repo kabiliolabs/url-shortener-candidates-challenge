@@ -6,11 +6,11 @@ Continuing with the project stack, I kept the monorepo and React Router as a ful
 
 Then, after doing some tests in the app and studying a little bit one URL shortener (https://tinyurl.com/) I focused the following:
 
-- Split the app clearly into `server/` (loaders/actions/services) and `ui/` (components/pages), to make responsibilities obvious.
+- Splitted the app clearly into `server/` (loaders/actions/services) and `ui/` (components/pages), to make responsibilities obvious.
 - Extracted logic into a small domain package (`libs/url-shortener` instead of `libs/engine`) to keep business logic out of route files.
 - Added Prisma + SQLite (NoSQL for easier testing) so data survives restarts.
 - Implemented a repository pattern to store shortened URLs and also register clicks.
-- As I have some extra time, I did a few research of Radix and implemented it to built reusable UI components (`Button`, `Input`, `Card`, etc.) and improved the styling (inspired by the TinyURL site).
+- As I have some extra time, I did some research about Radix UI and implemented it to built reusable UI components (`Button`, `Input`, `Card`, etc.) and improved the styling (inspired by the TinyURL site).
 - Added basic validation and anti-abuse measures (URL validation, input limits, debounce with a delay a of a few seconds after clicking).
 - Added some error messages
 
