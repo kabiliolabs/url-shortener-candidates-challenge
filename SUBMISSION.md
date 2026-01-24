@@ -12,6 +12,7 @@ Then, after doing some tests in the app and studying a little bit one URL shorte
 - Implemented a repository pattern to store shortened URLs and also register clicks.
 - As I have some extra time, I did a few research of Radix and implemented it to built reusable UI components (`Button`, `Input`, `Card`, etc.) and improved the styling (inspired by the TinyURL site).
 - Added basic validation and anti-abuse measures (URL validation, input limits, debounce with a delay a of a few seconds after clicking).
+- Added some error messages
 
 
 ## What I Would Do With More Time
