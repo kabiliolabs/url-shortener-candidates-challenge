@@ -12,10 +12,7 @@ export interface ShortenUrlActionResult {
   isExisting?: boolean;
 }
 
-/**
- * Validates a URL string
- * Returns an error message if invalid, null if valid
- */
+// Validates a URL string
 function validateUrl(url: string): string | null {
   // Check if URL is provided
   if (!url || !url.trim()) {

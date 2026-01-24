@@ -1,4 +1,5 @@
-import { urlShortenerService, type ShortenedUrlResult } from "../services/url-shortener.service";
+import { urlShortenerService } from "../services/url-shortener.service";
+import type { ShortenedUrlResult } from "../services/types";
 
 export interface HomeLoaderData {
   baseUrl: string;

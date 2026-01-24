@@ -13,9 +13,11 @@ Then, after doing some tests in the app and studying a little bit one URL shorte
 - As I have some extra time, I did a few research of Radix and implemented it to built reusable UI components (`Button`, `Input`, `Card`, etc.) and improved the styling (inspired by the TinyURL site).
 - Added basic validation and anti-abuse measures (URL validation, input limits, debounce with a delay a of a few seconds after clicking).
 
+
 ## What I Would Do With More Time
 
 - Add tests (unit tests for the library and some integration tests for the flows).
+- Fix the dockerfile to have a dockerized version for non-dev environment.
 - Improve server-side error handling. I am handling only DB errors.
 - I would add a logger specially in the backend to have some metrics and data of how is it working.
 - Store and use IP/User-Agent metadata (I already added the DB columns) to better understand usage patterns and support abuse prevention.
@@ -26,6 +28,7 @@ Then, after doing some tests in the app and studying a little bit one URL shorte
 - Add states to keep the counter of clicks updated
 - Do something with the order of the last 5 clicked when doing a repetition of URL
 - Add some github action to check the errors before pushing or commiting
+
 
 ## AI Usage
 

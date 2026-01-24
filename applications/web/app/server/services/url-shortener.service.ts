@@ -4,75 +4,27 @@ import {
   type RecordClickOptions,
   sqliteUrlRepository,
 } from "@url-shortener/core";
+import { handleDatabaseError } from "../errors";
+import type {
+  ShortenedUrlResult,
+  CreateUrlOptions,
+  UrlShortenerService,
+} from "./types";
 
 // Configuration
 const baseUrl = process.env.PUBLIC_URL;
-
-// Custom error for database issues
-export class DatabaseError extends Error {
-  constructor(message: string, public originalError?: Error) {
-    super(message);
-    this.name = "DatabaseError";
-  }
-}
-
-// Helper to check if error is a Prisma database error
-function isDatabaseError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase();
-    return (
-      message.includes("table") && message.includes("does not exist") ||
-      message.includes("database") ||
-      message.includes("prisma") ||
-      error.name === "PrismaClientKnownRequestError" ||
-      error.name === "PrismaClientInitializationError"
-    );
-  }
-  return false;
-}
-
-// Wrapper to handle database errors gracefully
-function handleDatabaseError(error: unknown): never {
-  if (isDatabaseError(error)) {
-    throw new DatabaseError(
-      "Database is not set up correctly. Please run 'pnpm db:push' to initialize the database.",
-      error instanceof Error ? error : undefined
-    );
-  }
-  throw error;
-}
 
 // Repository instance - SQLite only
 const urlRepository = sqliteUrlRepository;
 
 console.log(`[url-shortener] Using SQLite repository`);
 
-export interface ShortenedUrlResult {
-  shortCode: string;
-  shortenedUrl: string;
-  originalUrl: string;
-  clicks: number;
-}
-
-export interface CreateUrlOptions {
-  ipHash?: string;
-  userAgentHash?: string;
-}
-
-export interface UrlShortenerService {
-  getBaseUrl(): string;
-  shortenUrl(url: string, options?: CreateUrlOptions): Promise<ShortenedUrlResult>;
-  findExistingUrl(originalUrl: string): Promise<ShortenedUrlResult | null>;
-  getOriginalUrl(code: string): Promise<string | null>;
-  getAllUrls(): Promise<ShortenedUrlResult[]>;
-  trackClick(code: string, options?: RecordClickOptions): Promise<void>;
-}
-
 export const urlShortenerService: UrlShortenerService = {
   getBaseUrl(): string {
     return baseUrl ? `${baseUrl}/s/` : "-";
   },
 
+  // Finds and checks if there is an existing URL
   async findExistingUrl(originalUrl: string): Promise<ShortenedUrlResult | null> {
     try {
       const existing = await urlRepository.findByOriginalUrl(originalUrl);
@@ -89,6 +41,7 @@ export const urlShortenerService: UrlShortenerService = {
     }
   },
 
+  // Shortens a URL
   async shortenUrl(url: string, options?: CreateUrlOptions): Promise<ShortenedUrlResult> {
     try {
       // Check for existing URL first
@@ -119,6 +72,7 @@ export const urlShortenerService: UrlShortenerService = {
     }
   },
 
+  // Gets the original URL from the short code
   async getOriginalUrl(code: string): Promise<string | null> {
     try {
       const shortenedUrl = await urlRepository.findByCode(code);
@@ -128,6 +82,7 @@ export const urlShortenerService: UrlShortenerService = {
     }
   },
 
+  // Gets all the URLs
   async getAllUrls(): Promise<ShortenedUrlResult[]> {
     try {
       const urls = await urlRepository.findAll();
@@ -142,6 +97,7 @@ export const urlShortenerService: UrlShortenerService = {
     }
   },
 
+  // Tracks the click
   async trackClick(code: string, options?: RecordClickOptions): Promise<void> {
     try {
       await urlRepository.recordClick(code, options);

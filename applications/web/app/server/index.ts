@@ -3,7 +3,11 @@ export { urlShortenerService } from "./services/url-shortener.service";
 export type {
   UrlShortenerService,
   ShortenedUrlResult,
-} from "./services/url-shortener.service";
+  CreateUrlOptions,
+} from "./services/types";
+
+// Errors
+export { DatabaseError, isDatabaseError, handleDatabaseError } from "./errors";
 
 // Loaders
 export { homeLoader } from "./loaders/home.loader";
