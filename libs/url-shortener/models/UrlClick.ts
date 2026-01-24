@@ -1,4 +1,4 @@
-import { UrlClickProps } from "./types";
+import type { UrlClickProps } from "./types";
 
 // Represents a click on a shortened URL
 export class UrlClick {

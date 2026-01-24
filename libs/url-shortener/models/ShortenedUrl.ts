@@ -1,4 +1,4 @@
-import { ShortenedUrlProps } from "./types";
+import type { ShortenedUrlProps } from "./types";
 // Represents a shortened URL
 export class ShortenedUrl {
   readonly id?: number;
