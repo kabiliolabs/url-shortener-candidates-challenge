@@ -18,7 +18,7 @@ Then, after doing some tests in the app and studying a little bit one URL shorte
 ## What I Would Do With More Time
 
 - Add tests (unit tests for the library and some integration tests for the flows).
-- Fix the dockerfile to have a dockerized version for non-dev environment.
+- Fix the dockerfile to have a dockerized version for a non-dev environment.
 - Improve server-side error handling. I am handling only DB errors.
 - I would add a logger specially in the backend to have some metrics and data of how is it working.
 - Store and use IP/User-Agent metadata (I already added the DB columns) to better understand usage patterns and support abuse prevention.
