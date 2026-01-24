@@ -1,14 +1,6 @@
-export interface UrlClickProps {
-  id?: number;
-  shortUrlId: number;
-  createdAt?: Date;
-  ipHash?: string | null;
-  userAgentHash?: string | null;
-}
+import { UrlClickProps } from "./types";
 
-/**
- * Represents a click on a shortened URL
- */
+// Represents a click on a shortened URL
 export class UrlClick {
   readonly id?: number;
   readonly shortUrlId: number;

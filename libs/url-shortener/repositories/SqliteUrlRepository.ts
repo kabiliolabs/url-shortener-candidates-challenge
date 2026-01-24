@@ -1,11 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { ShortenedUrl, UrlClick } from "../models";
 import type { UrlRepository, RecordClickOptions } from "./UrlRepository";
+import { getPrismaClient } from "./prisma";
 
-/**
- * SQLite URL Repository
- * Prisma-based implementation with SQLite
- */
+// SqliteUrlRepository implements the UrlRepository interface
 export class SqliteUrlRepository implements UrlRepository {
   constructor(private prisma: PrismaClient) {}
 
@@ -187,18 +185,6 @@ export class SqliteUrlRepository implements UrlRepository {
     });
     return count > 0;
   }
-}
-
-// Prisma client singleton
-let prismaInstance: PrismaClient | null = null;
-
-export function getPrismaClient(): PrismaClient {
-  if (!prismaInstance) {
-    console.log(`[SqliteUrlRepository] Current working directory: ${process.cwd()}`);
-    console.log(`[SqliteUrlRepository] DATABASE_URL: ${process.env.DATABASE_URL}`);
-    prismaInstance = new PrismaClient();
-  }
-  return prismaInstance;
 }
 
 // Default repository instance

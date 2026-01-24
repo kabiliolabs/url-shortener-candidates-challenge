@@ -17,6 +17,7 @@ Then, after doing some tests in the app and studying a little bit one URL shorte
 
 - Add tests (unit tests for the library and some integration tests for the flows).
 - Improve server-side error handling.
+- I would add a logger specially in the backend to have some metrics and data of how is it working.
 - Store and use IP/User-Agent metadata (I already added the DB columns) to better understand usage patterns and support abuse prevention.
 - Build a richer analytics page.
 - Add stronger abuse prevention (for example rate limiting per IP, CAPTCHA).

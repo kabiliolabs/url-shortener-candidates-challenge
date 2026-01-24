@@ -1,2 +1,3 @@
 export type { UrlRepository, RecordClickOptions } from "./UrlRepository";
-export { SqliteUrlRepository, sqliteUrlRepository, getPrismaClient } from "./SqliteUrlRepository";
+export { SqliteUrlRepository, sqliteUrlRepository } from "./SqliteUrlRepository";
+export { getPrismaClient } from "./prisma";

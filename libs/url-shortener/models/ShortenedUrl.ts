@@ -1,16 +1,5 @@
-export interface ShortenedUrlProps {
-  id?: number;
-  shortCode: string;
-  originalUrl: string;
-  createdAt?: Date;
-  createdByIpHash?: string | null;
-  createdByUserAgentHash?: string | null;
-  clicks?: number;
-}
-
-/**
- * Represents a shortened URL
- */
+import { ShortenedUrlProps } from "./types";
+// Represents a shortened URL
 export class ShortenedUrl {
   readonly id?: number;
   readonly shortCode: string;
@@ -18,6 +7,7 @@ export class ShortenedUrl {
   readonly createdAt: Date;
   readonly createdByIpHash?: string | null;
   readonly createdByUserAgentHash?: string | null;
+  //Internal field for clicks count
   private _clicks: number;
 
   constructor(props: ShortenedUrlProps) {
@@ -34,7 +24,4 @@ export class ShortenedUrl {
     return this._clicks;
   }
 
-  recordClick(): void {
-    this._clicks++;
-  }
 }
