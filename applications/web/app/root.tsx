@@ -9,6 +9,8 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Theme } from "@radix-ui/themes";
+import { Toaster } from "sonner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -32,7 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body suppressHydrationWarning className="bg-linear-to-br from-slate-50 via-white to-sky-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -42,7 +44,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <Theme accentColor="blue" grayColor="slate" radius="medium" appearance="light">
+      <Outlet />
+      <Toaster richColors position="top-right" />
+    </Theme>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
