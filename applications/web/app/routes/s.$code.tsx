@@ -1,15 +1,22 @@
 import { redirect } from "react-router";
+import { findByCode, incrementClicks } from "~/server/short-url.repository";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const { code } = params;
 
-  const url = shortenedUrls.get(code);
+  if (!code) {
+    throw new Response("Missing code", { status: 400 });
+  }
 
-  if (!url) {
+  const found = await findByCode(code);
+
+
+  if (!found) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  return redirect(url);
+  await incrementClicks(found.id);
+
+  return redirect(found.originalUrl, { status: 302 });
 }
