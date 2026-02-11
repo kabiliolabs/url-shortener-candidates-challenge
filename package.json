@@ -9,6 +9,7 @@
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
+    "prisma": "^7.3.0",
     "turbo": "^2.7.4"
   }
 }
