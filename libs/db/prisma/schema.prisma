@@ -1,0 +1,40 @@
+// Prisma schema for URL shortener
+// Using SQLite for simplicity - can be swapped to PostgreSQL in production
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// Shortened URL entity with metadata
+model ShortenedUrl {
+  id          String   @id @default(uuid())
+  shortCode   String   @unique
+  originalUrl String
+  createdAt   DateTime @default(now())
+  clickCount  Int      @default(0)
+  
+  clicks      Click[]
+  
+  @@index([shortCode])
+  @@map("shortened_urls")
+}
+
+/// Click tracking for analytics
+model Click {
+  id              String   @id @default(uuid())
+  shortenedUrlId  String
+  timestamp       DateTime @default(now())
+  userAgent       String?
+  referer         String?
+  
+  shortenedUrl    ShortenedUrl @relation(fields: [shortenedUrlId], references: [id], onDelete: Cascade)
+  
+  @@index([shortenedUrlId])
+  @@index([timestamp])
+  @@map("clicks")
+}

@@ -11,6 +11,7 @@
   "dependencies": {
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",
+    "@url-shortener/db": "workspace:*",
     "@url-shortener/engine": "workspace:*",
     "isbot": "^5.1.31",
     "react": "^19.2.3",

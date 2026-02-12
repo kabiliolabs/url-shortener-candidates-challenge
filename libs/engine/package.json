@@ -12,6 +12,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "nanoid": "^5.0.0"
+  },
   "devDependencies": {
     "@types/node": "^22.19.7",
     "typescript": "^5.9.3"
