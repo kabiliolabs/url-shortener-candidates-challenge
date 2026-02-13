@@ -2,7 +2,7 @@ import { Form, useActionData, Link, useNavigation } from "react-router";
 import type { Route } from "./+types/_index";
 import { urlService } from "~/lib/url-service.server";
 import { ValidationError } from "@url-shortener/engine";
-import { CopyButton } from "~/components/CopyButton";
+import { CopyButton } from "~/components/copy-button/CopyButton";
 
 export function loader() {
   const baseUrl = process.env.PUBLIC_URL || "http://localhost:5173";

@@ -1,4 +1,4 @@
-import { CopyButton } from "./CopyButton";
+import { CopyButton } from "./copy-button/CopyButton";
 
 interface Click {
   id: string;
@@ -18,7 +18,7 @@ interface UrlCardProps {
 
 /**
  * UrlCard - Displays a shortened URL with stats and actions
- * 
+ *
  * Shows URL information, click statistics, and recent click details.
  * Includes copy button and link to open the shortened URL.
  */

@@ -1,5 +1,5 @@
 import { useLoaderData, Link } from "react-router";
-import { StatsCard } from "~/components/StatsCard";
+import { StatsCard } from "~/components/stats-card/StatsCard";
 import { UrlCard } from "~/components/UrlCard";
 import { urlService } from "~/lib/url-service.server";
 
@@ -21,9 +21,8 @@ export default function Dashboard() {
 
   // Calculate stats
   const totalClicks = urls.reduce((sum, url) => sum + url.clickCount, 0);
-  const avgClicksPerUrl = urls.length > 0 
-    ? Math.round(totalClicks / urls.length) 
-    : 0;
+  const avgClicksPerUrl =
+    urls.length > 0 ? Math.round(totalClicks / urls.length) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
