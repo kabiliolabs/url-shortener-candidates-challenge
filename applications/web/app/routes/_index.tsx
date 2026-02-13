@@ -2,6 +2,7 @@ import { Form, useActionData, Link } from "react-router";
 import type { Route } from "./+types/_index";
 import { urlService } from "~/lib/url-service.server";
 import { ValidationError } from "@url-shortener/engine";
+import { useClipboard } from "~/hooks/useClipboard";
 
 export function loader() {
   const baseUrl = process.env.PUBLIC_URL || "http://localhost:5173";
@@ -48,13 +49,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const { baseUrl } = loaderData;
   const actionData = useActionData<typeof action>();
 
-  const handleCopy = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (error) {
-      console.error("Failed to copy:", error);
-    }
-  };
+  const { copy, copied } = useClipboard();
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -86,7 +81,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer"
           >
             Shorten URL
           </button>
@@ -109,11 +104,11 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                 className="flex-1 px-3 py-2 bg-white border border-green-300 rounded text-sm font-mono text-gray-800"
               />
               <button
-                onClick={() => handleCopy(actionData.shortenedUrl!)}
-                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors duration-200"
+                onClick={() => copy(actionData.shortenedUrl!)}
+                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors duration-200 cursor-pointer"
                 title="Copy to clipboard"
               >
-                Copy
+                {copied ? "Copied!" : "Copy"}
               </button>
             </div>
           </div>
