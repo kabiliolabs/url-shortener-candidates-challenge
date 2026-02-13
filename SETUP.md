@@ -24,6 +24,16 @@ pnpm dev
 
 > Need more details? Continue reading below.
 
+### ⚠️ Common Post-Install Issues
+
+If you encounter errors after `pnpm install`:
+
+1. **"Cannot find module '.prisma/client'"** → Run `pnpm --filter @url-shortener/db prisma generate` then restart dev server
+2. **TypeScript errors in IDE** → Generate Prisma client, then restart TS server (Cmd/Ctrl+Shift+P → "Restart TS Server")
+3. **Dashboard shows 404** → Check `applications/web/app/routes.ts` includes dashboard route
+
+See [Troubleshooting](#troubleshooting) section below for detailed solutions.
+
 ---
 
 ## Prerequisites
@@ -76,17 +86,19 @@ pnpm --filter @url-shortener/db prisma migrate dev --name init
 **Expected output:**
 
 ```
-✔ Generated Prisma Client
+✔ Generated Prisma Client (v6.x.x) to .../node_modules/@prisma/client in XXms
 ✔ Applied migration: 20XXXXXX_init
 ```
 
 This will:
 
 - Create a `dev.db` file in `libs/db/`
-- Generate TypeScript types for Prisma models
+- Generate TypeScript types for Prisma models in `node_modules/.prisma/client/`
 - Set up the initial database schema
 
 **Verify:** Check that `libs/db/dev.db` file was created.
+
+**⚠️ Important:** The Prisma client generation step is **required** after every `pnpm install`. If you skip it, you'll get module resolution errors.
 
 ### 3. Configure Environment
 
@@ -280,14 +292,19 @@ pnpm install
 pnpm --filter @url-shortener/db prisma generate
 ```
 
-### "Cannot find module '.prisma/client'"
+### "Cannot find module '.prisma/client'" or ".prisma/client/default"
 
-**Fix:** Install dependencies and regenerate
+**Fix:** Regenerate Prisma client and restart dev server
 
 ```bash
-pnpm install
 pnpm --filter @url-shortener/db prisma generate
 ```
+
+**⚠️ Important:** After generating, **restart your dev server** (stop with Ctrl+C and run `pnpm dev` again). The running server won't detect the newly generated Prisma client.
+
+**Why this happens:**
+- After `pnpm install` or dependency changes, Prisma client needs regeneration
+- The dev server caches module resolution and won't pick up new files until restarted
 
 ### "Database not found" or "P1003: Database does not exist"
 
@@ -323,7 +340,40 @@ pnpm --filter @url-shortener/db prisma generate
 Then restart your TypeScript server:
 
 - **VS Code:** `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows) → "Restart TypeScript Server"
+- **Cursor:** `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows) → "TypeScript: Restart TS Server"
 - **Other editors:** Restart the editor
+
+### "Cannot find module 'vitest'" or Vitest version errors
+
+**Fix:** The project uses Vitest v3.x which requires Vite v7. If you see version conflicts:
+
+```bash
+# Clean reinstall
+rm -rf node_modules
+pnpm install
+pnpm --filter @url-shortener/db prisma generate
+```
+
+**Note:** Make sure you're using the versions specified in `package.json`:
+- Vite: 7.x
+- Vitest: 3.x
+- TypeScript: 5.9+
+
+### "404 - Page not found" on /dashboard
+
+**Fix:** Ensure the route is registered in `applications/web/app/routes.ts`
+
+The dashboard route should be listed:
+
+```typescript
+export default [
+  index("routes/_index.tsx"),
+  route("dashboard", "routes/dashboard.tsx"),  // Make sure this exists
+  route("s/:code", "routes/s.$code.tsx"),
+] satisfies RouteConfig;
+```
+
+React Router v7 requires explicit route registration even with file-based routing.
 
 ### Docker container fails to start
 

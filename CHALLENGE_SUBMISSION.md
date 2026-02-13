@@ -19,7 +19,7 @@ The backend implementation is straightforward but solid: Prisma with SQLite for 
 
 ## AI Usage
 
-I used AI as a pair programming reviewer and thinking partner, not as an autopilot. I worked incrementally—making small changes, asking for explanations before implementing suggestions, and validating ideas against the time constraint and actual requirements. The goal was to move faster on boilerplate and get quick feedback on patterns, while maintaining full control over architectural decisions.
+I used AI as a pair programming reviewer (Cursor) and thinking partner (gpt-5.2), not as an autopilot. I worked incrementally—making small changes, asking for explanations before implementing suggestions, and validating ideas against the time constraint and actual requirements. The goal was to move faster on boilerplate and get quick feedback on patterns, while maintaining full control over architectural decisions.
 
 Example prompts I used:
 
