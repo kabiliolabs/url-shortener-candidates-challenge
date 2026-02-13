@@ -96,7 +96,11 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         </Form>
 
         {actionData?.success && actionData.shortenedUrl && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+          <div
+            className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md"
+            role="alert"
+            aria-live="polite"
+          >
             <p className="text-sm font-medium text-green-800 mb-2">
               ✓ Success! Your shortened URL:
             </p>
@@ -106,6 +110,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                 readOnly
                 value={actionData.shortenedUrl}
                 className="flex-1 px-3 py-2 bg-white border border-green-300 rounded text-sm font-mono text-gray-800"
+                aria-label="Shortened URL"
               />
               <CopyButton
                 textToCopy={actionData.shortenedUrl}
@@ -116,7 +121,11 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         )}
 
         {actionData?.error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+          <div
+            className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md"
+            role="alert"
+            aria-live="assertive"
+          >
             <p className="text-sm text-red-800 font-medium">
               ✗ {actionData.error}
             </p>
