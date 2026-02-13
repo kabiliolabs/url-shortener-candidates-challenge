@@ -1,4 +1,4 @@
-import { Form, useActionData, Link } from "react-router";
+import { Form, useActionData, Link, useNavigation } from "react-router";
 import type { Route } from "./+types/_index";
 import { urlService } from "~/lib/url-service.server";
 import { ValidationError } from "@url-shortener/engine";
@@ -48,6 +48,9 @@ export function meta({}: Route.MetaArgs) {
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { baseUrl } = loaderData;
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+
+  const isSubmitting = navigation.state === "submitting";
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -59,7 +62,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           Transform long URLs into short, shareable links
         </p>
 
-        <Form method="post" className="space-y-4">
+        <Form method="post" className="space-y-4" aria-busy={isSubmitting}>
           <div>
             <label
               htmlFor="url"
@@ -73,15 +76,18 @@ export default function Index({ loaderData }: Route.ComponentProps) {
               name="url"
               placeholder="https://example.com/very-long-url"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-800"
+              disabled={isSubmitting}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-800 disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer"
+            disabled={isSubmitting}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            aria-label={isSubmitting ? "Shortening URL..." : "Shorten URL"}
           >
-            Shorten URL
+            {isSubmitting ? "Shortening..." : "Shorten URL"}
           </button>
 
           <p className="text-xs text-gray-500 text-center">
