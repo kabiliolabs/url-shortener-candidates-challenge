@@ -2,7 +2,7 @@ import { Form, useActionData, Link } from "react-router";
 import type { Route } from "./+types/_index";
 import { urlService } from "~/lib/url-service.server";
 import { ValidationError } from "@url-shortener/engine";
-import { useClipboard } from "~/hooks/useClipboard";
+import { CopyButton } from "~/components/CopyButton";
 
 export function loader() {
   const baseUrl = process.env.PUBLIC_URL || "http://localhost:5173";
@@ -48,8 +48,6 @@ export function meta({}: Route.MetaArgs) {
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { baseUrl } = loaderData;
   const actionData = useActionData<typeof action>();
-
-  const { copy, copied } = useClipboard();
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -103,13 +101,10 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                 value={actionData.shortenedUrl}
                 className="flex-1 px-3 py-2 bg-white border border-green-300 rounded text-sm font-mono text-gray-800"
               />
-              <button
-                onClick={() => copy(actionData.shortenedUrl!)}
-                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors duration-200 cursor-pointer"
-                title="Copy to clipboard"
-              >
-                {copied ? "Copied!" : "Copy"}
-              </button>
+              <CopyButton
+                textToCopy={actionData.shortenedUrl}
+                variant="primary"
+              />
             </div>
           </div>
         )}

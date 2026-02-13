@@ -1,5 +1,5 @@
 import { useLoaderData, Link } from "react-router";
-import { useClipboard } from "~/hooks/useClipboard";
+import { CopyButton } from "~/components/CopyButton";
 import { urlService } from "~/lib/url-service.server";
 
 export function meta() {
@@ -17,8 +17,6 @@ export async function loader() {
 
 export default function Dashboard() {
   const { urls, baseUrl } = useLoaderData<typeof loader>();
-
-  const { copy, copied } = useClipboard();
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -105,15 +103,10 @@ export default function Dashboard() {
                           <code className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-sm font-mono">
                             {baseUrl}/s/{url.shortCode}
                           </code>
-                          <button
-                            onClick={() =>
-                              copy(`${baseUrl}/s/${url.shortCode}`)
-                            }
-                            className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors font-medium cursor-pointer"
-                            title="Copy to clipboard"
-                          >
-                            {copied ? "Copied!" : "Copy"}
-                          </button>
+                          <CopyButton
+                            textToCopy={`${baseUrl}/s/${url.shortCode}`}
+                            variant="text"
+                          />
                           <a
                             href={`${baseUrl}/s/${url.shortCode}`}
                             target="_blank"
