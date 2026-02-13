@@ -1,32 +1,40 @@
-import { Form, useActionData } from "react-router";
+import { Form, useActionData, Link } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { urlService } from "~/lib/url-service.server";
+import { ValidationError } from "@url-shortener/engine";
 
 export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
+  const baseUrl = process.env.PUBLIC_URL || "http://localhost:5173";
+  return { baseUrl };
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
+  try {
+    const formData = await request.formData();
+    const url = formData.get("url") as string;
 
-  if (!url) {
-    return { error: "URL is required" };
+    const shortened = await urlService.createShortenedUrl(url);
+    const baseUrl = process.env.PUBLIC_URL || "http://localhost:5173";
+
+    return {
+      success: true,
+      shortenedUrl: `${baseUrl}/s/${shortened.shortCode}`,
+      shortCode: shortened.shortCode,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    console.error("Error creating shortened URL:", error);
+    return {
+      success: false,
+      error: "An unexpected error occurred. Please try again.",
+    };
   }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -40,58 +48,93 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const { baseUrl } = loaderData;
   const actionData = useActionData<typeof action>();
 
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      console.error("Failed to copy:", error);
+    }
+  };
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
+          URL Shortener
         </h1>
+        <p className="text-center text-gray-600 mb-8 text-sm">
+          Transform long URLs into short, shareable links
+        </p>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
-
+        <Form method="post" className="space-y-4">
           <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
+            <label
+              htmlFor="url"
+              className="block text-sm font-medium text-gray-700 mb-2"
             >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
+              Enter your URL
+            </label>
+            <input
+              type="url"
+              id="url"
+              name="url"
+              placeholder="https://example.com/very-long-url"
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-800"
+            />
           </div>
+
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+          >
+            Shorten URL
+          </button>
+
+          <p className="text-xs text-gray-500 text-center">
+            Shortened URLs will start with {baseUrl}/s/
+          </p>
         </Form>
 
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
+        {actionData?.success && actionData.shortenedUrl && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-sm font-medium text-green-800 mb-2">
+              ✓ Success! Your shortened URL:
             </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={actionData.shortenedUrl}
+                className="flex-1 px-3 py-2 bg-white border border-green-300 rounded text-sm font-mono text-gray-800"
+              />
+              <button
+                onClick={() => handleCopy(actionData.shortenedUrl!)}
+                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors duration-200"
+                title="Copy to clipboard"
+              >
+                Copy
+              </button>
+            </div>
           </div>
         )}
 
         {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-800 font-medium">
+              ✗ {actionData.error}
             </p>
           </div>
         )}
+
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <Link
+            to="/dashboard"
+            className="block text-center text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors"
+          >
+            View all shortened URLs →
+          </Link>
+        </div>
       </div>
     </main>
   );
