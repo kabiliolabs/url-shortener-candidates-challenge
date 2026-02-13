@@ -34,17 +34,22 @@ url-shortener/
 
 ## Quick Start
 
+> 🚀 **First time?** See [SETUP.md](./SETUP.md) for a step-by-step guide with troubleshooting.
+
 ### Local Development
 
 ```bash
 # 1. Install dependencies
 pnpm install
 
-# 2. Setup database
-pnpm --filter @url-shortener/db prisma generate
-pnpm --filter @url-shortener/db prisma migrate dev
+# 2. Copy environment file (if needed)
+cp .env.example .env
 
-# 3. Start dev server
+# 3. Setup database
+pnpm --filter @url-shortener/db prisma generate
+pnpm --filter @url-shortener/db prisma migrate dev --name init
+
+# 4. Start dev server
 pnpm dev
 ```
 
@@ -53,15 +58,18 @@ Open `http://localhost:5173`
 ### Docker Setup
 
 ```bash
+# Build and run in production mode
 docker-compose up --build
 ```
 
 Open `http://localhost:3000`
 
+**Note:** Docker runs on port 3000, local development on port 5173.
+
 ## Documentation
 
-- **[SETUP.md](./SETUP.md)** - Detailed setup instructions and troubleshooting
-- **[REFACTORING_GUIDE.md](./REFACTORING_GUIDE.md)** - Architecture decisions and design patterns
+- **[SETUP.md](./SETUP.md)** - 🚀 Complete setup guide (quick start + troubleshooting)
+- **[REFACTORING_GUIDE.md](./REFACTORING_GUIDE.md)** - Architecture, design decisions, and implementation details
 - **[CHALLENGE_DESCRIPTION.md](./CHALLENGE_DESCRIPTION.md)** - Original challenge requirements
 
 ## Application Routes
