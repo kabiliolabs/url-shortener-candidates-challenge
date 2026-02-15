@@ -1,8 +1,7 @@
 import { config } from "dotenv";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client.js";
+import { PrismaClient } from "../../generated/prisma/client.js";
 
-// Load .env from cwd (e.g. applications/web when running dev) so DATABASE_URL is set
 config();
 
 const ENV = {

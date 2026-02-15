@@ -15,7 +15,6 @@ export interface UpdateShortenedUrlInput {
   code?: string;
 }
 
-/** Return type of shortenUrl() in shortened-url.server. */
 export interface ShortenUrlResult {
   code: string;
   shortened: ShortenedUrlEntity;

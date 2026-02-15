@@ -2,6 +2,7 @@ import { useAtom, useSetAtom } from "jotai";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
+import Alert from "@mui/material/Alert";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { PageSection } from "../PageSection";
 import { ContentCard } from "../ContentCard";
@@ -9,13 +10,18 @@ import { PageTitle } from "../PageTitle";
 import { ShortenFormUrlInput } from "../ShortenFormUrlInput";
 import { ShortenFormSubmitButton } from "../ShortenFormSubmitButton";
 import { useShortenUrl, useCopyToClipboard } from "../../hooks/index.js";
-import { lastShortenedUrlAtom, shortenFormCopyErrorAtom } from "../../state/index.js";
+import {
+  lastShortenedUrlAtom,
+  shortenFormErrorAtom,
+  shortenFormCopyErrorAtom,
+} from "../../state/index.js";
 import { getCopyErrorMessage } from "../../api/error-messages.js";
 
 export function ShortenPage(): React.JSX.Element {
   const { submit } = useShortenUrl();
   const { copy, copied } = useCopyToClipboard();
   const [shortenedUrl] = useAtom(lastShortenedUrlAtom);
+  const [shortenError, setShortenError] = useAtom(shortenFormErrorAtom);
   const setCopyError = useSetAtom(shortenFormCopyErrorAtom);
 
   function handleSubmit(e: React.FormEvent) {
@@ -40,6 +46,11 @@ export function ShortenPage(): React.JSX.Element {
           subtitle={'Enter a long URL (e.g. https://example.com or example.com), then click Shorten. Share the short link; visits are counted. Use "All URLs" in the bar above to see the list.'}
         />
         <form onSubmit={handleSubmit}>
+          {shortenError && !shortenedUrl && (
+            <Alert severity="error" className="mb-4" onClose={() => setShortenError(null)}>
+              {shortenError}
+            </Alert>
+          )}
           <ShortenFormUrlInput />
           <div className="mt-4 mb-4">
             <ShortenFormSubmitButton />

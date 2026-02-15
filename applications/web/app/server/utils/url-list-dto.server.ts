@@ -1,6 +1,5 @@
-import type { ShortenedUrlEntity } from "../../types/server.types.js";
+import type { ShortenedUrlEntity } from "../types.js";
 
-/** DTO shape for list API (matches frontend ShortenedUrlDto). */
 export interface UrlListItemDto {
   id: string;
   code: string;

@@ -1,9 +1,5 @@
 import { baseUrl } from "@url-shortener/engine";
 
-/**
- * Derives the base URL (origin) for building shortened links from the request.
- * Server-only.
- */
 export function getShortenedBaseUrl(request: Request): string {
   if (baseUrl && baseUrl.trim()) return baseUrl.trim().replace(/\/$/, "");
   try {

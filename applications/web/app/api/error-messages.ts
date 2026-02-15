@@ -26,7 +26,11 @@ export function getShortenErrorMessage(rawMessage: string, status?: number): str
     return "The app couldn’t generate a short link right now. Please try again in a moment.";
   }
 
-  if (lower.includes("failed to generate unique short code") || lower.includes("conflict")) {
+  if (
+    lower.includes("failed to generate unique short code") ||
+    lower.includes("short code collision") ||
+    lower.includes("conflict")
+  ) {
     return "The app couldn’t create a unique short link. Please try again.";
   }
 

@@ -6,9 +6,7 @@
 
   --color-primary: #e0e0e0;
   --color-primary-light: #ffffff;
-  --color-primary-dark: #b0b0b0;
   --color-secondary: #00e5ff;
-  --color-secondary-light: #6effff;
   --color-background: #0a0a0f;
   --color-background-paper: #12121a;
   --color-success: #00e676;
@@ -17,9 +15,6 @@
   --color-text-secondary: #a0a0a8;
   --color-text-disabled: #606068;
   --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-strong: rgba(255, 255, 255, 0.12);
-  --color-success-muted: rgba(0, 230, 118, 0.08);
-  --color-success-border: rgba(0, 230, 118, 0.2);
 }
 
 html,

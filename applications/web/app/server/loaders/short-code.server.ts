@@ -3,7 +3,6 @@ import { resolveAndTrackClick } from "../services/shortened-url.server.js";
 
 /**
  * Loader logic for /s/:code. Resolves the code and redirects, or throws 404.
- * Use in route: export const loader = ({ params }) => loadShortCodeRedirect(params.code);
  */
 export async function loadShortCodeRedirect(code: string): Promise<Response> {
   const url = await resolveAndTrackClick(code);

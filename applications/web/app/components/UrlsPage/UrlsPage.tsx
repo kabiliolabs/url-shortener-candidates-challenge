@@ -10,7 +10,7 @@ import Alert from "@mui/material/Alert";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { useUrlList } from "../../hooks/index.js";
-import { formatDate } from "../../utils/format.js";
+import { formatDate } from "../../utils/date.js";
 
 export function UrlsPage(): React.JSX.Element {
   const { urls, loading, error } = useUrlList();
