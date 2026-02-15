@@ -1,13 +1,19 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 
 import type { Route } from "./+types/root";
+import { AppTheme } from "./theme/index.jsx";
+import { Layout as AppLayout } from "./components/Layout.jsx";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -42,7 +48,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <AppTheme>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    </AppTheme>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
@@ -62,14 +74,45 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <AppTheme>
+      <AppLayout>
+        <Box
+          component="main"
+          sx={{
+            maxWidth: 600,
+            mx: "auto",
+            py: 4,
+            px: 2,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="h1" gutterBottom sx={{ color: "primary.main" }}>
+            {message}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            {details}
+          </Typography>
+          {stack && (
+            <Box
+              component="pre"
+              sx={{
+                p: 2,
+                overflow: "auto",
+                textAlign: "left",
+                bgcolor: "background.paper",
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <code>{stack}</code>
+            </Box>
+          )}
+          <Button component={Link} to="/" variant="contained" sx={{ mt: 2 }}>
+            Go home
+          </Button>
+        </Box>
+      </AppLayout>
+    </AppTheme>
   );
 }
