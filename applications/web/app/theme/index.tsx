@@ -38,7 +38,7 @@ const theme = createTheme({
     borderRadius: 8,
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
       fontWeight: 700,
       letterSpacing: "-0.02em",
@@ -114,9 +114,9 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
+          borderRadius: 0,
           background: "rgba(10, 10, 15, 0.85)",
           backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
         },
       },
     },

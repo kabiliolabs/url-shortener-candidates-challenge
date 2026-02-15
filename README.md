@@ -52,14 +52,103 @@ Then open **http://localhost:5173**
 
 ### Local development with PostgreSQL
 
-The app uses **PostgreSQL** and **Prisma**. For local dev:
+The app uses **PostgreSQL** and **Prisma**. Follow these steps so the app can connect and create the required tables.
 
-1. Run PostgreSQL (e.g. Docker: `docker run -d -p 5432:5432 -e POSTGRES_USER=urlshortener -e POSTGRES_PASSWORD=urlshortener -e POSTGRES_DB=urlshortener postgres:16-alpine`).
-2. In the repo root, copy `.env.example` to `.env` and set `DATABASE_URL` (see `.env.example`).
-3. In `applications/web`, run migrations: `npx prisma migrate deploy`.
-4. Start the app from the repo root: `npx pnpm dev` (or `pnpm dev`).
+#### 1. Start PostgreSQL
 
-Or use **Docker Compose** (see below); it starts PostgreSQL and the app together.
+**Option A – Docker Compose (recommended)**
+
+From the **repo root**:
+
+```bash
+docker-compose up -d postgres
+```
+
+This starts Postgres on port **5432** with user `urlshortener`, password `urlshortener`, database `urlshortener`.
+
+**Option B – One-off Docker container**
+
+```bash
+docker run -d -p 5432:5432 -e POSTGRES_USER=urlshortener -e POSTGRES_PASSWORD=urlshortener -e POSTGRES_DB=urlshortener postgres:16-alpine
+```
+
+**Option C – Local PostgreSQL**
+
+Install PostgreSQL and create a database, then use its connection URL in step 2.
+
+#### 2. Set `DATABASE_URL`
+
+- When you run `pnpm dev` from the **repo root**, the app loads `.env` from the **repo root**. Create or edit **`.env`** there (same folder as `package.json` and `docker-compose.yml`).
+- When you run Prisma commands from `applications/web`, Prisma loads `.env` from **`applications/web`**. So either put a `.env` in `applications/web` with the same `DATABASE_URL`, or set it in the shell when running migrations.
+
+**Example `.env` (repo root and/or `applications/web/.env`):**
+
+```env
+# Database – use port 5432 for local/Docker Postgres
+DATABASE_URL="postgresql://urlshortener:urlshortener@localhost:5432/urlshortener"
+
+# Optional: base URL for short links
+PUBLIC_URL=http://localhost:5173
+```
+
+Format: `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`. For local Docker use `localhost` and port **5432** (if your DB is on a different port, change it here).
+
+#### 3. Create the tables (run migrations)
+
+Prisma creates the `ShortenedUrl` table from the existing migration. From **`applications/web`**:
+
+```bash
+cd applications/web
+npx prisma migrate deploy
+```
+
+If `DATABASE_URL` is only in the repo root `.env`, either copy it into `applications/web/.env`, or set it in the shell:
+
+```powershell
+# PowerShell (repo root)
+$env:DATABASE_URL="postgresql://urlshortener:urlshortener@localhost:5432/urlshortener"; cd applications/web; npx prisma migrate deploy
+```
+
+#### 4. Verify the connection (optional)
+
+From `applications/web`:
+
+```bash
+npx prisma db execute --stdin
+```
+
+Type `SELECT 1;`, press Enter, then Ctrl+D (or Ctrl+Z then Enter on Windows). No error means the database is reachable.
+
+Or open Prisma Studio to browse data:
+
+```bash
+npx prisma studio
+```
+
+Opens http://localhost:5555 (e.g. `ShortenedUrl` table).
+
+#### 5. Start the app
+
+From the **repo root**:
+
+```bash
+pnpm dev
+```
+
+Then open **http://localhost:5173**.
+
+**Checklist**
+
+| Step | Action |
+|------|--------|
+| 1 | Postgres is running on port 5432 (`docker-compose up -d postgres` or local install). |
+| 2 | `DATABASE_URL` in repo root `.env` (and in `applications/web/.env` if you run Prisma from there) uses **port 5432**. |
+| 3 | Migrations applied: `cd applications/web && npx prisma migrate deploy`. |
+| 4 | App started from repo root: `pnpm dev`. |
+
+**If the app can’t connect:** ensure `DATABASE_URL` uses `localhost:5432` (not another port), and user/password match your Postgres (e.g. `urlshortener` / `urlshortener` for Docker Compose).
+
+More detail: **[applications/web/DATABASE.md](applications/web/DATABASE.md)**.
 
 ---
 

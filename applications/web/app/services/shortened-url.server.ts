@@ -1,15 +1,10 @@
 import { randomBytes } from "node:crypto";
 import { db } from "../db.server.js";
-
-export type ShortenedUrl = {
-  id: string;
-  code: string;
-  url: string;
-  createdAt: Date;
-  clickCount: number;
-};
-
-export type UpdateShortenedUrlInput = { url?: string; code?: string };
+import type {
+  ShortenedUrlEntity,
+  ShortenUrlResult,
+  UpdateShortenedUrlInput,
+} from "../types/server.types.js";
 
 const URL_MAX_LENGTH = 2048;
 const MESSAGES = {
@@ -70,7 +65,7 @@ const SELECT_ALL = {
   clickCount: true,
 } as const;
 
-async function repoCreate(data: { code: string; url: string }): Promise<ShortenedUrl> {
+async function repoCreate(data: { code: string; url: string }): Promise<ShortenedUrlEntity> {
   const row = await db.shortenedUrl.create({
     data: { code: data.code, url: data.url },
     select: SELECT_ALL,
@@ -85,17 +80,17 @@ async function repoGetUrlAndIncrementClicks(code: string): Promise<string | null
   return row.url;
 }
 
-async function repoFindById(id: string): Promise<ShortenedUrl | null> {
+async function repoFindById(id: string): Promise<ShortenedUrlEntity | null> {
   const row = await db.shortenedUrl.findUnique({ where: { id }, select: SELECT_ALL });
   return row;
 }
 
-async function repoFindByCode(code: string): Promise<ShortenedUrl | null> {
+async function repoFindByCode(code: string): Promise<ShortenedUrlEntity | null> {
   const row = await db.shortenedUrl.findUnique({ where: { code }, select: SELECT_ALL });
   return row;
 }
 
-async function repoUpdateById(id: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrl | null> {
+async function repoUpdateById(id: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrlEntity | null> {
   try {
     const payload: { url?: string; code?: string } = {};
     if (data.url !== undefined) payload.url = data.url;
@@ -109,7 +104,7 @@ async function repoUpdateById(id: string, data: UpdateShortenedUrlInput): Promis
   }
 }
 
-async function repoUpdateByCode(code: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrl | null> {
+async function repoUpdateByCode(code: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrlEntity | null> {
   try {
     const payload: { url?: string; code?: string } = {};
     if (data.url !== undefined) payload.url = data.url;
@@ -123,7 +118,7 @@ async function repoUpdateByCode(code: string, data: UpdateShortenedUrlInput): Pr
   }
 }
 
-async function repoFindAll(): Promise<ShortenedUrl[]> {
+async function repoFindAll(): Promise<ShortenedUrlEntity[]> {
   const rows = await db.shortenedUrl.findMany({
     orderBy: { createdAt: "desc" },
     select: SELECT_ALL,
@@ -147,7 +142,7 @@ function generateCode(): string {
   return code;
 }
 
-async function tryCreateWithUniqueCode(url: string): Promise<ShortenedUrl | null> {
+async function tryCreateWithUniqueCode(url: string): Promise<ShortenedUrlEntity | null> {
   for (let attempt = 0; attempt < MAX_CREATE_ATTEMPTS; attempt++) {
     const code = generateCode();
     try {
@@ -169,14 +164,15 @@ function isCodeValidForLookup(code: string): boolean {
   return !!code && isValidShortCodeFormat(code, SHORT_CODE_ALPHABET, SHORT_CODE_LENGTH);
 }
 
-export async function shortenUrl(url: string): Promise<{ code: string; shortened: ShortenedUrl }> {
+export async function shortenUrl(url: string): Promise<ShortenUrlResult> {
   const trimmed = normalizeStringInput(url);
   validateUrlInput(trimmed);
 
   const shortened = await tryCreateWithUniqueCode(trimmed);
   if (!shortened) throw new ConflictError(MESSAGES.CODE_GENERATION_FAILED);
 
-  return { code: shortened.code, shortened };
+  const result: ShortenUrlResult = { code: shortened.code, shortened };
+  return result;
 }
 
 export async function resolveAndTrackClick(code: string): Promise<string | null> {
@@ -184,24 +180,24 @@ export async function resolveAndTrackClick(code: string): Promise<string | null>
   return repoGetUrlAndIncrementClicks(code);
 }
 
-export async function getById(id: string): Promise<ShortenedUrl | null> {
+export async function getById(id: string): Promise<ShortenedUrlEntity | null> {
   return repoFindById(id);
 }
 
-export async function getByCode(code: string): Promise<ShortenedUrl | null> {
+export async function getByCode(code: string): Promise<ShortenedUrlEntity | null> {
   if (!isCodeValidForLookup(code)) return null;
   return repoFindByCode(code);
 }
 
-export async function updateById(id: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrl | null> {
+export async function updateById(id: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrlEntity | null> {
   return repoUpdateById(id, data);
 }
 
-export async function updateByCode(code: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrl | null> {
+export async function updateByCode(code: string, data: UpdateShortenedUrlInput): Promise<ShortenedUrlEntity | null> {
   if (!isCodeValidForLookup(code)) return null;
   return repoUpdateByCode(code, data);
 }
 
-export async function list(): Promise<ShortenedUrl[]> {
+export async function list(): Promise<ShortenedUrlEntity[]> {
   return repoFindAll();
 }
