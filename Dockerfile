@@ -13,6 +13,9 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=dependencies /app/applications/web/node_modules ./applications/web/node_modules
 COPY . .
+WORKDIR /app/applications/web
+RUN npx prisma generate
+WORKDIR /app
 RUN pnpm build
 
 FROM base AS production
@@ -20,6 +23,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/applications/web/node_modules ./applications/web/node_modules
 COPY --from=build /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=build /app/applications/web/build ./applications/web/build
+COPY --from=build /app/applications/web/prisma ./applications/web/prisma
+COPY --from=build /app/applications/web/generated ./applications/web/generated
 COPY libs/engine/src ./libs/engine/src
 COPY applications/web/package.json ./applications/web/
 COPY libs/engine/package.json ./libs/engine/
@@ -27,4 +32,4 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
 WORKDIR /app/applications/web
 EXPOSE 3000
-CMD ["pnpm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && pnpm start"]
