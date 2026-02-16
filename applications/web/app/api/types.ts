@@ -18,6 +18,21 @@ export interface ListUrlsResponse {
   urls: ShortenedUrlDto[];
 }
 
+/** JSON body shape when the API returns an error (e.g. 4xx/5xx). */
+export interface ApiErrorResponse {
+  error: string;
+}
+
+/** Type guard: true when value is an object with a string 'error' property. */
+export function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "error" in value &&
+    typeof (value as ApiErrorResponse).error === "string"
+  );
+}
+
 /** Error thrown by API client with optional HTTP status. */
 export interface ApiError extends Error {
   status?: number;

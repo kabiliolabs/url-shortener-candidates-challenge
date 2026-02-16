@@ -69,7 +69,7 @@ app/
 │       ├── get-base-url.server.ts
 │       ├── url-list-dto.server.ts
 │       └── database-error.server.ts
-├── api/                    # Frontend: client, types, query-keys, error-messages
+├── api/                    # Frontend: client, types, error-messages
 ├── routes/
 ├── components/
 └── ...

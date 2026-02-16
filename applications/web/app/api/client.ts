@@ -1,4 +1,5 @@
 import type { ApiError, ListUrlsResponse, ShortenResponse } from "./types.js";
+import { isApiErrorResponse } from "./types.js";
 
 const API_BASE = "";
 
@@ -19,12 +20,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  const data = (await res.json().catch(() => ({}))) as T & { error?: string };
+  const data: unknown = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg =
-      data && typeof data === "object" && "error" in data && typeof (data as { error: string }).error === "string"
-        ? (data as { error: string }).error
-        : `Request failed: ${res.status}`;
+    const msg = isApiErrorResponse(data) ? data.error : `Request failed: ${res.status}`;
     const err: ApiError = new Error(msg) as ApiError;
     err.status = res.status;
     throw err;

@@ -35,8 +35,7 @@ describe("ShortenPage", () => {
       </TestWrapper>
     );
     await user.click(screen.getByRole("button", { name: "Shorten" }));
-    // Match error message (apostrophe may be straight or curly)
-    expect(screen.getByText(/You didn.t enter a URL.+full web address/i)).toBeInTheDocument();
+    expect(screen.getByText(/Please enter a URL/i)).toBeInTheDocument();
   });
 
   it("calls shortenUrl and shows result on success", async () => {
@@ -44,6 +43,7 @@ describe("ShortenPage", () => {
     vi.mocked(api.shortenUrl).mockResolvedValue({
       shortenedUrl: "https://app.com/s/abc123",
     });
+    vi.mocked(api.listUrls).mockResolvedValue({ urls: [] });
     render(
       <TestWrapper>
         <ShortenPage />
