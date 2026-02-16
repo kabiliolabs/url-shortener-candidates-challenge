@@ -1,7 +1,3 @@
-/**
- * Backend-only types. Do not import in frontend (api/, components/, routes that use client).
- */
-
 export interface ShortenedUrlEntity {
   id: string;
   code: string;

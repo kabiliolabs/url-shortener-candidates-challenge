@@ -1,8 +1,3 @@
-/**
- * Server-side error classes and helpers. Use in services and API handlers.
- * Do not import in frontend code.
- */
-
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);

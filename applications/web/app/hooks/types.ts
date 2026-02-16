@@ -1,7 +1,3 @@
-/**
- * Return types for custom hooks. Use these when consuming hooks or composing components.
- */
-
 import type { ShortenedUrlDto } from "../api/types.js";
 
 export interface UseShortenUrlReturn {

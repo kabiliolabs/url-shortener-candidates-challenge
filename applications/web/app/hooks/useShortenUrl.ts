@@ -20,7 +20,6 @@ import type { UseShortenUrlReturn } from "./types.js";
 
 /**
  * Hook for the shorten-URL form: submit mutation and derived state.
- * Form state (url, loading, error, result) lives in Jotai atoms; components use useAtom to read/write.
  */
 export function useShortenUrl(): UseShortenUrlReturn {
   const [url, setUrl] = useAtom(shortenFormUrlAtom);

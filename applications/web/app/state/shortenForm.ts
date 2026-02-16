@@ -1,10 +1,5 @@
 import { atom } from "jotai";
 
-/**
- * Shorten-form state. Use these atoms in components that need the state;
- * do not pass the same state as props from a parent.
- */
-
 /** URL input value in the shorten form. */
 export const shortenFormUrlAtom = atom<string>("");
 
