@@ -8,7 +8,7 @@ import {
   getShortenErrorMessage,
   getEmptyResultMessage,
 } from "../api/error-messages.js";
-import { normalizeUrl } from "../utils/url.js";
+import { normalizeUrl, validateUrl } from "../utils/url.js";
 import {
   shortenFormUrlAtom,
   shortenFormLoadingAtom,
@@ -68,7 +68,17 @@ export function useShortenUrl(): UseShortenUrlReturn {
   const submit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      mutation.mutate(url.trim());
+      const trimmed = url.trim();
+      const validation = validateUrl(trimmed);
+      if (!validation.valid) {
+        setError(validation.message);
+        setLastShortened(null);
+        return;
+      }
+      // Defer to next task so first click isn't lost to focus/activation after load
+      setTimeout(() => {
+        mutation.mutate(validation.url);
+      }, 0);
     },
     [url, mutation]
   );

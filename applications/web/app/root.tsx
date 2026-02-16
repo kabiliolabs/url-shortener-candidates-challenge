@@ -13,7 +13,7 @@ import Button from "@mui/material/Button";
 
 import type { Route } from "./+types/root";
 import { queryClient } from "./query-client.js";
-import { AppTheme } from "./theme/index.jsx";
+import { AppTheme } from "./theme/index.js";
 import { Layout as AppLayout } from "./components/Layout/index.js";
 import "./app.css";
 

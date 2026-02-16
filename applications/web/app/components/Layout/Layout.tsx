@@ -2,12 +2,11 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import { Link, useNavigate, useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 
 const tabPath = (pathname: string) => (pathname.startsWith("/urls") ? "/urls" : "/");
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   const location = useLocation();
   const currentTab = tabPath(location.pathname);
 
@@ -16,9 +15,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <AppBar
         position="sticky"
         elevation={0}
-        className="rounded-none border-b border-primary bg-[rgba(10,10,15,0.85)] backdrop-blur-xl"
+        className="rounded-none border-b border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,15,0.85)] backdrop-blur-xl"
       >
-        <Toolbar className="gap-4">
+        <Toolbar
+          className="!gap-4"
+          sx={{ "&.MuiToolbar-root": { minHeight: 0 } }}
+        >
           <Link
             to="/"
             className="flex-grow text-xl font-bold tracking-tight text-primary no-underline"
@@ -27,13 +29,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
           <Tabs
             value={currentTab}
-            onChange={(_, value) => navigate(value as string)}
             textColor="inherit"
             indicatorColor="primary"
-            className="min-h-12 [&_.MuiTab-root]:min-h-12"
+            className="!min-h-0 [&_.MuiTab-root]:!min-h-0"
+            sx={{
+              minHeight: "0 !important",
+              "& .MuiTab-root": { minHeight: "0 !important" },
+              "& .MuiTabs-flexContainer": { minHeight: "0 !important" },
+            }}
           >
-            <Tab label="Shorten" value="/" />
-            <Tab label="All URLs" value="/urls" />
+            <Tab label="Shorten" value="/" component={Link} to="/" />
+            <Tab label="All URLs" value="/urls" component={Link} to="/urls" />
           </Tabs>
         </Toolbar>
       </AppBar>
