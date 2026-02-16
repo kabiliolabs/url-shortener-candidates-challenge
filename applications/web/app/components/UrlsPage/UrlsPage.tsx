@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -7,13 +9,35 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import { useUrlList } from "../../hooks/index.js";
+import { urlListAtom, loadUrlList } from "../../state/index.js";
+import { getListUrlsErrorMessage } from "../../api/error-messages.js";
 import { formatDate } from "../../utils/date.js";
 
 export function UrlsPage(): React.JSX.Element {
-  const { urls, loading, error } = useUrlList();
+  const [urls, setUrls] = useAtom(urlListAtom);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    loadUrlList(setUrls)
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load URLs"))
+      .finally(() => setLoading(false));
+  }, [setUrls]);
+
+  const handleShortLinkClick = (shortCode: string) => {
+    setUrls((prev) => {
+      const index = prev.findIndex((row) => row.shortCode === shortCode);
+      if (index === -1) return prev;
+      const next = [...prev];
+      next[index] = { ...next[index], clicks: next[index].clicks + 1 };
+      return next;
+    });
+  };
+
+  const errorMessage = error ? getListUrlsErrorMessage(error) : null;
 
   if (loading) {
     return (
@@ -23,10 +47,10 @@ export function UrlsPage(): React.JSX.Element {
     );
   }
 
-  if (error) {
+  if (errorMessage) {
     return (
       <div className="mx-auto max-w-[560px]">
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">{errorMessage}</Alert>
       </div>
     );
   }
@@ -64,27 +88,27 @@ export function UrlsPage(): React.JSX.Element {
                 <TableRow key={row.id} className="hover:bg-white/[0.02]">
                   <TableCell>
                     <a
-                      href={`/s/${row.code}`}
+                      href={`/s/${row.shortCode}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-secondary no-underline hover:underline"
+                      onClick={() => handleShortLinkClick(row.shortCode)}
                     >
-                      /s/{row.code}
+                      /s/{row.shortCode}
                     </a>
-                    <OpenInNewIcon className="ml-0.5 inline align-middle text-sm text-text-disabled" />
                   </TableCell>
                   <TableCell className="max-w-[280px]">
                     <span
                       className="block truncate font-mono text-[0.85rem] text-text-secondary"
-                      title={row.url}
+                      title={row.originalUrl}
                     >
-                      {row.url}
+                      {row.originalUrl}
                     </span>
                   </TableCell>
                   <TableCell align="right">
                     <div className="flex items-center justify-end gap-1">
                       <BarChartIcon className="text-lg text-text-secondary" />
-                      <span className="text-sm text-text-primary">{row.clickCount}</span>
+                      <span className="text-sm text-text-primary">{row.clicks}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-[0.85rem] text-text-secondary">

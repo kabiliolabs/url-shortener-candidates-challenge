@@ -14,7 +14,18 @@ export const SERVER_MESSAGES = {
   CODE_GENERATION_FAILED: "Failed to generate unique short code",
   /** User-facing message for API when collision occurs. */
   SHORT_CODE_COLLISION: "Short code collision: could not generate a unique link. Please try again.",
+  /** Returned when base URL cannot be derived for building the short link. */
+  MISSING_BASE_URL: "Could not build shortened URL (missing base URL)",
+  /** Returned when GET /api/urls fails (e.g. DB error). */
+  LIST_LOAD_ERROR: "The list of URLs could not be loaded. Please try again later.",
+  /** Returned when rate limit is exceeded (429). */
+  RATE_LIMIT_EXCEEDED: "Too many shorten requests. Please try again in a minute.",
 } as const;
+
+/** Rate limit: max shorten requests per window per key (e.g. per IP). */
+export const RATE_LIMIT_SHORTEN_MAX = 20;
+/** Rate limit window in milliseconds (1 minute). */
+export const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
 /** User-facing messages for shorten API errors (used by frontend getShortenErrorMessage). */
 export const SHORTEN_ERROR_MESSAGES = {
@@ -34,6 +45,8 @@ export const SHORTEN_ERROR_MESSAGES = {
     "The app is temporarily unable to save links. Please try again later.",
   SERVER_ERROR_500:
     "Something went wrong on our side. Please try again. If it keeps happening, try again later.",
+  RATE_LIMIT_429:
+    "Too many shorten requests. Please try again in a minute.",
   BAD_REQUEST_400:
     "Your request couldn't be processed. Please check that you entered a valid URL (e.g. https://example.com) and try again.",
   GENERIC_FALLBACK: (raw: string) =>

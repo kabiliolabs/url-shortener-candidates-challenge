@@ -47,6 +47,10 @@ export function getShortenErrorMessage(rawMessage: string, status?: number): str
     return SHORTEN_ERROR_MESSAGES.SERVER_ERROR_500;
   }
 
+  if (status === 429 || lower.includes("too many") || lower.includes("rate limit")) {
+    return SHORTEN_ERROR_MESSAGES.RATE_LIMIT_429;
+  }
+
   if (status === 400 || lower.includes("request failed: 400")) {
     return SHORTEN_ERROR_MESSAGES.BAD_REQUEST_400;
   }

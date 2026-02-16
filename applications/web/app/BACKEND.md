@@ -37,9 +37,9 @@ Routes (HTTP)  →  server/handlers, server/loaders  →  server/services  →  
 ### 6. Shared backend (`app/server/` root and `server/utils/`)
 
 - **errors.ts**: ValidationError, ConflictError, isClientError().
-- **constants.ts**: URL_MAX_LENGTH, SHORT_CODE_*, PRISMA_*, SERVER_MESSAGES.
+- **constants.ts**: URL_MAX_LENGTH, SHORT_CODE_*, PRISMA_*, SERVER_MESSAGES, RATE_LIMIT_* (for shorten endpoint).
 - **types.ts**: ShortenedUrlEntity, UpdateShortenedUrlInput, ShortenUrlResult (backend-only; do not import in frontend).
-- **utils/**: http-response, parse-shorten-body, prisma-error, short-code, url-validation, get-base-url, url-list-dto, database-error.
+- **utils/**: http-response, parse-shorten-body, prisma-error, short-code, url-validation, get-base-url, url-list-dto, database-error, rate-limit (in-memory limit for POST /api/shorten to reduce abuse).
 
 ## File layout
 

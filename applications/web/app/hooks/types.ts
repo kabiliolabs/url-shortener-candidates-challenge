@@ -1,5 +1,3 @@
-import type { ShortenedUrlDto } from "../api/types.js";
-
 export interface UseShortenUrlReturn {
   url: string;
   setUrl: (value: string) => void;
@@ -17,10 +15,3 @@ export interface UseCopyToClipboardReturn {
   clearCopyError: () => void;
 }
 
-export interface UseUrlListReturn {
-  urls: ShortenedUrlDto[];
-  loading: boolean;
-  isFetching: boolean;
-  error: string | null;
-  refetch: () => Promise<unknown>;
-}

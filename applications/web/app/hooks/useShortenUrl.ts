@@ -1,9 +1,8 @@
 import { useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import type { ApiError } from "../api/types.js";
 import { shortenUrl } from "../api/client.js";
-import { urlKeys } from "../api/query-keys.js";
 import {
   getShortenErrorMessage,
   getEmptyResultMessage,
@@ -15,6 +14,8 @@ import {
   shortenFormErrorAtom,
   shortenFormCopyErrorAtom,
   lastShortenedUrlAtom,
+  urlListAtom,
+  loadUrlList,
 } from "../state/index.js";
 import type { UseShortenUrlReturn } from "./types.js";
 
@@ -27,7 +28,7 @@ export function useShortenUrl(): UseShortenUrlReturn {
   const setError = useSetAtom(shortenFormErrorAtom);
   const setCopyError = useSetAtom(shortenFormCopyErrorAtom);
   const setLastShortened = useSetAtom(lastShortenedUrlAtom);
-  const queryClient = useQueryClient();
+  const setUrlList = useSetAtom(urlListAtom);
 
   const mutation = useMutation({
     mutationFn: (rawUrl: string) => {
@@ -48,7 +49,7 @@ export function useShortenUrl(): UseShortenUrlReturn {
       if (resultUrl) {
         setLastShortened(resultUrl);
         setError(null);
-        queryClient.invalidateQueries({ queryKey: urlKeys.list() });
+        void loadUrlList(setUrlList);
       } else {
         setError(getEmptyResultMessage());
       }

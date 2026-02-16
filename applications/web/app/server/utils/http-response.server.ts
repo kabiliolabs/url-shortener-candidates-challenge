@@ -10,7 +10,7 @@ export const httpResponse = {
   ok<T extends Record<string, unknown>>(body: T): Response {
     return Response.json(body, { status: 200, headers: JSON_HEADERS });
   },
-  error(message: string, status: 400 | 405 | 500 = 500): Response {
+  error(message: string, status: 400 | 405 | 429 | 500 = 500): Response {
     return Response.json({ error: message }, { status, headers: JSON_HEADERS });
   },
   methodNotAllowed(): Response {
