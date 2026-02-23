@@ -8,3 +8,10 @@ services:
     environment:
       - NODE_ENV=production
       - PUBLIC_URL=http://localhost:3000
+      - DATABASE_URL=file:/data/url-shortener.db
+      - MAX_CREATE_PER_MINUTE=20
+    volumes:
+      - url_shortener_data:/data
+
+volumes:
+  url_shortener_data:

@@ -7,7 +7,11 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:push": "prisma db push --schema prisma/schema.prisma",
+    "db:deploy": "prisma db push --schema prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -15,5 +19,13 @@
   "devDependencies": {
     "@types/node": "^22.19.7",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.3",
+    "@vitest/coverage-v8": "^4.0.18",
+    "nanoid": "^5.1.6",
+    "prisma": "^6.16.3",
+    "vitest": "^4.0.18",
+    "zod": "^4.3.6"
   }
 }

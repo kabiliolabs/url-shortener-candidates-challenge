@@ -1,97 +1,177 @@
-import { Form, useActionData } from "react-router";
+import { Form, useActionData, useNavigation } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { getRequestIpAddress } from "../server/request-ip.server";
+import { toHttpResponse } from "../server/http-error.server";
+import { urlShortenerApplication } from "../server/url-shortener.server";
+import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
+import { Alert } from "~/components/ui/alert";
 
-export function loader() {
+type ActionData =
+  | {
+      ok: true;
+      shortenedUrl: string;
+      shortCode: string;
+    }
+  | {
+      ok: false;
+      error: string;
+    };
+
+export async function loader() {
+  const result = await urlShortenerApplication.listShortLinks({ limit: 100 });
+
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl: process.env.PUBLIC_URL ?? "http://localhost:5173",
+    items: result.items,
   };
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
+  try {
+    const formData = await request.formData();
+    const url = String(formData.get("url") ?? "");
 
-  if (!url) {
-    return { error: "URL is required" };
+    const created = await urlShortenerApplication.createShortLink({
+      originalUrl: url,
+      ipAddress: getRequestIpAddress(request),
+    });
+
+    return {
+      ok: true,
+      shortenedUrl: created.shortUrl,
+      shortCode: created.shortCode,
+    } satisfies ActionData;
+  } catch (error) {
+    const response = toHttpResponse(error);
+    const message = await response.text();
+
+    return {
+      ok: false,
+      error: message,
+    } satisfies ActionData;
   }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
 }
 
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "URL Shortener" },
-    { name: "description", content: "Shorten your URLs quickly and easily" },
+    {
+      name: "description",
+      content: "Shorten links with persistent storage and click analytics",
+    },
   ];
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
+  const { baseUrl, items } = loaderData;
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-12">
+        <header className="space-y-2">
+          <p className="text-sm font-medium text-slate-600">URL Shortener</p>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Short links with click analytics
+          </h1>
+          <p className="text-sm text-slate-600">
+            Base URL: <span className="font-medium">{baseUrl}</span>
+          </p>
+        </header>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
+        <Card>
+          <Form method="post" className="flex flex-col gap-4">
+            <label className="space-y-2">
+              <span className="text-sm font-medium text-slate-700">
+                Destination URL
+              </span>
+              <Input
+                type="url"
+                name="url"
+                placeholder="https://example.com"
+                required
+              />
+            </label>
 
-          <div>
-            <button
+            <Button
               type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
+              disabled={isSubmitting}
             >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
+              {isSubmitting ? "Creating..." : "Create short URL"}
+            </Button>
+          </Form>
 
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
-        )}
+          {actionData?.ok && (
+            <div className="mt-4">
+              <Alert tone="success">
+              <p className="font-medium">Short URL created</p>
+              <a
+                href={actionData.shortenedUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="break-all text-emerald-900 underline"
+              >
+                {actionData.shortenedUrl}
+              </a>
+              </Alert>
+            </div>
+          )}
 
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
+          {actionData && !actionData.ok && (
+            <div className="mt-4">
+              <Alert tone="error">{actionData.error}</Alert>
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <h2 className="mb-4 text-lg font-semibold">Latest links</h2>
+          {items.length === 0 ? (
+            <p className="text-sm text-slate-600">No links yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="text-slate-600">
+                  <tr>
+                    <th className="px-2 py-2 font-medium">Short URL</th>
+                    <th className="px-2 py-2 font-medium">Original URL</th>
+                    <th className="px-2 py-2 font-medium">Clicks</th>
+                    <th className="px-2 py-2 font-medium">Last visit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.code} className="border-t border-slate-100">
+                      <td className="px-2 py-2">
+                        <a
+                          href={item.shortUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sky-700 underline"
+                        >
+                          {item.shortUrl}
+                        </a>
+                      </td>
+                      <td className="max-w-[420px] truncate px-2 py-2 text-slate-700">
+                        {item.originalUrl}
+                      </td>
+                      <td className="px-2 py-2">{item.clicks}</td>
+                      <td className="px-2 py-2 text-slate-700">
+                        {item.lastVisitedAt
+                          ? new Date(item.lastVisitedAt).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
       </div>
     </main>
   );
