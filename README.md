@@ -23,6 +23,7 @@ url-shortener/
 ```bash
 pnpm install
 cp .env.example .env
+DATABASE_URL="file:$PWD/libs/engine/prisma/database.db" pnpm --filter @url-shortener/engine exec prisma db push
 pnpm dev
 ```
 
