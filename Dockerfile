@@ -1,4 +1,5 @@
 FROM node:20-alpine AS base
+RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 WORKDIR /app
 
@@ -13,6 +14,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=dependencies /app/applications/web/node_modules ./applications/web/node_modules
 COPY . .
+RUN cd libs/engine && pnpm exec prisma generate
 RUN pnpm build
 
 FROM base AS production
@@ -20,11 +22,18 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/applications/web/node_modules ./applications/web/node_modules
 COPY --from=build /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=build /app/applications/web/build ./applications/web/build
+COPY --from=build /app/libs/engine/prisma ./libs/engine/prisma
 COPY libs/engine/src ./libs/engine/src
 COPY applications/web/package.json ./applications/web/
 COPY libs/engine/package.json ./libs/engine/
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
-WORKDIR /app/applications/web
+# Regenerate Prisma client for the production environment
+WORKDIR /app/libs/engine
+RUN pnpm exec prisma generate
+
+WORKDIR /app
 EXPOSE 3000
-CMD ["pnpm", "start"]
+CMD ["./docker-entrypoint.sh"]
