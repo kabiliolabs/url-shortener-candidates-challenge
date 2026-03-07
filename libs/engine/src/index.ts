@@ -12,4 +12,10 @@ export * from './infrastructure/db';
 export * from './infrastructure/PrismaUrlRepository';
 export * from './infrastructure/NanoidGenerator';
 
+// Use Cases
+export * from './use-cases/CreateShortUrlUseCase';
+export * from './use-cases/GetUrlByCodeUseCase';
+export * from './use-cases/IncrementClickUseCase';
+export * from './use-cases/GetRecentUrlsUseCase';
+
 export { baseUrl } from './base-url'

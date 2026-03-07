@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const createUrlSchema = z.object({
-  url: z.string().url('Please enter a valid URL.'),
-});
+  url: z.url('Please enter a valid URL.')
+})
 
 export type CreateUrlDto = z.infer<typeof createUrlSchema>;
 
