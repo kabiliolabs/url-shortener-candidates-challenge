@@ -5,10 +5,12 @@ import { makeCreateShortUrlUseCase, makeGetRecentUrlsUseCase } from '@/lib/di.se
 import { UrlForm } from '@/components/url-form'
 import { RecentUrlsList } from '@/components/recent-urls-list'
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url)
+  const page = parseInt(url.searchParams.get('page') || '1', 10)
+
   const getRecentUrls = makeGetRecentUrlsUseCase()
-  // Show last 5 URLs
-  const recentUrls = await getRecentUrls.execute(5)
+  const recentUrls = await getRecentUrls.execute(Math.max(1, page), 5)
 
   return {
     baseUrl: baseUrl ? baseUrl + '/s/' : '-',
@@ -33,6 +35,10 @@ export async function action({ request }: Route.ActionArgs) {
       error: null
     }
   } catch (error: any) {
+    if (error?.errors && Array.isArray(error.errors) && error.errors.length > 0) {
+      // Handle Zod errors gracefully
+      return { error: error.errors[0].message }
+    }
     return { error: error.message || 'An unexpected error occurred.' }
   }
 }
