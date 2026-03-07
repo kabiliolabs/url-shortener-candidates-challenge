@@ -1,3 +1,12 @@
-export { baseUrl } from "./base-url";
+// DTOs & Validation
+export * from './dtos/UrlDto'
 
-export { shortenedUrls, generateShortCode } from "./shortened-url";
+// Domain
+export * from './domain/entities/Url'
+export * from './domain/value-objects/ShortCode'
+export * from './domain/value-objects/OriginalUrl'
+export * from './domain/repositories/IUrlRepository'
+export * from './domain/services/IShortCodeGenerator'
+export * from './domain/errors/UrlErrors'
+
+export { baseUrl } from './base-url'
