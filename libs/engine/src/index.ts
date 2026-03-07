@@ -7,6 +7,9 @@ export * from './domain/value-objects/ShortCode'
 export * from './domain/value-objects/OriginalUrl'
 export * from './domain/repositories/IUrlRepository'
 export * from './domain/services/IShortCodeGenerator'
-export * from './domain/errors/UrlErrors'
+// Infrastructure
+export * from './infrastructure/db';
+export * from './infrastructure/PrismaUrlRepository';
+export * from './infrastructure/NanoidGenerator';
 
 export { baseUrl } from './base-url'
