@@ -23,7 +23,7 @@ url-shortener/
 ```bash
 pnpm install
 cp .env.example .env
-pnpm dev
+pnpm dev:all
 ```
 
 Open `http://localhost:5173`

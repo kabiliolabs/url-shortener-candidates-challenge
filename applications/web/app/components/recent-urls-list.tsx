@@ -43,8 +43,8 @@ export function RecentUrlsList({ recentUrls, baseUrl }: RecentUrlsListProps) {
   const { data, page, totalPages, total } = recentUrls
 
   return (
-    <div className='w-full max-w-2xl mx-auto space-y-6 mt-16 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both'>
-      <div className='flex items-center justify-between px-1'>
+    <div className='w-full max-w-2xl mx-auto flex flex-col items-center mt-16 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both'>
+      <div className='flex items-center justify-between w-full px-1 mb-6'>
         <div className='flex items-center gap-2'>
           <div className='p-1.5 bg-zinc-800/50 rounded-md border border-zinc-700/50'>
             <MousePointerClick className='w-4 h-4 text-zinc-400' />
@@ -53,12 +53,11 @@ export function RecentUrlsList({ recentUrls, baseUrl }: RecentUrlsListProps) {
         </div>
         <span className='text-sm text-zinc-500 font-medium'>{total} total links</span>
       </div>
-
-      <div className='grid gap-3'>
+      <div className='flex flex-col gap-3 w-full'>
         {data.map((url, i) => (
           <div
             key={url.id}
-            className='group relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-zinc-800 hover:border-zinc-700/80 transition-all duration-300'
+            className='group relative flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-zinc-900/40 w-full border border-zinc-800 hover:bg-zinc-800/60 hover:border-zinc-700/80 transition-all duration-300'
             style={{ animationDelay: `${200 + i * 100}ms` }}
           >
             <div className='absolute inset-0 bg-linear-to-r from-emerald-500/0 via-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-transparent rounded-2xl transition-all duration-500 pointer-events-none' />
@@ -126,7 +125,7 @@ export function RecentUrlsList({ recentUrls, baseUrl }: RecentUrlsListProps) {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className='flex items-center justify-between pt-4'>
+        <div className='flex items-center justify-center gap-6 pt-4'>
           <button
             onClick={() => navigate(`/?page=${page - 1}`)}
             disabled={page <= 1}
