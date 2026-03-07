@@ -9,6 +9,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ui": ["./applications/web/app/components/ui/*"],
+      "@engine": ["./libs/engine/src"]
+    }
   }
 }
