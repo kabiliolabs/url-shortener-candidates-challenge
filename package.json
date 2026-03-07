@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up -d",
+    "docker:stop": "docker compose -f docker-compose.dev.yml down",
+    "db:setup": "pnpm --filter @url-shortener/engine db:push",
+    "db:studio": "pnpm --filter @url-shortener/engine db:studio",
+    "db:generate": "pnpm --filter @url-shortener/engine db:generate",
+    "dev:all": "pnpm docker:dev && pnpm db:setup && pnpm dev"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
