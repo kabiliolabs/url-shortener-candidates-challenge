@@ -1,10 +1,7 @@
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { baseUrl } from "@url-shortener/engine";
+import { shortenUrl } from "~/server/container";
 
 export function loader() {
   return {
@@ -20,13 +17,12 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: "URL is required" };
   }
 
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+  try {
+    const result = await shortenUrl.execute(url);
+    return { shortenedUrl: `${baseUrl}/s/${result.shortCode.value}` };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Failed to shorten URL" };
+  }
 }
 
 export function meta({}: Route.MetaArgs) {
