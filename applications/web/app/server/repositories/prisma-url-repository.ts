@@ -1,5 +1,5 @@
 import { ShortCode, LongUrl, ShortenedUrl } from "@url-shortener/engine";
-import type { IUrlRepository } from "@url-shortener/engine";
+import type { IUrlRepository, UrlSummary } from "@url-shortener/engine";
 import { prisma } from "../prisma";
 
 export class PrismaUrlRepository implements IUrlRepository {
@@ -22,5 +22,24 @@ export class PrismaUrlRepository implements IUrlRepository {
   async existsByCode(code: ShortCode): Promise<boolean> {
     const count = await prisma.shortenedUrl.count({ where: { code: code.value } });
     return count > 0;
+  }
+
+  async findAll(): Promise<UrlSummary[]> {
+    const records = await prisma.shortenedUrl.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return records.map((r) => ({
+      code: r.code,
+      url: r.url,
+      clicks: r.clicks,
+      createdAt: r.createdAt,
+    }));
+  }
+
+  async incrementClicks(code: ShortCode): Promise<void> {
+    await prisma.shortenedUrl.update({
+      where: { code: code.value },
+      data: { clicks: { increment: 1 } },
+    });
   }
 }

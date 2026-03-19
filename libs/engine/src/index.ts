@@ -2,7 +2,7 @@
 export { ShortCode } from "./domain/value-objects/short-code";
 export { LongUrl } from "./domain/value-objects/long-url";
 export { ShortenedUrl } from "./domain/entities/shortened-url";
-export type { IUrlRepository } from "./domain/repositories/url-repository";
+export type { IUrlRepository, UrlSummary } from "./domain/repositories/url-repository";
 export type { IShortCodeGenerator } from "./domain/services/short-code-generator";
 
 // Application

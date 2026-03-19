@@ -1,11 +1,13 @@
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
 import { baseUrl } from "@url-shortener/engine";
-import { shortenUrl } from "~/server/container";
+import { shortenUrl, listUrls } from "~/server/container";
 
-export function loader() {
+export async function loader() {
+  const urls = await listUrls();
   return {
     baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    urls,
   };
 }
 
@@ -33,11 +35,11 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
+  const { baseUrl, urls } = loaderData;
   const actionData = useActionData<typeof action>();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
+    <main className="min-h-screen flex flex-col items-center justify-start py-12 bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
       <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
         <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
           ~*~ URL Shortener ~*~
@@ -86,6 +88,44 @@ export default function Index({ loaderData }: Route.ComponentProps) {
             <p className="text-2xl text-blue-800 font-black">
               {actionData.error}
             </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8 bg-orange-100 p-8 border-8 border-dashed border-teal-500 w-full max-w-lg -rotate-1 shadow-xl shadow-purple-500">
+        <h2 className="text-2xl font-mono font-black text-center mb-6 text-purple-700 uppercase tracking-widest underline decoration-wavy decoration-pink-500">
+          ≋ All URLs ≋
+        </h2>
+
+        {urls.length === 0 ? (
+          <p className="text-center text-indigo-600 font-bold font-mono bg-yellow-200 p-4 border-4 border-dotted border-red-400">
+            No URLs shortened yet! Be the first~
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {urls.map((entry) => (
+              <div
+                key={entry.code}
+                className="bg-cyan-200 border-4 border-solid border-fuchsia-500 p-3 flex items-center justify-between gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <a
+                    href={`${baseUrl.replace(/\/s\/$/, "")}/s/${entry.code}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-sm font-black text-red-600 hover:text-purple-700 block"
+                  >
+                    {entry.code}
+                  </a>
+                  <span className="text-xs text-indigo-700 truncate block font-mono">
+                    {entry.url}
+                  </span>
+                </div>
+                <span className="shrink-0 bg-red-500 text-yellow-200 font-black font-mono text-sm px-2 py-1 border-2 border-solid border-yellow-300">
+                  {entry.clicks} clicks
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>
