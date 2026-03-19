@@ -74,14 +74,3 @@ infrastructure/
 - `DATABASE_URL` paths are relative to `applications/web/` (the process working directory); Docker uses an absolute path
 
 The engine is consumed as a workspace package (`@url-shortener/engine`) with Vite configured to not externalize it during SSR (`ssr.noExternal`).
-
-## Challenge context
-
-This is a deliberate refactoring exercise (see `CHALLENGE_DESCRIPTION.md`). Outstanding items from the requirements not yet implemented:
-
-- Persistent database (Prisma suggested) — current store is in-memory and resets on restart
-- Click statistics tracking
-- URL listing view
-- Rate limiting / abuse prevention
-- Reusable UI component library (Radix/shadcn suggested)
-- Fill in `CHALLENGE_SUBMISSION.md` before submitting
