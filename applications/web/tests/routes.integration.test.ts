@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createInMemoryRepository } from "./helpers/in-memory-repository";
+
+const repository = createInMemoryRepository();
+
+vi.mock("~/infrastructure/prisma-shortened-url.repository.server", () => ({
+  shortenedUrlRepository: repository,
+  createPrismaRepository: () => repository,
+}));
 
 async function resetWithPublicUrl(url: string) {
   vi.resetModules();
   process.env.PUBLIC_URL = url;
-  const { shortenedUrls } = await import("@url-shortener/engine");
-  shortenedUrls.clear();
+
+  repository.records.clear();
 }
 
 describe("index route handlers", () => {
@@ -42,7 +50,6 @@ describe("index route handlers", () => {
 
   it("action stores url and returns shortenedUrl matching current code shape", async () => {
     const { action } = await import("../app/routes/_index");
-    const { shortenedUrls } = await import("@url-shortener/engine");
     const longUrl = "https://example.com/page";
     const formData = new FormData();
     formData.set("url", longUrl);
@@ -65,7 +72,8 @@ describe("index route handlers", () => {
       /^http:\/\/test\.example\/s\/[abc]{2}$/,
     );
     const code = shortenedUrl.split("/").pop()!;
-    expect(shortenedUrls.get(code)).toBe(longUrl);
+    const stored = await repository.findByCode(code);
+    expect(stored?.originalUrl).toBe(longUrl);
   });
 });
 
@@ -73,8 +81,7 @@ describe("index route loader without PUBLIC_URL", () => {
   beforeEach(async () => {
     vi.resetModules();
     delete process.env.PUBLIC_URL;
-    const { shortenedUrls } = await import("@url-shortener/engine");
-    shortenedUrls.clear();
+    repository.records.clear();
   });
 
   it("loader returns '-' for baseUrl", async () => {
@@ -89,10 +96,12 @@ describe("short code redirect route", () => {
   });
 
   it("redirects when code exists", async () => {
-    const { shortenedUrls } = await import("@url-shortener/engine");
-    shortenedUrls.set("aa", "https://example.com");
+    await repository.create({
+      code: "aa",
+      originalUrl: "https://example.com",
+    });
     const { loader } = await import("../app/routes/s.$code");
-    const response = loader({
+    const response = await loader({
       request: new Request("http://test.example/s/aa"),
       params: { code: "aa" },
     } as Parameters<typeof loader>[0]);
@@ -108,7 +117,7 @@ describe("short code redirect route", () => {
       params: { code: "nope" },
     } as Parameters<typeof loader>[0];
     try {
-      loader(args);
+      await loader(args);
       expect.fail("expected loader to throw");
     } catch (e) {
       expect(e).toBeInstanceOf(Response);
@@ -116,5 +125,20 @@ describe("short code redirect route", () => {
       expect(res.status).toBe(404);
       expect(await res.text()).toBe("Not Found");
     }
+  });
+
+  it("increments click count on redirect", async () => {
+    await repository.create({
+      code: "bb",
+      originalUrl: "https://example.com/clicked",
+    });
+    const { loader } = await import("../app/routes/s.$code");
+    await loader({
+      request: new Request("http://test.example/s/bb"),
+      params: { code: "bb" },
+    } as Parameters<typeof loader>[0]);
+
+    const record = await repository.findByCode("bb");
+    expect(record?.clicks).toBe(1);
   });
 });

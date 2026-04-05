@@ -1,25 +1,21 @@
-import {
-  baseUrl,
-  generateShortCode,
-  shortenedUrls,
-} from "@url-shortener/engine";
-
-type ShortenedUrlStore = Pick<Map<string, string>, "get" | "set">;
-
-type ShortenUrlDependencies = {
-  currentBaseUrl: string | undefined;
-  createCode: () => string;
-  store: ShortenedUrlStore;
-};
+import { baseUrl, generateShortCode } from "@url-shortener/engine";
+import type { ShortenedUrlRepository } from "~/domain/repositories/shortened-url.repository";
+import { shortenedUrlRepository } from "~/infrastructure/prisma-shortened-url.repository.server";
 
 export type ShortenUrlActionResult =
   | { error: string }
   | { shortenedUrl: string };
 
+type ShortenUrlDependencies = {
+  currentBaseUrl: string | undefined;
+  createCode: () => string;
+  repository: ShortenedUrlRepository;
+};
+
 const defaultDependencies: ShortenUrlDependencies = {
   currentBaseUrl: baseUrl,
   createCode: generateShortCode,
-  store: shortenedUrls,
+  repository: shortenedUrlRepository,
 };
 
 export function buildShortenedUrlPrefix(
@@ -34,13 +30,13 @@ export function getSubmittedUrl(formData: FormData): string | null {
   return typeof url === "string" && url ? url : null;
 }
 
-export function createShortenedUrl(
+export async function createShortenedUrl(
   url: string,
-  { currentBaseUrl, createCode, store }: ShortenUrlDependencies,
-): { shortenedUrl: string } {
+  { currentBaseUrl, createCode, repository }: ShortenUrlDependencies,
+): Promise<{ shortenedUrl: string }> {
   const shortCode = createCode();
 
-  store.set(shortCode, url);
+  await repository.create({ code: shortCode, originalUrl: url });
 
   return {
     shortenedUrl: `${currentBaseUrl}/s/${shortCode}`,
@@ -61,13 +57,21 @@ export async function handleShortenUrlAction(
   return createShortenedUrl(url, dependencies);
 }
 
-export function findShortenedUrl(
+export async function findShortenedUrl(
   code: string | undefined,
-  store: Pick<Map<string, string>, "get"> = shortenedUrls,
-): string | null {
+  repository: ShortenedUrlRepository = shortenedUrlRepository,
+): Promise<string | null> {
   if (!code) {
     return null;
   }
 
-  return store.get(code) ?? null;
+  const record = await repository.findByCode(code);
+  return record?.originalUrl ?? null;
+}
+
+export async function recordClick(
+  code: string,
+  repository: ShortenedUrlRepository = shortenedUrlRepository,
+): Promise<void> {
+  await repository.incrementClicks(code);
 }

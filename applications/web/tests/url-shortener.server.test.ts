@@ -7,6 +7,7 @@ import {
   getSubmittedUrl,
   handleShortenUrlAction,
 } from "../app/domain/url-shortener.server";
+import { createInMemoryRepository } from "./helpers/in-memory-repository";
 
 describe("url shortener server utilities", () => {
   it("builds the shortened URL prefix when a base URL exists", () => {
@@ -30,23 +31,26 @@ describe("url shortener server utilities", () => {
     expect(getSubmittedUrl(new FormData())).toBeNull();
   });
 
-  it("stores the URL and builds a shortened URL", () => {
-    const set = vi.fn();
+  it("stores the URL and builds a shortened URL", async () => {
+    const repository = createInMemoryRepository();
 
-    const result = createShortenedUrl("https://example.com/page", {
+    const result = await createShortenedUrl("https://example.com/page", {
       currentBaseUrl: "http://test.example",
       createCode: () => "aa",
-      store: { get: vi.fn(), set },
+      repository,
     });
 
-    expect(set).toHaveBeenCalledWith("aa", "https://example.com/page");
     expect(result).toEqual({
       shortenedUrl: "http://test.example/s/aa",
     });
+
+    const stored = await repository.findByCode("aa");
+    expect(stored?.originalUrl).toBe("https://example.com/page");
   });
 
   it("returns a validation error before generating a code", async () => {
     const createCode = vi.fn(() => "aa");
+    const repository = createInMemoryRepository();
     const request = new Request("http://test.example/", {
       method: "POST",
       body: new FormData(),
@@ -55,23 +59,33 @@ describe("url shortener server utilities", () => {
     const result = await handleShortenUrlAction(request, {
       currentBaseUrl: "http://test.example",
       createCode,
-      store: { get: vi.fn(), set: vi.fn() },
+      repository,
     });
 
     expect(result).toEqual({ error: "URL is required" });
     expect(createCode).not.toHaveBeenCalled();
   });
 
-  it("finds a stored shortened URL by code", () => {
-    const store = new Map([["aa", "https://example.com/page"]]);
+  it("finds a stored shortened URL by code", async () => {
+    const repository = createInMemoryRepository();
+    await repository.create({
+      code: "aa",
+      originalUrl: "https://example.com/page",
+    });
 
-    expect(findShortenedUrl("aa", store)).toBe("https://example.com/page");
+    expect(await findShortenedUrl("aa", repository)).toBe(
+      "https://example.com/page",
+    );
   });
 
-  it("returns null when a code is missing or unknown", () => {
-    const store = new Map([["aa", "https://example.com/page"]]);
+  it("returns null when a code is missing or unknown", async () => {
+    const repository = createInMemoryRepository();
+    await repository.create({
+      code: "aa",
+      originalUrl: "https://example.com/page",
+    });
 
-    expect(findShortenedUrl(undefined, store)).toBeNull();
-    expect(findShortenedUrl("bb", store)).toBeNull();
+    expect(await findShortenedUrl(undefined, repository)).toBeNull();
+    expect(await findShortenedUrl("bb", repository)).toBeNull();
   });
 });
