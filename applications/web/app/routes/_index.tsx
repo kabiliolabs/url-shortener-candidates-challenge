@@ -1,6 +1,8 @@
-import { Form, useActionData } from "react-router";
+import { useActionData } from "react-router";
 import type { Route } from "./+types/_index";
 import { baseUrl } from "@url-shortener/engine";
+import { ShortenFormCard } from "~/components/layout/shorten-form-card";
+import { ShortenOutcomePanels } from "~/components/layout/shorten-outcome-panels";
 import {
   buildShortenedUrlPrefix,
   handleShortenUrlAction,
@@ -24,7 +26,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
+  const { baseUrl: baseUrlPrefix } = loaderData;
   const actionData = useActionData<typeof action>();
   const shortenedUrl =
     actionData && "shortenedUrl" in actionData ? actionData.shortenedUrl : null;
@@ -32,57 +34,25 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     actionData && "error" in actionData ? actionData.error : null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <main className="flex min-h-screen flex-col">
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-14 sm:px-6 lg:py-20">
+        <header className="mb-10 space-y-4 text-center">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            Shorten any link
+          </h1>
+          <p className="mx-auto max-w-md text-pretty text-muted-foreground">
+            Turn long URLs into compact links. Perfect for messages, docs, and
+            social posts.
+          </p>
+        </header>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
+        <div className="space-y-8">
+          <ShortenFormCard baseUrl={baseUrlPrefix} />
+          <ShortenOutcomePanels
+            shortenedUrl={shortenedUrl}
+            errorMessage={errorMessage}
           />
-
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
-
-        {shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {shortenedUrl}
-            </a>
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {errorMessage}
-            </p>
-          </div>
-        )}
+        </div>
       </div>
     </main>
   );
