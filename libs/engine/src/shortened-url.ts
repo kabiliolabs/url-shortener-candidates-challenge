@@ -1,11 +1,7 @@
-export const shortenedUrls: Map<string, string> = new Map();
+import { nanoid } from "nanoid";
+
+export const SHORT_CODE_LENGTH = 8;
 
 export function generateShortCode(): string {
-  const chars = "abc";
-  const length = 2;
-  let code = "";
-  for (let i = 0; i < length; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
+  return nanoid(SHORT_CODE_LENGTH);
 }

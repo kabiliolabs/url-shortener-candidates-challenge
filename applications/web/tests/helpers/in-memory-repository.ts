@@ -2,6 +2,7 @@ import type {
   CreateShortenedUrlInput,
   ShortenedUrl,
 } from "../../app/domain/models/shortened-url";
+import { DuplicateCodeError } from "../../app/domain/errors/duplicate-code.error";
 import type { ShortenedUrlRepository } from "../../app/domain/repositories/shortened-url.repository";
 
 export function createInMemoryRepository(): ShortenedUrlRepository & {
@@ -14,7 +15,7 @@ export function createInMemoryRepository(): ShortenedUrlRepository & {
 
     async create(input: CreateShortenedUrlInput): Promise<ShortenedUrl> {
       if (records.has(input.code)) {
-        throw new Error(`Duplicate code: ${input.code}`);
+        throw new DuplicateCodeError(input.code);
       }
 
       const record: ShortenedUrl = {
