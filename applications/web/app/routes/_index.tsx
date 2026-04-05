@@ -1,4 +1,4 @@
-import { useActionData } from "react-router";
+import { Link, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
 import { baseUrl } from "@url-shortener/engine";
 import { ShortenFormCard } from "~/components/layout/shorten-form-card";
@@ -53,6 +53,16 @@ export default function Index({ loaderData }: Route.ComponentProps) {
             errorMessage={errorMessage}
           />
         </div>
+
+        <p className="mt-10 text-center text-sm text-muted-foreground">
+          <Link
+            to="/stats"
+            reloadDocument
+            className="font-medium text-foreground underline-offset-4 hover:underline transition-colors"
+          >
+            View click statistics →
+          </Link>
+        </p>
       </div>
     </main>
   );
