@@ -1,32 +1,19 @@
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
+import { baseUrl } from "@url-shortener/engine";
 import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+  buildShortenedUrlPrefix,
+  handleShortenUrlAction,
+} from "~/domain/url-shortener.server";
 
 export function loader() {
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl: buildShortenedUrlPrefix(baseUrl),
   };
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
-
-  if (!url) {
-    return { error: "URL is required" };
-  }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+  return handleShortenUrlAction(request);
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -39,6 +26,10 @@ export function meta({}: Route.MetaArgs) {
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { baseUrl } = loaderData;
   const actionData = useActionData<typeof action>();
+  const shortenedUrl =
+    actionData && "shortenedUrl" in actionData ? actionData.shortenedUrl : null;
+  const errorMessage =
+    actionData && "error" in actionData ? actionData.error : null;
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
@@ -69,26 +60,26 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           </div>
         </Form>
 
-        {actionData?.shortenedUrl && (
+        {shortenedUrl && (
           <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
             <p className="text-lg text-lime-300 mb-2 font-black uppercase">
               Your shortened URL:
             </p>
             <a
-              href={actionData.shortenedUrl}
+              href={shortenedUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
             >
-              {actionData.shortenedUrl}
+              {shortenedUrl}
             </a>
           </div>
         )}
 
-        {actionData?.error && (
+        {errorMessage && (
           <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
             <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
+              {errorMessage}
             </p>
           </div>
         )}
