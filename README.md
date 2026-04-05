@@ -23,6 +23,9 @@ url-shortener/
 ```bash
 pnpm install
 cp .env.example .env
+docker compose up -d postgres
+pnpm --filter @url-shortener/engine prisma:generate
+pnpm --filter @url-shortener/engine prisma:migrate:dev
 pnpm dev
 ```
 

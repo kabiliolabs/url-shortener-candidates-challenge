@@ -1,5 +1,6 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -8,6 +9,16 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { buttonVariants } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { cn } from "~/lib/utils";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -32,7 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="min-h-screen">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -62,14 +73,28 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="flex min-h-screen flex-col items-center justify-center p-6">
+      <Card className="w-full max-w-lg shadow-lg ring-1 ring-foreground/10">
+        <CardHeader>
+          <CardTitle className="text-2xl tracking-tight">{message}</CardTitle>
+          <CardDescription className="text-base">{details}</CardDescription>
+        </CardHeader>
+        {stack && (
+          <CardContent>
+            <pre className="max-h-64 overflow-x-auto overflow-y-auto rounded-md border bg-muted/50 p-4 text-xs leading-relaxed">
+              <code>{stack}</code>
+            </pre>
+          </CardContent>
+        )}
+        <CardFooter className="border-t pt-6">
+          <Link
+            to="/"
+            className={cn(buttonVariants({ variant: "default" }))}
+          >
+            Back home
+          </Link>
+        </CardFooter>
+      </Card>
     </main>
   );
 }

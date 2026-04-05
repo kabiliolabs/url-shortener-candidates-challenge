@@ -1,3 +1,24 @@
-export { baseUrl } from "./base-url";
+export {
+  MAX_CODE_GENERATION_ATTEMPTS,
+  buildShortenedUrlPrefix,
+  createShortenedUrl,
+  findShortenedUrl,
+  getStatsViewData,
+  recordClick,
+} from "./application";
 
-export { shortenedUrls, generateShortCode } from "./shortened-url";
+export type {
+  CreateShortenedUrlDependencies,
+  ShortenedUrlRepository,
+  StatsViewData,
+} from "./application";
+
+export {
+  CodeGenerationExhaustedError,
+  DuplicateCodeError,
+  isCodeGenerationExhaustedError,
+  isDuplicateCodeError,
+} from "./domain";
+
+export type { CreateShortenedUrlInput, ShortenedUrl } from "./domain";
+export { SHORT_CODE_LENGTH, generateShortCode } from "./shortened-url";
