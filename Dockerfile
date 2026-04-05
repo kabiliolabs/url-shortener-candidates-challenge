@@ -13,7 +13,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=dependencies /app/applications/web/node_modules ./applications/web/node_modules
 COPY . .
-RUN pnpm --filter web exec prisma generate
+RUN pnpm --filter @url-shortener/engine prisma:generate
 RUN pnpm build
 
 FROM base AS production
@@ -21,13 +21,14 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/applications/web/node_modules ./applications/web/node_modules
 COPY --from=build /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=build /app/applications/web/build ./applications/web/build
-COPY --from=build /app/applications/web/prisma ./applications/web/prisma
-COPY --from=build /app/applications/web/prisma.config.ts ./applications/web/prisma.config.ts
+COPY --from=build /app/libs/engine/generated/prisma ./libs/engine/generated/prisma
+COPY --from=build /app/libs/engine/prisma ./libs/engine/prisma
+COPY --from=build /app/libs/engine/prisma.config.ts ./libs/engine/prisma.config.ts
 COPY libs/engine/src ./libs/engine/src
 COPY applications/web/package.json ./applications/web/
 COPY libs/engine/package.json ./libs/engine/
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
-WORKDIR /app/applications/web
+WORKDIR /app
 EXPOSE 3000
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && pnpm start"]
+CMD ["sh", "-c", "pnpm --filter @url-shortener/engine prisma:migrate:deploy && pnpm --filter web start"]
