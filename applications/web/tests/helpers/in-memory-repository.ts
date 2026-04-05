@@ -1,9 +1,9 @@
 import type {
   CreateShortenedUrlInput,
   ShortenedUrl,
-} from "../../app/domain/models/shortened-url";
-import { DuplicateCodeError } from "../../app/domain/errors/duplicate-code.error";
-import type { ShortenedUrlRepository } from "../../app/domain/repositories/shortened-url.repository";
+  ShortenedUrlRepository,
+} from "@url-shortener/engine";
+import { DuplicateCodeError } from "@url-shortener/engine";
 
 export function createInMemoryRepository(): ShortenedUrlRepository & {
   records: Map<string, ShortenedUrl>;

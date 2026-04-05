@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   MAX_CODE_GENERATION_ATTEMPTS,
   createShortenedUrl,
-} from "../app/domain/url-shortener.server";
+} from "../src";
 import { createInMemoryRepository } from "./helpers/in-memory-repository";
 
 describe("collision handling in createShortenedUrl", () => {

@@ -3,7 +3,7 @@ import { createInMemoryRepository } from "./helpers/in-memory-repository";
 
 const repository = createInMemoryRepository();
 
-vi.mock("~/infrastructure/prisma-shortened-url.repository.server", () => ({
+vi.mock("@url-shortener/engine/server", () => ({
   shortenedUrlRepository: repository,
   createPrismaRepository: () => repository,
 }));

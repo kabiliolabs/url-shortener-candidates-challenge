@@ -1,11 +1,11 @@
+import { Prisma } from "../../generated/prisma/client.js";
+import type { ShortenedUrlRepository } from "../application/repositories/shortened-url-repository";
+import { DuplicateCodeError } from "../domain/errors/duplicate-code-error";
 import type {
   CreateShortenedUrlInput,
   ShortenedUrl,
-} from "~/domain/models/shortened-url";
-import type { ShortenedUrlRepository } from "~/domain/repositories/shortened-url.repository";
-import { DuplicateCodeError } from "~/domain/errors/duplicate-code.error";
-import { Prisma } from "../../generated/prisma/client.js";
-import { prisma } from "./db.server";
+} from "../domain/models/shortened-url";
+import { prisma } from "./db";
 
 function isCodeUniqueConstraintError(
   error: unknown,

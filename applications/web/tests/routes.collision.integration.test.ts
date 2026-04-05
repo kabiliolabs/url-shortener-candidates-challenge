@@ -15,7 +15,7 @@ vi.mock("@url-shortener/engine", async () => {
   };
 });
 
-vi.mock("~/infrastructure/prisma-shortened-url.repository.server", () => ({
+vi.mock("@url-shortener/engine/server", () => ({
   shortenedUrlRepository: repository,
   createPrismaRepository: () => repository,
 }));

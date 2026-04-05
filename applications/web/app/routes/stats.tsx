@@ -1,31 +1,18 @@
 import { Link, useLoaderData } from "react-router";
-import type { Route } from "./+types/stats";
+import type { Route } from "./+types/Stats";
 
-import { baseUrl } from "@url-shortener/engine";
+import { type StatsViewData } from "@url-shortener/engine";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
-import {
-  getStatsViewData,
-  type StatsViewData,
-} from "~/domain/shortened-url-stats.server";
-import { StatsSummaryCards } from "~/components/layout/stats-summary-cards";
-import { StatsTopLinks } from "~/components/layout/stats-top-links";
-import { StatsLinksTable } from "~/components/layout/stats-links-table";
+import { StatsSummaryCards } from "~/components/layout/StatsSummaryCards";
+import { StatsTopLinks } from "~/components/layout/StatsTopLinks";
+import { StatsLinksTable } from "~/components/layout/StatsLinksTable";
+import { loadStatsViewData } from "~/server/load-stats-data";
 
-const emptyStats: StatsViewData = {
-  totalLinks: 0,
-  totalClicks: 0,
-  topLinks: [],
-  allLinks: [],
-};
+type StatsLoaderData = StatsViewData & { baseUrl: string };
 
-export async function loader(): Promise<StatsViewData> {
-  try {
-    return await getStatsViewData();
-  } catch (error) {
-    const loadError =
-      error instanceof Error ? error.message : "Failed to load statistics.";
-    return { ...emptyStats, loadError };
-  }
+export async function loader(): Promise<StatsLoaderData> {
+  const stats = await loadStatsViewData();
+  return { ...stats, baseUrl: process.env.PUBLIC_URL ?? "" };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -36,7 +23,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function StatsPage() {
-  const { totalLinks, totalClicks, topLinks, allLinks, loadError } =
+  const { totalLinks, totalClicks, topLinks, allLinks, loadError, baseUrl } =
     useLoaderData<typeof loader>();
 
   return (
@@ -93,7 +80,7 @@ export default function StatsPage() {
           <div className="space-y-6">
             <StatsSummaryCards totalLinks={totalLinks} totalClicks={totalClicks} />
             <StatsTopLinks topLinks={topLinks} />
-            <StatsLinksTable links={allLinks} baseUrl={baseUrl ?? ""} />
+            <StatsLinksTable links={allLinks} baseUrl={baseUrl} />
           </div>
         ) : null}
       </div>

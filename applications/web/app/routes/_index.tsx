@@ -1,16 +1,15 @@
 import { Link, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import { baseUrl } from "@url-shortener/engine";
-import { ShortenFormCard } from "~/components/layout/shorten-form-card";
-import { ShortenOutcomePanels } from "~/components/layout/shorten-outcome-panels";
+import { ShortenFormCard } from "~/components/layout/ShortenFormCard";
+import { ShortenOutcomePanels } from "~/components/layout/ShortenOutcomePanels";
 import {
-  buildShortenedUrlPrefix,
+  getShortenedUrlPrefixFromEnv,
   handleShortenUrlAction,
-} from "~/domain/url-shortener.server";
+} from "~/server/http-shorten-url";
 
 export function loader() {
   return {
-    baseUrl: buildShortenedUrlPrefix(baseUrl),
+    baseUrl: getShortenedUrlPrefixFromEnv(),
   };
 }
 

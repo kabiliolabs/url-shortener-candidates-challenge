@@ -4,7 +4,7 @@ import { buildShortCodePattern } from "./helpers/short-code-pattern";
 
 const repository = createInMemoryRepository();
 
-vi.mock("~/infrastructure/prisma-shortened-url.repository.server", () => ({
+vi.mock("@url-shortener/engine/server", () => ({
   shortenedUrlRepository: repository,
   createPrismaRepository: () => repository,
 }));

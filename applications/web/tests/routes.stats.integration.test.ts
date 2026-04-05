@@ -3,7 +3,7 @@ import { createInMemoryRepository } from "./helpers/in-memory-repository";
 
 const repository = createInMemoryRepository();
 
-vi.mock("~/infrastructure/prisma-shortened-url.repository.server", () => ({
+vi.mock("@url-shortener/engine/server", () => ({
   shortenedUrlRepository: repository,
   createPrismaRepository: () => repository,
 }));
@@ -18,7 +18,7 @@ describe("stats route loader", () => {
   beforeEach(reset);
 
   it("returns empty state when no links exist", async () => {
-    const { loader } = await import("../app/routes/stats");
+    const { loader } = await import("../app/routes/Stats");
     const result = await loader();
 
     expect(result).toMatchObject({
@@ -36,7 +36,7 @@ describe("stats route loader", () => {
     await repository.incrementClicks("aa");
     await repository.incrementClicks("bb");
 
-    const { loader } = await import("../app/routes/stats");
+    const { loader } = await import("../app/routes/Stats");
     const result = await loader();
 
     expect(result.totalLinks).toBe(2);
@@ -60,7 +60,7 @@ describe("stats route loader", () => {
       createdAt: new Date(now + 1000),
     });
 
-    const { loader } = await import("../app/routes/stats");
+    const { loader } = await import("../app/routes/Stats");
     const { allLinks } = await loader();
 
     expect(allLinks[0].code).toBe("dd");
@@ -77,7 +77,7 @@ describe("stats route loader", () => {
     await repository.incrementClicks("gg");
     await repository.incrementClicks("ee");
 
-    const { loader } = await import("../app/routes/stats");
+    const { loader } = await import("../app/routes/Stats");
     const { topLinks } = await loader();
 
     expect(topLinks[0].code).toBe("gg");
@@ -94,7 +94,7 @@ describe("stats route loader", () => {
       }
     }
 
-    const { loader } = await import("../app/routes/stats");
+    const { loader } = await import("../app/routes/Stats");
     const { topLinks } = await loader();
 
     expect(topLinks).toHaveLength(5);
@@ -108,9 +108,7 @@ describe("stats view data – getStatsViewData", () => {
     await repository.create({ code: "zz", originalUrl: "https://z.example" });
     await repository.incrementClicks("zz");
 
-    const { getStatsViewData } = await import(
-      "../app/domain/shortened-url-stats.server"
-    );
+    const { getStatsViewData } = await import("@url-shortener/engine");
     await getStatsViewData(repository);
     await getStatsViewData(repository);
 

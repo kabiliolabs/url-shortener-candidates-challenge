@@ -1,7 +1,7 @@
 import type {
   CreateShortenedUrlInput,
   ShortenedUrl,
-} from "~/domain/models/shortened-url";
+} from "../../domain/models/shortened-url";
 
 export interface ShortenedUrlRepository {
   create(input: CreateShortenedUrlInput): Promise<ShortenedUrl>;

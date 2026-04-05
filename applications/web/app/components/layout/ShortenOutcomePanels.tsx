@@ -1,7 +1,7 @@
 import { Link2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
-import { CopyShortUrlButton } from "~/components/layout/copy-short-url-button";
+import { CopyShortUrlButton } from "~/components/layout/CopyShortUrlButton";
 import { cn } from "~/lib/utils";
 
 type ShortenOutcomePanelsProps = {

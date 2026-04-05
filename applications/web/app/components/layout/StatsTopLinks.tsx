@@ -1,6 +1,6 @@
 import { Trophy } from "lucide-react";
 
-import type { ShortenedUrl } from "~/domain/models/shortened-url";
+import type { ShortenedUrl } from "@url-shortener/engine";
 import { Badge } from "~/components/ui/badge";
 import {
   Card,

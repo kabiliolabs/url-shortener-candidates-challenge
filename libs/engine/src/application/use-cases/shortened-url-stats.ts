@@ -1,5 +1,4 @@
-import type { ShortenedUrlRepository } from "~/domain/repositories/shortened-url.repository";
-import { shortenedUrlRepository } from "~/infrastructure/prisma-shortened-url.repository.server";
+import type { ShortenedUrlRepository } from "../repositories/shortened-url-repository";
 
 export type StatsViewData = {
   totalLinks: number;
@@ -12,10 +11,9 @@ export type StatsViewData = {
 const TOP_LINKS_LIMIT = 5;
 
 export async function getStatsViewData(
-  repository: ShortenedUrlRepository = shortenedUrlRepository,
+  repository: ShortenedUrlRepository,
 ): Promise<StatsViewData> {
   const allLinks = await repository.list();
-
   const totalLinks = allLinks.length;
   const totalClicks = allLinks.reduce((sum, link) => sum + link.clicks, 0);
 
