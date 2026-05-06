@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../../generated/client/index.js"
+import type { PrismaClient } from "../../generated/client/client.js"
 import type { LinkRecord, LinkRepository } from "../core/repository.js"
 import { RepositoryConflictError } from "../core/repository.js"
 

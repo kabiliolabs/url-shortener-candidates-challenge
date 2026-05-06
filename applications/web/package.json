@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && react-router build",
     "clean": "rm -rf build .react-router .turbo",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
