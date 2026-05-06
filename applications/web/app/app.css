@@ -1,15 +1,71 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-family-sans: 'Lexend', system-ui, sans-serif;
+  --color-surface: #f8fafc;
 }
 
-html,
-body {
-  @apply bg-white dark:bg-gray-950;
+/* ------------------------------------------------------------------ */
+/* Identity: wavy yellow underline on title                            */
+/* ------------------------------------------------------------------ */
+.wavy-underline {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.15em;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+.wavy-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 100%;
+  height: 10px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 4'%3E%3Cpath d='M0 3.5c5 0 5-3 10-3s5 3 10 3 5-3 10-3' fill='none' stroke='%23eab308' stroke-width='2'/%3E%3C/svg%3E")
+    repeat-x;
+  background-size: 20px 10px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Pink CTA button                                                      */
+/* ------------------------------------------------------------------ */
+.btn-pink {
+  background-color: #ff4d94;
+  color: white;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 4px 0 #d6337a;
+}
+
+.btn-pink:hover:not(:disabled) {
+  background-color: #ff66a3;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 #d6337a;
+}
+
+.btn-pink:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #d6337a;
+}
+
+/* ------------------------------------------------------------------ */
+/* Utility animations                                                   */
+/* ------------------------------------------------------------------ */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.35s ease-out both;
+}
+
+/* ------------------------------------------------------------------ */
+/* Spin animation for loading state                                     */
+/* ------------------------------------------------------------------ */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 0.8s linear infinite;
 }
