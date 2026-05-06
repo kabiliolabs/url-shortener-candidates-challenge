@@ -6,8 +6,17 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router"
+import { Provider as JotaiProvider } from "jotai"
 import type { Route } from "./+types/root"
 import "./app.css"
+
+/** Runs before React hydrates — reads localStorage and sets .dark on <html>
+ *  to avoid a flash of the wrong colour scheme. */
+function ThemeScript() {
+  const script = `(function(){try{var t=localStorage.getItem('theme');var dark=(t==='dark')||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',dark);}catch(e){}})();`
+  // eslint-disable-next-line react/no-danger
+  return <script dangerouslySetInnerHTML={{ __html: script }} />
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -28,11 +37,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <ThemeScript />
         <Meta />
         <Links />
       </head>
-      <body>
-        {children}
+      <body className="bg-[#f8fafc] dark:bg-slate-900 transition-colors duration-200">
+        <JotaiProvider>
+          {children}
+        </JotaiProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

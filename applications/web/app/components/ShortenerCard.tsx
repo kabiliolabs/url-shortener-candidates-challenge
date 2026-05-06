@@ -24,7 +24,7 @@ function CopyButton({ url }: { url: string }) {
     <button
       type="button"
       onClick={() => copy(url)}
-      className="shrink-0 flex items-center gap-1.5 border-2 border-purple-200 bg-white text-purple-600 px-4 py-2 rounded-xl font-semibold text-sm hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-colors"
+      className="shrink-0 flex items-center gap-1.5 border-2 border-purple-200 dark:border-purple-700 bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 px-4 py-2 rounded-xl font-semibold text-sm hover:bg-purple-600 dark:hover:bg-purple-700 hover:text-white hover:border-purple-600 transition-colors"
     >
       {copied ? (
         <>
@@ -49,12 +49,12 @@ export function ShortenerCard({ actionData }: Props) {
   const hasError = actionData?.ok === false
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6 md:p-10 mb-8">
+    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 p-6 md:p-10 mb-8">
       <Form method="post" className="space-y-5">
         <div>
           <label
             htmlFor="url-input"
-            className="block text-sm font-semibold text-slate-700 mb-2 ml-1"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 ml-1"
           >
             Paste your long link here
           </label>
@@ -64,7 +64,7 @@ export function ShortenerCard({ actionData }: Props) {
             name="url"
             placeholder="https://example.com/my-very-long-url"
             autoComplete="off"
-            className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-base transition-all focus:outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-100"
+            className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-base transition-all focus:outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/30"
           />
         </div>
 
@@ -86,14 +86,14 @@ export function ShortenerCard({ actionData }: Props) {
         </button>
 
         {hasError && (
-          <p role="alert" className="text-red-500 text-sm font-medium text-center pt-1">
+          <p role="alert" className="text-red-500 dark:text-red-400 text-sm font-medium text-center pt-1">
             {(actionData as ActionErr).error}
           </p>
         )}
       </Form>
 
       {hasResult && (
-        <div className="mt-6 pt-6 border-t border-slate-100 animate-fade-in">
+        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700 animate-fade-in">
           {!(actionData as ActionOk).isNew && (
             <p className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
               Already shortened — here&apos;s your existing link
@@ -104,12 +104,12 @@ export function ShortenerCard({ actionData }: Props) {
               Your shortened URL
             </p>
           )}
-          <div className="bg-purple-50 border border-purple-100 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <a
               href={(actionData as ActionOk).shortUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-purple-700 font-bold text-base break-all hover:underline"
+              className="text-purple-700 dark:text-purple-300 font-bold text-base break-all hover:underline"
             >
               {(actionData as ActionOk).shortUrl}
             </a>

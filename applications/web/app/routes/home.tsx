@@ -9,6 +9,7 @@ import { domainErrorMessage } from "../core/errors.js"
 import { ShortenerCard } from "../components/ShortenerCard.js"
 import { RecentLinks } from "../components/RecentLinks.js"
 import { AppFooter } from "../components/AppFooter.js"
+import { AppHeader } from "../components/AppHeader.js"
 
 function getBaseUrl(request: Request): string {
   const url = new URL(request.url)
@@ -73,13 +74,14 @@ export function meta() {
 
 export default function Home({ loaderData, actionData }: Route.ComponentProps) {
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-900 flex flex-col">
+      <AppHeader />
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <header className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight text-slate-800 dark:text-slate-100">
             <span className="wavy-underline">URL Shortener</span>
           </h1>
-          <p className="text-slate-500 text-lg max-w-sm mx-auto">
+          <p className="text-slate-500 dark:text-slate-400 text-lg max-w-sm mx-auto">
             Shorten your links quickly, simply, and without distractions.
           </p>
         </header>
