@@ -1,16 +1,16 @@
-import { Effect } from "effect"
-import type { LinkRepository, LinkRecord } from "../repository.js"
-import { LinkNotFoundError } from "../errors.js"
-import { isValidCode } from "../short-code.js"
+import { Effect } from "effect";
+import type { LinkRepository, LinkRecord } from "../repository.js";
+import { LinkNotFoundError } from "../errors.js";
+import { isValidCode } from "../short-code.js";
 
 export interface LinkDto {
-  id: string
-  code: string
-  originalUrl: string
-  shortUrl: string
-  clickCount: number
-  createdAt: string
-  lastClickAt: string | null
+  id: string;
+  code: string;
+  originalUrl: string;
+  shortUrl: string;
+  clickCount: number;
+  createdAt: string;
+  lastClickAt: string | null;
 }
 
 function toDto(link: LinkRecord, baseUrl: string): LinkDto {
@@ -22,25 +22,34 @@ function toDto(link: LinkRecord, baseUrl: string): LinkDto {
     clickCount: link.clickCount,
     createdAt: link.createdAt.toISOString(),
     lastClickAt: link.lastClickAt ? link.lastClickAt.toISOString() : null,
-  }
+  };
 }
 
 export function makeLinksQuery(repo: LinkRepository) {
   return {
     /** Resolves a short code to its original URL and increments click count */
-    resolveAndTrack: (code: string): Effect.Effect<string, LinkNotFoundError> => {
-      if (!isValidCode(code)) return Effect.fail(new LinkNotFoundError({ code }))
-      return Effect.tryPromise(() => repo.trackClick(code)).pipe(
+    resolveAndTrack: (
+      code: string,
+    ): Effect.Effect<string, LinkNotFoundError> => {
+      if (!isValidCode(code))
+        return Effect.fail(new LinkNotFoundError({ code }));
+      return Effect.tryPromise({
+        try: () => repo.trackClick(code),
+        catch: () => new LinkNotFoundError({ code }),
+      }).pipe(
         Effect.flatMap((url) =>
           url !== null
             ? Effect.succeed(url)
             : Effect.fail(new LinkNotFoundError({ code })),
         ),
-      )
+      );
     },
 
     /** Fetch the N most recently created links */
-    listRecent: (limit: number, baseUrl: string): Effect.Effect<LinkDto[], never> =>
+    listRecent: (
+      limit: number,
+      baseUrl: string,
+    ): Effect.Effect<LinkDto[], never> =>
       Effect.tryPromise(() => repo.listRecent(limit)).pipe(
         Effect.map((rows) => rows.map((r) => toDto(r, baseUrl))),
         Effect.orElseSucceed(() => []),
@@ -52,5 +61,5 @@ export function makeLinksQuery(repo: LinkRepository) {
         Effect.map((rows) => rows.map((r) => toDto(r, baseUrl))),
         Effect.orElseSucceed(() => []),
       ),
-  }
+  };
 }

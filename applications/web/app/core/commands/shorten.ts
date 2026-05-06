@@ -51,12 +51,13 @@ function tryCreate(
   repo: LinkRepository,
   url: string,
   attemptsLeft: number,
-): Effect.Effect<LinkRecord, CodeCollisionError | Error> {
+): Effect.Effect<LinkRecord, CodeCollisionError> {
   if (attemptsLeft <= 0) return Effect.fail(new CodeCollisionError())
   const code = generateCode()
   return Effect.tryPromise({
     try: () => repo.create(code, url),
-    catch: (e) => e as Error,
+    catch: (e) =>
+      e instanceof RepositoryConflictError ? e : new CodeCollisionError(),
   }).pipe(
     Effect.catchIf(
       (e): e is RepositoryConflictError => e instanceof RepositoryConflictError,
@@ -76,7 +77,10 @@ export function makeShortenCommand(repo: LinkRepository) {
       yield* checkRateLimit(clientKey)
       const url = yield* parseUrl(rawUrl)
 
-      const existing = yield* Effect.tryPromise(() => repo.findByUrl(url))
+      const existing = yield* Effect.tryPromise({
+        try: () => repo.findByUrl(url),
+        catch: () => new CodeCollisionError(),
+      })
       if (existing) return { link: existing, isNew: false }
 
       const link = yield* tryCreate(repo, url, MAX_ATTEMPTS)

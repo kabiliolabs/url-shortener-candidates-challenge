@@ -11,10 +11,8 @@ const ENV = {
 
 function buildClient(): PrismaClient {
   const adapter = new PrismaPg({ connectionString: ENV.DATABASE_URL })
-  const log =
-    ENV.NODE_ENV === "development"
-      ? (["error", "warn"] as const)
-      : (["error"] as const)
+  const log: ("error" | "warn")[] =
+    ENV.NODE_ENV === "development" ? ["error", "warn"] : ["error"]
   return new PrismaClient({ adapter, log })
 }
 
