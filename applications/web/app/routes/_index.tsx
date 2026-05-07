@@ -26,13 +26,12 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const actionData = useActionData<typeof action>()
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-2">
-        <h1 className="text-2xl font-bold text-center">URL Shortener</h1>
-        <ShortenForm
-          baseUrl={loaderData.baseUrl}
-          error={actionData?.error}
-        />
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300 p-4">
+      <div className="w-full max-w-md bg-yellow-300 p-10 rounded-none border-8 border-dashed border-purple-600 rotate-1 shadow-2xl shadow-red-500">
+        <h1 className="text-3xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
+          ~*~ URL Shortener ~*~
+        </h1>
+        <ShortenForm baseUrl={loaderData.baseUrl} error={actionData?.error} />
         {actionData?.shortenedUrl && (
           <UrlCard shortenedUrl={actionData.shortenedUrl} />
         )}
