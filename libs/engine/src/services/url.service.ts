@@ -1,5 +1,5 @@
 import { encode } from '../utils/base62'
-import { prisma, findUrlByCode } from '../repository/url.repository'
+import { prisma, findUrlByCode, incrementClicks } from '../repository/url.repository'
 
 // The code is derived from the DB autoincrement ID via base62 encoding, which requires
 // two operations inside a transaction: insert with a temp code to obtain the ID, then
@@ -15,5 +15,11 @@ export async function shortenUrl(originalUrl: string) {
 }
 
 export async function findByCode(code: string) {
-  return findUrlByCode(code)
+  const url = await findUrlByCode(code)
+  // Awaiting incrementClicks adds latency to every redirect. Dropping the await would
+  // make it fire-and-forget but risks losing increments if the process crashes mid-flight.
+  // For higher scale: cache lookups in Redis (TTL 1h) and batch-flush click counts to
+  // the DB periodically to avoid a write on every request.
+  if (url) await incrementClicks(code)
+  return url
 }

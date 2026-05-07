@@ -5,6 +5,7 @@ vi.mock('../repository/url.repository', () => ({
     $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(mockTx)),
   },
   findUrlByCode: vi.fn(),
+  incrementClicks: vi.fn(),
 }))
 
 const mockTx = {
@@ -15,7 +16,7 @@ const mockTx = {
 }
 
 import { shortenUrl, findByCode } from './url.service'
-import { prisma, findUrlByCode } from '../repository/url.repository'
+import { findUrlByCode, incrementClicks } from '../repository/url.repository'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -23,8 +24,8 @@ beforeEach(() => {
 
 describe('shortenUrl', () => {
   it('creates a url and returns it with a base62 code', async () => {
-    mockTx.url.create.mockResolvedValue({ id: 1, code: '_tmp', originalUrl: 'https://example.com', createdAt: new Date() })
-    mockTx.url.update.mockResolvedValue({ id: 1, code: '1', originalUrl: 'https://example.com', createdAt: new Date() })
+    mockTx.url.create.mockResolvedValue({ id: 1, code: '_tmp', originalUrl: 'https://example.com', clicks: 0, createdAt: new Date() })
+    mockTx.url.update.mockResolvedValue({ id: 1, code: '1', originalUrl: 'https://example.com', clicks: 0, createdAt: new Date() })
 
     const result = await shortenUrl('https://example.com')
 
@@ -38,8 +39,8 @@ describe('shortenUrl', () => {
   })
 
   it('encodes higher IDs into multi-character base62 codes', async () => {
-    mockTx.url.create.mockResolvedValue({ id: 62, code: '_tmp', originalUrl: 'https://example.com', createdAt: new Date() })
-    mockTx.url.update.mockResolvedValue({ id: 62, code: '10', originalUrl: 'https://example.com', createdAt: new Date() })
+    mockTx.url.create.mockResolvedValue({ id: 62, code: '_tmp', originalUrl: 'https://example.com', clicks: 0, createdAt: new Date() })
+    mockTx.url.update.mockResolvedValue({ id: 62, code: '10', originalUrl: 'https://example.com', clicks: 0, createdAt: new Date() })
 
     const result = await shortenUrl('https://example.com')
 
@@ -51,20 +52,23 @@ describe('shortenUrl', () => {
 })
 
 describe('findByCode', () => {
-  it('returns the url when found', async () => {
-    const mockUrl = { id: 1, code: '1', originalUrl: 'https://example.com', createdAt: new Date() }
+  it('returns the url and increments clicks when found', async () => {
+    const mockUrl = { id: 1, code: '1', originalUrl: 'https://example.com', clicks: 0, createdAt: new Date() }
     vi.mocked(findUrlByCode).mockResolvedValue(mockUrl)
+    vi.mocked(incrementClicks).mockResolvedValue({ ...mockUrl, clicks: 1 })
 
     const result = await findByCode('1')
 
+    expect(incrementClicks).toHaveBeenCalledWith('1')
     expect(result).toEqual(mockUrl)
   })
 
-  it('returns null when not found', async () => {
+  it('returns null and does not increment clicks when not found', async () => {
     vi.mocked(findUrlByCode).mockResolvedValue(null)
 
     const result = await findByCode('notexist')
 
+    expect(incrementClicks).not.toHaveBeenCalled()
     expect(result).toBeNull()
   })
 })

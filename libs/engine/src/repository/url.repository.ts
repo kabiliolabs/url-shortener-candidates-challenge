@@ -9,3 +9,7 @@ export const prisma = new PrismaClient({ adapter })
 export async function findUrlByCode(code: string) {
   return prisma.url.findUnique({ where: { code } })
 }
+
+export async function incrementClicks(code: string) {
+  return prisma.url.update({ where: { code }, data: { clicks: { increment: 1 } } })
+}

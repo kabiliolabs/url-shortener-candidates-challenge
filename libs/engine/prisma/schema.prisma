@@ -10,5 +10,6 @@ model Url {
   id          Int      @id @default(autoincrement())
   code        String   @unique
   originalUrl String
+  clicks      Int      @default(0)
   createdAt   DateTime @default(now())
 }
