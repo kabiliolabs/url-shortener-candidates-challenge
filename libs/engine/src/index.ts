@@ -1,3 +1,3 @@
-export { baseUrl } from "./base-url";
+export { shortenUrl, findByCode } from './services/url.service'
 
-export { shortenedUrls, generateShortCode } from "./shortened-url";
+export const baseUrl = process.env.PUBLIC_URL
