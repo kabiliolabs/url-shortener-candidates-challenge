@@ -8,6 +8,7 @@
     "build": "tsc",
     "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
     "dev": "tsc --watch",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "exports": {
@@ -16,7 +17,8 @@
   "devDependencies": {
     "@types/node": "^22.19.7",
     "@types/pg": "^8.20.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
