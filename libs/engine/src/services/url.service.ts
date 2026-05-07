@@ -20,15 +20,17 @@ export async function shortenUrl(originalUrl: string) {
 export async function findByCode(code: string) {
   const redis = await getRedis()
   const cached = await redis.get(`url:${code}`)
-  if (cached) return JSON.parse(cached)
+  const url = cached ? JSON.parse(cached) : await findUrlByCode(code)
 
-  const url = await findUrlByCode(code)
-  if (url) {
-    await redis.set(`url:${code}`, JSON.stringify(url), { EX: CACHE_TTL })
-    // Awaiting incrementClicks adds latency to every redirect. Dropping the await would
-    // make it fire-and-forget but risks losing increments if the process crashes mid-flight.
-    // For higher scale: batch-flush click counts to the DB periodically.
-    await incrementClicks(code)
-  }
+  if (!url) return null
+
+  if (!cached) await redis.set(`url:${code}`, JSON.stringify(url), { EX: CACHE_TTL })
+
+  // Fire-and-forget: avoids adding DB write latency to the redirect.
+  // Risk: if the process crashes before the write completes, the click is lost.
+  // Improvement: buffer counts in Redis and flush to DB in batch (or use a message queue
+  // for durability — see CHALLENGE_SUBMISSION.md).
+  incrementClicks(code)
+
   return url
 }

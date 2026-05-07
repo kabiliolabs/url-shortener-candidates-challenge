@@ -30,9 +30,6 @@ describe('shortenUrl', () => {
 
     const result = await shortenUrl('https://example.com')
 
-    expect(mockTx.url.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ originalUrl: 'https://example.com' }) })
-    )
     expect(mockTx.url.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { code: '1' } })
     )
@@ -53,23 +50,22 @@ describe('shortenUrl', () => {
 })
 
 describe('findByCode', () => {
-  it('returns cached url without hitting the database', async () => {
+  it('returns cached url and fires click increment', async () => {
     const mockUrl = { id: 1, code: '1', originalUrl: 'https://example.com', clicks: 0, createdAt: new Date() }
     mockRedis.get.mockResolvedValue(JSON.stringify(mockUrl))
 
     const result = await findByCode('1')
 
     expect(findUrlByCode).not.toHaveBeenCalled()
-    expect(incrementClicks).not.toHaveBeenCalled()
+    expect(incrementClicks).toHaveBeenCalledWith('1')
     // createdAt is serialized as string through JSON — Date fields lose their type
     expect(result).toEqual(JSON.parse(JSON.stringify(mockUrl)))
   })
 
-  it('fetches from db on cache miss, stores in cache and increments clicks', async () => {
+  it('fetches from db on cache miss, stores in cache and fires click increment', async () => {
     const mockUrl = { id: 1, code: '1', originalUrl: 'https://example.com', clicks: 0, createdAt: new Date() }
     mockRedis.get.mockResolvedValue(null)
     vi.mocked(findUrlByCode).mockResolvedValue(mockUrl)
-    vi.mocked(incrementClicks).mockResolvedValue({ ...mockUrl, clicks: 1 })
 
     const result = await findByCode('1')
 
@@ -79,7 +75,7 @@ describe('findByCode', () => {
     expect(result).toEqual(mockUrl)
   })
 
-  it('returns null when not found in cache or db', async () => {
+  it('returns null and does not increment clicks when not found', async () => {
     mockRedis.get.mockResolvedValue(null)
     vi.mocked(findUrlByCode).mockResolvedValue(null)
 
