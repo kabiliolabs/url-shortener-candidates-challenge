@@ -9,6 +9,20 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Global: pointer cursor on all interactive elements                  */
+/* ------------------------------------------------------------------ */
+button,
+[role="button"],
+label[for],
+a[href] {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ */
 /* Identity: wavy yellow underline on title                            */
 /* ------------------------------------------------------------------ */
 .wavy-underline {
