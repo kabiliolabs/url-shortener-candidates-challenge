@@ -6,10 +6,4 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   envDir: "../..",
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-  ssr: {
-    noExternal: ["@url-shortener/engine"],
-  },
-  optimizeDeps: {
-    include: ["@url-shortener/engine"],
-  },
 });
