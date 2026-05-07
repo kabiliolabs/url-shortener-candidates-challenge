@@ -18,6 +18,7 @@ RUN pnpm build
 
 FROM base AS production
 RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
+ENV NODE_PATH=/app/libs/engine/node_modules
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/applications/web/node_modules ./applications/web/node_modules
