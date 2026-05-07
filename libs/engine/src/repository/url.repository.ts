@@ -13,3 +13,7 @@ export async function findUrlByCode(code: string) {
 export async function incrementClicks(code: string) {
   return prisma.url.update({ where: { code }, data: { clicks: { increment: 1 } } })
 }
+
+export async function getAllUrls() {
+  return prisma.url.findMany({ orderBy: { createdAt: 'desc' } })
+}
