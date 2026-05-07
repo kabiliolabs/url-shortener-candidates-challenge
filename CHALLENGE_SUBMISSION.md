@@ -71,15 +71,15 @@ I used Cursor (Claude Sonnet) as a pair programmer throughout the session. The A
 
 **Example prompts:**
 
-- *"Rewrite the entire URL shortener from scratch on a new branch. Use CQRS with core/commands and core/queries, Effect-TS for typed domain errors, Prisma 7 with @prisma/adapter-pg, React Router v7 loaders and actions, Jotai for global state, Tailwind v4 with @custom-variant dark. The repository interface must be defined in core/ with no Prisma dependency, and the Prisma adapter lives in infra/. Use nanoid for code generation with a character set that avoids ambiguous characters (0/O, 1/l/I)."*
+- _"Rewrite the entire URL shortener from scratch on a new branch. Use CQRS with core/commands and core/queries, Effect-TS for typed domain errors, Prisma 7 with @prisma/adapter-pg, React Router v7 loaders and actions, Jotai for global state, Tailwind v4 with @custom-variant dark. The repository interface must be defined in core/ with no Prisma dependency, and the Prisma adapter lives in infra/."_
 
-- *"Add a dark mode toggle with system preference detection, localStorage persistence via atomWithStorage from Jotai, and inject a ThemeScript in <head> to prevent flash of wrong theme before React hydrates."*
+- _"Add a dark mode toggle with system preference detection, localStorage persistence via atomWithStorage from Jotai, and inject a ThemeScript in <head> to prevent flash of wrong theme before React hydrates."_
 
-- *"Generate unit tests for makeShortenCommand covering: valid URL creates a link, duplicate URL returns existing with isNew:false, empty string fails with InvalidUrlError(empty), whitespace-only string fails with InvalidUrlError(empty), non-URL string fails with InvalidUrlError(format), ftp:// protocol fails with InvalidUrlError(format), URL over 2048 chars fails with InvalidUrlError(too_long), 11th request from same client key fails with RateLimitError, and different client keys are rate-limited independently."*
+- _"Generate unit tests for makeShortenCommand covering: valid URL creates a link, duplicate URL returns existing with isNew:false, empty string fails with InvalidUrlError(empty), whitespace-only string fails with InvalidUrlError(empty), non-URL string fails with InvalidUrlError(format), ftp:// protocol fails with InvalidUrlError(format), URL over 2048 chars fails with InvalidUrlError(too_long), 11th request from same client key fails with RateLimitError, and different client keys are rate-limited independently."_
 
-- *"Generate integration tests for the home route loader and action using vi.mock to replace the Prisma adapter with an in-memory implementation. Cover: loader returns empty array with no data, loader returns links with correct shortUrl shape, action returns ok:true and shortUrl for valid URL, action returns isNew:false for duplicate, action returns ok:false for empty URL, action returns ok:false for invalid URL format."*
+- _"Generate integration tests for the home route loader and action using vi.mock to replace the Prisma adapter with an in-memory implementation. Cover: loader returns empty array with no data, loader returns links with correct shortUrl shape, action returns ok:true and shortUrl for valid URL, action returns isNew:false for duplicate, action returns ok:false for empty URL, action returns ok:false for invalid URL format."_
 
-- *"Fix prisma.config.ts TypeScript error: 'migrate' does not exist in type PrismaConfig. Check what the actual PrismaConfig type allows in Prisma 7.8 and update accordingly."*
+- _"Fix prisma.config.ts TypeScript error: 'migrate' does not exist in type PrismaConfig. Check what the actual PrismaConfig type allows in Prisma 7.8 and update accordingly."_
 
 ---
 
