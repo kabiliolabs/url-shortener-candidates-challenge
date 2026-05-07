@@ -1,6 +1,6 @@
 import { useActionData } from "react-router"
 import type { Route } from "./+types/_index"
-import { baseUrl, shortenUrl } from "@url-shortener/engine"
+import { baseUrl, shortenUrl, checkRateLimit } from "@url-shortener/engine"
 import { ShortenForm } from "~/components/shorten-form"
 import { UrlCard } from "~/components/url-card"
 
@@ -9,6 +9,10 @@ export function loader() {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown"
+  const allowed = await checkRateLimit(ip)
+  if (!allowed) return { error: "Too many requests. Please wait a moment." }
+
   const formData = await request.formData()
   const url = formData.get("url") as string
 

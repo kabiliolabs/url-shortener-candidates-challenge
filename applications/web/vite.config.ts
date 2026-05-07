@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   ssr: {
     noExternal: ["@url-shortener/engine"],
-    external: ["@prisma/client", "@prisma/adapter-pg", "pg"],
+    external: ["@prisma/client", "@prisma/adapter-pg", "pg", "redis"],
   },
   optimizeDeps: {
     include: ["@url-shortener/engine"],
