@@ -1,8 +1,8 @@
 services:
   db:
     image: postgres:16-alpine
-    # ports:
-    #   - "5432:5432"  # Uncomment for local development access
+    ports:
+      - "5432:5432"  # Uncomment for local development access
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -17,8 +17,8 @@ services:
 
   cache:
     image: redis:7-alpine
-    # ports:
-    #   - "6379:6379"  # Uncomment for local development access
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:

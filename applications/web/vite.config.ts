@@ -12,5 +12,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ["@url-shortener/database"],
+    exclude: ["@prisma/client", ".prisma", "prisma", "ioredis", "pino", "pino-pretty", "thread-stream", "rate-limiter-flexible"],
   },
 });

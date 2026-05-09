@@ -20,11 +20,13 @@
     "db:reset": "prisma migrate reset"
   },
   "devDependencies": {
-    "prisma": "^7.8.0",
-    "typescript": "^5.9.2"
+    "prisma": "catalog:",
+    "typescript": "^5.9.2",
+    "@types/node": "^22"
   },
   "dependencies": {
-    "@prisma/client": "^7.8.0",
-    "ioredis": "^5.10.1"
+    "@prisma/client": "catalog:",
+    "@prisma/adapter-pg": "catalog:",
+    "ioredis": "catalog:"
   }
 }

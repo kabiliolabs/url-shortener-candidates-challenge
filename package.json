@@ -18,7 +18,12 @@
         "recharts>react": "19",
         "recharts>react-dom": "19"
       }
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.5",
