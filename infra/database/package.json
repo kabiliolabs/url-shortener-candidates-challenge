@@ -9,11 +9,21 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset"
   },
   "devDependencies": {
+    "prisma": "^7.8.0",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.8.0",
+    "ioredis": "^5.10.1"
   }
 }

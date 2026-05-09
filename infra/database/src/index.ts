@@ -1,3 +1,11 @@
-// Database infrastructure package
-// Prisma client and Redis connection will be configured in Phase 3
-export {};
+export { prisma } from "./prisma.js";
+export { redis } from "./redis.js";
+
+export async function disconnectAll(): Promise<void> {
+  const { prisma } = await import("./prisma.js");
+  const { redis } = await import("./redis.js");
+  await Promise.allSettled([
+    prisma.$disconnect(),
+    redis.status !== "close" ? redis.quit() : Promise.resolve(),
+  ]);
+}

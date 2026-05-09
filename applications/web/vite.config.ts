@@ -8,6 +8,7 @@ export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   ssr: {
     noExternal: ["@url-shortener/database"],
+    external: ["@prisma/client", "ioredis"],
   },
   optimizeDeps: {
     include: ["@url-shortener/database"],
