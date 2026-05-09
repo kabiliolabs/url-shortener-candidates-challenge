@@ -1,27 +1,28 @@
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import { getBaseUrl, createShortUrl } from "~/server/services/url-shortener.service";
+import { validateUrl, shortenUrl, listUrls } from "~/server/services/url.service.server";
+import { urlRepository } from "~/server/repositories/index.server";
 
-export function loader() {
-  const baseUrl = getBaseUrl();
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
+export async function loader() {
+  const baseUrl = (process.env.PUBLIC_URL ?? "http://localhost:5173") + "/s/";
+  const urls = await listUrls(urlRepository);
+  return { baseUrl, urls };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const url = formData.get("url") as string;
 
-  if (!url) {
-    return { error: "URL is required" };
+  const error = validateUrl(url);
+  if (error) {
+    return { error };
   }
 
-  const { fullShortUrl } = createShortUrl(url);
+  const result = await shortenUrl(url, urlRepository);
+  const baseUrl = process.env.PUBLIC_URL ?? "http://localhost:5173";
+  const fullShortUrl = `${baseUrl}/s/${result.shortCode}`;
 
-  return {
-    shortenedUrl: fullShortUrl,
-  };
+  return { shortenedUrl: fullShortUrl };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -31,8 +32,16 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+function truncateUrl(url: string, maxLength = 50): string {
+  return url.length > maxLength ? url.slice(0, maxLength) + "…" : url;
+}
+
+function formatDate(date: Date | string): string {
+  return new Date(date).toLocaleDateString();
+}
+
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
+  const { baseUrl, urls } = loaderData;
   const actionData = useActionData<typeof action>();
 
   return (
@@ -85,6 +94,40 @@ export default function Index({ loaderData }: Route.ComponentProps) {
             <p className="text-2xl text-blue-800 font-black">
               {actionData.error}
             </p>
+          </div>
+        )}
+
+        {urls.length > 0 && (
+          <div className="mt-10 p-4 bg-teal-300 border-4 border-dotted border-fuchsia-600 rotate-[-0.5deg]">
+            <h2 className="text-2xl font-mono text-orange-700 underline decoration-wavy decoration-blue-500 mb-4 text-center tracking-wide">
+              ★ All Shortened URLs ★
+            </h2>
+            <div className="space-y-3">
+              {urls.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="bg-pink-200 border-2 border-dashed border-indigo-500 p-3 rounded-none"
+                >
+                  <p className="font-mono text-purple-700 text-lg font-bold">
+                    /{entry.shortCode}
+                  </p>
+                  <p
+                    className="text-sm text-blue-900 break-all bg-yellow-100 p-1 border border-red-400"
+                    title={entry.originalUrl}
+                  >
+                    → {truncateUrl(entry.originalUrl)}
+                  </p>
+                  <div className="flex justify-between mt-2 text-xs font-bold">
+                    <span className="bg-lime-400 text-fuchsia-800 px-2 py-1 border border-orange-500">
+                      🖱 {entry.clickCount} clicks
+                    </span>
+                    <span className="bg-violet-300 text-green-900 px-2 py-1 border border-cyan-500">
+                      📅 {formatDate(entry.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
