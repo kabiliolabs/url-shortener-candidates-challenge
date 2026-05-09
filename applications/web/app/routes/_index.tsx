@@ -1,12 +1,9 @@
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { getBaseUrl, createShortUrl } from "~/server/services/url-shortener.service";
 
 export function loader() {
+  const baseUrl = getBaseUrl();
   return {
     baseUrl: baseUrl ? baseUrl + "/s/" : "-",
   };
@@ -20,12 +17,10 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: "URL is required" };
   }
 
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
+  const { fullShortUrl } = createShortUrl(url);
 
   return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
+    shortenedUrl: fullShortUrl,
   };
 }
 

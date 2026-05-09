@@ -1,6 +1,6 @@
 packages:
   - "applications/*"
-  - "libs/*"
+  - "infra/*"
 allowBuilds:
   "prisma/client": true
   "@prisma/engines": true

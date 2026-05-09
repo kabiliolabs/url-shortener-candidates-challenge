@@ -2,6 +2,6 @@
   "files": [],
   "references": [
     { "path": "applications/web" },
-    { "path": "libs/engine" }
+    { "path": "infra/database" }
   ]
 }

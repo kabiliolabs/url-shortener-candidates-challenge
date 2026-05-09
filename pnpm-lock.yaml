@@ -20,9 +20,9 @@ importers:
       '@react-router/serve':
         specifier: 7.15.0
         version: 7.15.0(react-router@7.15.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
-      '@url-shortener/engine':
+      '@url-shortener/database':
         specifier: workspace:*
-        version: link:../../libs/engine
+        version: link:../../infra/database
       isbot:
         specifier: ^5.1.31
         version: 5.1.32
@@ -64,13 +64,10 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@7.3.3(@types/node@22.19.7)(jiti@2.6.1)(lightningcss@1.32.0))
 
-  libs/engine:
+  infra/database:
     devDependencies:
-      '@types/node':
-        specifier: ^22.19.7
-        version: 22.19.7
       typescript:
-        specifier: ^5.9.3
+        specifier: ^5.9.2
         version: 5.9.3
 
 packages:

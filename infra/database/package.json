@@ -1,20 +1,19 @@
 {
-  "name": "@url-shortener/engine",
+  "name": "@url-shortener/database",
   "version": "0.0.1",
+  "private": true,
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
-    "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
-  },
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
-    "@types/node": "^22.19.7",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.2"
   }
 }
