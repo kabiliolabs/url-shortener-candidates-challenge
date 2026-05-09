@@ -7,7 +7,10 @@ interface RecaptchaResponse {
   "error-codes"?: string[];
 }
 
-export async function verifyRecaptcha(token: string): Promise<{ success: boolean; score: number }> {
+export async function verifyRecaptcha(
+  token: string,
+  expectedAction = "shorten"
+): Promise<{ success: boolean; score: number }> {
   if (process.env.NODE_ENV === "test" || process.env.RECAPTCHA_DISABLED === "true") {
     return { success: true, score: 1.0 };
   }
@@ -18,11 +21,15 @@ export async function verifyRecaptcha(token: string): Promise<{ success: boolean
     return { success: false, score: 0 };
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
   try {
     const response = await fetch("https://www.google.com/recaptcha/api/siteverify", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ secret: secretKey, response: token }),
+      signal: controller.signal,
     });
 
     const data: RecaptchaResponse = await response.json();
@@ -33,9 +40,25 @@ export async function verifyRecaptcha(token: string): Promise<{ success: boolean
     }
 
     const score = data.score ?? 0;
-    return { success: score >= 0.5, score };
+
+    if (score < 0.5) {
+      return { success: false, score };
+    }
+
+    if (data.action && data.action !== expectedAction) {
+      logger.warn({ expected: expectedAction, actual: data.action }, "reCAPTCHA action mismatch");
+      return { success: false, score };
+    }
+
+    return { success: true, score };
   } catch (error) {
-    logger.error({ error }, "reCAPTCHA verification error");
+    if (error instanceof Error && error.name === "AbortError") {
+      logger.warn("reCAPTCHA verification timed out");
+    } else {
+      logger.error({ err: error }, "reCAPTCHA verification failed");
+    }
     return { success: false, score: 0 };
+  } finally {
+    clearTimeout(timeout);
   }
 }

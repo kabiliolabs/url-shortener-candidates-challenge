@@ -19,7 +19,10 @@ vi.mock("rate-limiter-flexible", () => {
   class MockRateLimiterRedis {
     consume = mockConsume;
   }
-  return { RateLimiterRedis: MockRateLimiterRedis };
+  class MockRateLimiterMemory {
+    consume = mockConsume;
+  }
+  return { RateLimiterRedis: MockRateLimiterRedis, RateLimiterMemory: MockRateLimiterMemory };
 });
 
 import { rateLimitMiddleware } from "./rate-limit.server";
@@ -58,15 +61,15 @@ describe("rate limit middleware", () => {
     expect(body.error).toBe("Too many requests");
   });
 
-  it("allows requests through on Redis error", async () => {
-    mockConsume.mockRejectedValue(new Error("Redis connection lost"));
+  it("returns 429 on Redis error (insuranceLimiter rejects)", async () => {
+    mockConsume.mockRejectedValue({ msBeforeNext: 60000 });
 
     const request = new Request("http://localhost/", {
       headers: { "x-forwarded-for": "1.2.3.4" },
     });
 
     const response = await rateLimitMiddleware({ request } as any, mockNext);
-    expect(mockNext).toHaveBeenCalled();
+    expect(response!.status).toBe(429);
   });
 
   it("extracts IP from x-forwarded-for header", async () => {
@@ -87,11 +90,11 @@ describe("rate limit middleware", () => {
     expect(mockConsume).toHaveBeenCalledWith("192.168.1.1");
   });
 
-  it("skips rate limiting when no IP headers present", async () => {
+  it("rate limits when no IP headers present (uses 'unknown' bucket)", async () => {
     const request = new Request("http://localhost/");
 
     await rateLimitMiddleware({ request } as any, mockNext);
-    expect(mockConsume).not.toHaveBeenCalled();
+    expect(mockConsume).toHaveBeenCalledWith("unknown");
     expect(mockNext).toHaveBeenCalled();
   });
 });

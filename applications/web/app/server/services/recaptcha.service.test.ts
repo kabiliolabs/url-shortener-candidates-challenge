@@ -47,7 +47,7 @@ describe("recaptcha service", () => {
     delete process.env.RECAPTCHA_DISABLED;
 
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ success: true, score: 0.9 }))
+      new Response(JSON.stringify({ success: true, score: 0.9, action: "shorten" }))
     );
 
     const result = await verifyRecaptcha("valid-token");
@@ -60,11 +60,37 @@ describe("recaptcha service", () => {
     delete process.env.RECAPTCHA_DISABLED;
 
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ success: true, score: 0.2 }))
+      new Response(JSON.stringify({ success: true, score: 0.2, action: "shorten" }))
     );
 
     const result = await verifyRecaptcha("low-score-token");
     expect(result).toEqual({ success: false, score: 0.2 });
+  });
+
+  it("returns failure on action mismatch", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.RECAPTCHA_SECRET_KEY = "test-secret";
+    delete process.env.RECAPTCHA_DISABLED;
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true, score: 0.9, action: "login" }))
+    );
+
+    const result = await verifyRecaptcha("valid-token", "shorten");
+    expect(result).toEqual({ success: false, score: 0.9 });
+  });
+
+  it("accepts custom expectedAction", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.RECAPTCHA_SECRET_KEY = "test-secret";
+    delete process.env.RECAPTCHA_DISABLED;
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true, score: 0.9, action: "login" }))
+    );
+
+    const result = await verifyRecaptcha("valid-token", "login");
+    expect(result).toEqual({ success: true, score: 0.9 });
   });
 
   it("returns failure on fetch error", async () => {
@@ -75,6 +101,18 @@ describe("recaptcha service", () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Network error"));
 
     const result = await verifyRecaptcha("error-token");
+    expect(result).toEqual({ success: false, score: 0 });
+  });
+
+  it("returns failure on timeout (AbortError)", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.RECAPTCHA_SECRET_KEY = "test-secret";
+    delete process.env.RECAPTCHA_DISABLED;
+
+    const abortError = new DOMException("The operation was aborted", "AbortError");
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(abortError);
+
+    const result = await verifyRecaptcha("timeout-token");
     expect(result).toEqual({ success: false, score: 0 });
   });
 });

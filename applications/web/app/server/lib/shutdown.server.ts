@@ -8,8 +8,13 @@ export function registerShutdownHooks(): void {
     if (isShuttingDown) return;
     isShuttingDown = true;
     logger.info({ signal }, "Shutting down gracefully...");
-    await disconnectAll();
-    process.exit(0);
+    try {
+      await disconnectAll();
+    } catch (err) {
+      logger.error({ err }, "Error during disconnect");
+    } finally {
+      process.exit(0);
+    }
   };
 
   process.on("SIGTERM", () => void shutdown("SIGTERM"));

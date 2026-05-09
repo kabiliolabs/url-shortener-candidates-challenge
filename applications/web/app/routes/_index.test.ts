@@ -54,6 +54,7 @@ describe("_index route", () => {
   describe("action", () => {
     it("returns error when recaptcha token is missing", async () => {
       const formData = new FormData();
+      formData.set("url", "https://example.com");
       const request = new Request("http://localhost/", {
         method: "POST",
         body: formData,

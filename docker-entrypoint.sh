@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+# NOTE: In multi-replica deployments, migrations should be run as a separate
+# init container or one-off job to avoid race conditions.
 echo "Running database migrations..."
 MAX_RETRIES=5
 RETRY_COUNT=0

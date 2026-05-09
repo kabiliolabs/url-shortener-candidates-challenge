@@ -21,8 +21,10 @@ export class PrismaUrlRepository implements UrlRepository {
     });
   }
 
-  async findAllWithStats(): Promise<UrlWithStats[]> {
+  async findAllWithStats(options?: { take?: number; skip?: number }): Promise<UrlWithStats[]> {
     const urls = await prisma.shortenedUrl.findMany({
+      take: options?.take ?? 50,
+      skip: options?.skip ?? 0,
       include: { _count: { select: { clicks: true } } },
       orderBy: { createdAt: "desc" },
     });

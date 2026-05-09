@@ -54,9 +54,10 @@ export async function resolveShortCode(
 }
 
 export async function listUrls(
-  urlRepo: UrlRepository
+  urlRepo: UrlRepository,
+  options?: { take?: number; skip?: number }
 ): Promise<UrlWithStats[]> {
-  return urlRepo.findAllWithStats();
+  return urlRepo.findAllWithStats(options);
 }
 
 export async function getUrlClicksByDay(

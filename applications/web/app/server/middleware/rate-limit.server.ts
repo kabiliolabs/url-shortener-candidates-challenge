@@ -1,6 +1,6 @@
 import type { Route } from "../../+types/root";
 import { redis } from "@url-shortener/database";
-import { RateLimiterRedis } from "rate-limiter-flexible";
+import { RateLimiterRedis, RateLimiterMemory } from "rate-limiter-flexible";
 import { logger } from "../lib/logger.server";
 
 const postLimiter = new RateLimiterRedis({
@@ -8,6 +8,7 @@ const postLimiter = new RateLimiterRedis({
   keyPrefix: "rl:post",
   points: 10,
   duration: 60,
+  insuranceLimiter: new RateLimiterMemory({ points: 10, duration: 60 }),
 });
 
 const getLimiter = new RateLimiterRedis({
@@ -15,6 +16,7 @@ const getLimiter = new RateLimiterRedis({
   keyPrefix: "rl:get",
   points: 100,
   duration: 60,
+  insuranceLimiter: new RateLimiterMemory({ points: 100, duration: 60 }),
 });
 
 function getClientIp(request: Request): string {
@@ -39,25 +41,14 @@ export const rateLimitMiddleware: Route.MiddlewareFunction = async (
   { request },
   next
 ) => {
-  const ip = getClientIp(request);
-
-  if (ip === "unknown") {
-    logger.warn("No client IP detected, skipping rate limit");
-    return next();
-  }
+  const ip = getClientIp(request) ?? "unknown";
 
   const limiter = selectLimiter(request);
 
   try {
     await limiter.consume(ip);
   } catch (error) {
-    if (error instanceof Error) {
-      // Redis connection error — allow the request through
-      logger.warn({ err: error }, "Rate limiter Redis error, allowing request");
-      return next();
-    }
-
-    // RateLimiterRes — rate limit exceeded
+    // RateLimiterRes — rate limit exceeded (insuranceLimiter handles Redis failures)
     const rateLimiterRes = error as { msBeforeNext?: number };
     const retryAfter = Math.ceil((rateLimiterRes.msBeforeNext ?? 60000) / 1000);
 

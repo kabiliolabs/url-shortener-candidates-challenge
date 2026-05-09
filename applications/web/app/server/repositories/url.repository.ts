@@ -28,6 +28,6 @@ export interface UrlRepository {
     originalUrl: string;
     createdAt: Date;
   }>;
-  findAllWithStats(): Promise<UrlWithStats[]>;
+  findAllWithStats(options?: { take?: number; skip?: number }): Promise<UrlWithStats[]>;
   findByCodeWithStats(code: string): Promise<UrlWithStats | null>;
 }

@@ -30,6 +30,14 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && chown -R appuser:appgroup /app
+USER appuser
+
 WORKDIR /app/applications/web
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3000/ || exit 1
+
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

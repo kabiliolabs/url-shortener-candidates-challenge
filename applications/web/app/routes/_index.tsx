@@ -26,10 +26,13 @@ export async function loader() {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const url = formData.get("url");
+  if (typeof url !== "string") {
+    return { error: "URL is required" };
+  }
 
-  const recaptchaToken = formData.get("recaptcha_token") as string;
-  if (!recaptchaToken) {
+  const recaptchaToken = formData.get("recaptcha_token");
+  if (typeof recaptchaToken !== "string" || !recaptchaToken) {
     return { error: "Bot verification failed — please try again" };
   }
   const recaptcha = await verifyRecaptcha(recaptchaToken);
@@ -78,6 +81,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         tokenInput.value = token;
       } catch (err) {
         console.error("reCAPTCHA failed:", err);
+        return;
       }
     }
 

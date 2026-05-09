@@ -1,12 +1,12 @@
 services:
   db:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"  # Uncomment for local development access
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: urlshortener
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-urlshortener}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -17,8 +17,8 @@ services:
 
   cache:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"  # Uncomment for local development access
     volumes:
       - redis_data:/data
     healthcheck:
@@ -36,7 +36,7 @@ services:
     environment:
       - NODE_ENV=production
       - PUBLIC_URL=http://localhost:3000
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/urlshortener?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-urlshortener}?schema=public
       - REDIS_URL=redis://cache:6379
     depends_on:
       db:

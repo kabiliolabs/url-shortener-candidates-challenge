@@ -34,6 +34,10 @@ export default function handleRequest(
           const stream = createReadableStreamFromReadable(body);
 
           responseHeaders.set("Content-Type", "text/html");
+          responseHeaders.set("X-Content-Type-Options", "nosniff");
+          responseHeaders.set("X-Frame-Options", "DENY");
+          responseHeaders.set("Referrer-Policy", "strict-origin-when-cross-origin");
+          responseHeaders.set("X-DNS-Prefetch-Control", "off");
 
           resolve(
             new Response(stream, {
@@ -45,6 +49,7 @@ export default function handleRequest(
           pipe(body);
         },
         onShellError(error: unknown) {
+          logger.error({ err: error }, "SSR shell render failed");
           reject(error);
         },
         onError(error: unknown) {
