@@ -1,4 +1,5 @@
 export { prisma } from "./prisma.js";
+export { Prisma } from "@prisma/client";
 export { redis } from "./redis.js";
 
 export async function disconnectAll(): Promise<void> {

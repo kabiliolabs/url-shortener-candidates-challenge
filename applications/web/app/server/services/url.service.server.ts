@@ -1,4 +1,5 @@
 import type { UrlRepository, UrlWithStats } from "../repositories/url.repository";
+import type { ClickRepository, DailyClickCount, DailyClickCountByUrl } from "../repositories/click.repository";
 import { generateShortCode } from "./shortcode.service.server";
 import { logger } from "../lib/logger.server";
 
@@ -56,4 +57,30 @@ export async function listUrls(
   urlRepo: UrlRepository
 ): Promise<UrlWithStats[]> {
   return urlRepo.findAllWithStats();
+}
+
+export async function getUrlClicksByDay(
+  urlId: number,
+  clickRepo: ClickRepository,
+  days = 7
+): Promise<DailyClickCount[]> {
+  return clickRepo.getClicksByDay(urlId, days);
+}
+
+export async function getUrlClicksByDayBatch(
+  urlIds: number[],
+  clickRepo: ClickRepository,
+  days = 7
+): Promise<Map<number, DailyClickCount[]>> {
+  const results = await clickRepo.getClicksByDayForUrls(urlIds, days);
+  const map = new Map<number, DailyClickCount[]>();
+
+  for (const r of results) {
+    if (!map.has(r.urlId)) {
+      map.set(r.urlId, []);
+    }
+    map.get(r.urlId)!.push({ date: r.date, count: r.count });
+  }
+
+  return map;
 }

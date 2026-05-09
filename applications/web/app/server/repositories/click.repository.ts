@@ -13,6 +13,17 @@ export interface ClickData {
   referer: string | null;
 }
 
+export interface DailyClickCount {
+  date: string; // ISO date string "YYYY-MM-DD"
+  count: number;
+}
+
+export interface DailyClickCountByUrl {
+  urlId: number;
+  date: string;
+  count: number;
+}
+
 export interface ClickRepository {
   recordClick(
     shortenedUrlId: number,
@@ -23,4 +34,6 @@ export interface ClickRepository {
     options?: { limit?: number; offset?: number }
   ): Promise<ClickData[]>;
   getClickCountByUrlId(urlId: number): Promise<number>;
+  getClicksByDay(urlId: number, days?: number): Promise<DailyClickCount[]>;
+  getClicksByDayForUrls(urlIds: number[], days?: number): Promise<DailyClickCountByUrl[]>;
 }

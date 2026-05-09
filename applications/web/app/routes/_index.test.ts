@@ -16,6 +16,11 @@ vi.mock("~/server/repositories/index.server", () => ({
     findAllWithStats: vi.fn(() => Promise.resolve([])),
     findByCodeWithStats: vi.fn(),
   },
+  clickRepository: {
+    getClicksByDay: vi.fn(() => Promise.resolve([])),
+    getClicksByDayForUrls: vi.fn(() => Promise.resolve([])),
+    record: vi.fn(),
+  },
 }));
 
 // Mock shortcode generator for deterministic results
