@@ -1,7 +1,9 @@
+import { useRef } from "react";
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
 import { validateUrl, shortenUrl, listUrls } from "~/server/services/url.service.server";
 import { urlRepository } from "~/server/repositories/index.server";
+import { verifyRecaptcha } from "~/server/services/recaptcha.service.server";
 
 export async function loader() {
   const baseUrl = (process.env.PUBLIC_URL ?? "http://localhost:5173") + "/s/";
@@ -12,6 +14,15 @@ export async function loader() {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const url = formData.get("url") as string;
+
+  const recaptchaToken = formData.get("recaptcha_token") as string;
+  if (!recaptchaToken) {
+    return { error: "Bot verification failed — please try again" };
+  }
+  const recaptcha = await verifyRecaptcha(recaptchaToken);
+  if (!recaptcha.success) {
+    return { error: "Bot check failed — please try again" };
+  }
 
   const error = validateUrl(url);
   if (error) {
@@ -43,6 +54,33 @@ function formatDate(date: Date | string): string {
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { baseUrl, urls } = loaderData;
   const actionData = useActionData<typeof action>();
+  const tokenRef = useRef<HTMLInputElement>(null);
+  const submittingRef = useRef(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    if (submittingRef.current) {
+      submittingRef.current = false;
+      return;
+    }
+    e.preventDefault();
+
+    const form = e.currentTarget;
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+    if (window.grecaptcha && siteKey) {
+      try {
+        const token = await window.grecaptcha.execute(siteKey, { action: "shorten" });
+        if (tokenRef.current) {
+          tokenRef.current.value = token;
+        }
+      } catch (err) {
+        console.error("reCAPTCHA failed:", err);
+      }
+    }
+
+    submittingRef.current = true;
+    form.requestSubmit();
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
@@ -51,7 +89,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           ~*~ URL Shortener ~*~
         </h1>
 
-        <Form method="post" className="flex flex-col gap-6">
+        <Form method="post" onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <input type="hidden" name="recaptcha_token" ref={tokenRef} />
           <input
             type="text"
             name="url"

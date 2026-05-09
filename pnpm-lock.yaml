@@ -38,6 +38,9 @@ importers:
       pino:
         specifier: ^10.3.1
         version: 10.3.1
+      rate-limiter-flexible:
+        specifier: ^11.1.0
+        version: 11.1.0
       react:
         specifier: ^19.2.3
         version: 19.2.3
@@ -1832,6 +1835,9 @@ packages:
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
     engines: {node: '>= 0.6'}
+
+  rate-limiter-flexible@11.1.0:
+    resolution: {integrity: sha512-lyyC0SqKz+dE5JoHZ4JMqdrM3LSZKBxzuAFAyKCYAnmHnPz/Rb6iDquxoL4CMipDXoR0G+QRhOzYWL3JKihbNw==}
 
   raw-body@2.5.3:
     resolution: {integrity: sha512-s4VSOf6yN0rvbRZGxs8Om5CWj6seneMwK3oDb4lWDH0UPhWcxwOWw5+qk24bxq87szX1ydrwylIOp2uG1ojUpA==}
@@ -3932,6 +3938,8 @@ snapshots:
   quick-format-unescaped@4.0.4: {}
 
   range-parser@1.2.1: {}
+
+  rate-limiter-flexible@11.1.0: {}
 
   raw-body@2.5.3:
     dependencies:

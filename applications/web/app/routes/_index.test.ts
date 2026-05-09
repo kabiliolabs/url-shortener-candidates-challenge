@@ -28,6 +28,11 @@ vi.mock("~/server/lib/logger.server", () => ({
   logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
+// Mock reCAPTCHA verification to always succeed
+vi.mock("~/server/services/recaptcha.service.server", () => ({
+  verifyRecaptcha: vi.fn(() => Promise.resolve({ success: true, score: 1.0 })),
+}));
+
 import { loader, action } from "./_index";
 
 describe("_index route", () => {
@@ -42,8 +47,28 @@ describe("_index route", () => {
   });
 
   describe("action", () => {
+    it("returns error when recaptcha token is missing", async () => {
+      const formData = new FormData();
+      const request = new Request("http://localhost/", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await action({
+        request,
+        params: {},
+        context: {} as never,
+        url: new URL(request.url),
+        pattern: "/",
+      } as any);
+      expect(result).toEqual({
+        error: "Bot verification failed — please try again",
+      });
+    });
+
     it("returns error when URL is missing", async () => {
       const formData = new FormData();
+      formData.set("recaptcha_token", "test-token");
       const request = new Request("http://localhost/", {
         method: "POST",
         body: formData,
@@ -61,6 +86,7 @@ describe("_index route", () => {
 
     it("returns error for invalid protocol", async () => {
       const formData = new FormData();
+      formData.set("recaptcha_token", "test-token");
       formData.set("url", "ftp://example.com");
       const request = new Request("http://localhost/", {
         method: "POST",
@@ -80,6 +106,7 @@ describe("_index route", () => {
 
     it("returns shortenedUrl for valid input", async () => {
       const formData = new FormData();
+      formData.set("recaptcha_token", "test-token");
       formData.set("url", "https://example.com");
       const request = new Request("http://localhost/", {
         method: "POST",

@@ -9,15 +9,22 @@ import {
 
 import type { Route } from "./+types/root";
 import { loggingMiddleware } from "~/server/middleware/logging.server";
+import { rateLimitMiddleware } from "~/server/middleware/rate-limit.server";
 import "./app.css";
 
-export const middleware = [loggingMiddleware];
+export const middleware = [loggingMiddleware, rateLimitMiddleware];
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
     href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
+  },
+  { rel: "preconnect", href: "https://www.google.com" },
+  {
+    rel: "preconnect",
+    href: "https://www.gstatic.com",
     crossOrigin: "anonymous",
   },
   {
@@ -34,6 +41,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          src={`https://www.google.com/recaptcha/api.js?render=${import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? ""}`}
+          async
+          defer
+        />
       </head>
       <body>
         {children}
