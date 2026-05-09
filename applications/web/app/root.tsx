@@ -8,7 +8,10 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { loggingMiddleware } from "~/server/middleware/logging.server";
 import "./app.css";
+
+export const middleware = [loggingMiddleware];
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

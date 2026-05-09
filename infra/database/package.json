@@ -12,6 +12,7 @@
     "build": "prisma generate && tsc",
     "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",

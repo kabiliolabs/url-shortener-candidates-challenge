@@ -77,6 +77,15 @@ All commands target the `@url-shortener/database` workspace:
 2. Run `pnpm --filter @url-shortener/database db:migrate:dev` — creates a migration and updates the client
 3. Import models from `@url-shortener/database` in application code
 
+## Testing
+
+```bash
+pnpm test                                        # Run all tests via Turborepo
+pnpm test:coverage                               # Run tests with coverage report
+pnpm --filter web test                           # Run web app tests only
+pnpm --filter @url-shortener/database test       # Run database tests only
+```
+
 ### Environment Variables
 
 | Variable       | Description                      | Default                                                            |

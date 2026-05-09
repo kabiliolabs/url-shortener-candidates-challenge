@@ -1,4 +1,5 @@
 import { disconnectAll } from "@url-shortener/database";
+import { logger } from "./logger.server";
 
 let isShuttingDown = false;
 
@@ -6,7 +7,7 @@ export function registerShutdownHooks(): void {
   const shutdown = async (signal: string) => {
     if (isShuttingDown) return;
     isShuttingDown = true;
-    console.log(`Received ${signal}, shutting down gracefully...`);
+    logger.info({ signal }, "Shutting down gracefully...");
     await disconnectAll();
     process.exit(0);
   };
