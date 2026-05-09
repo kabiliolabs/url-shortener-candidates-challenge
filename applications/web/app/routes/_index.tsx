@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
 import { validateUrl, shortenUrl, listUrls } from "~/server/services/url.service.server";
+import { truncateUrl, formatDate } from "~/services/url.helpers";
 import { urlRepository } from "~/server/repositories/index.server";
 import { verifyRecaptcha } from "~/server/services/recaptcha.service.server";
 
@@ -41,14 +42,6 @@ export function meta({}: Route.MetaArgs) {
     { title: "URL Shortener" },
     { name: "description", content: "Shorten your URLs quickly and easily" },
   ];
-}
-
-function truncateUrl(url: string, maxLength = 50): string {
-  return url.length > maxLength ? url.slice(0, maxLength) + "…" : url;
-}
-
-function formatDate(date: Date | string): string {
-  return new Date(date).toLocaleDateString();
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {

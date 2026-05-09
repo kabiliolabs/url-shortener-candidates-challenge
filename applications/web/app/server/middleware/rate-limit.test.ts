@@ -25,7 +25,7 @@ vi.mock("rate-limiter-flexible", () => {
 import { rateLimitMiddleware } from "./rate-limit.server";
 
 describe("rate limit middleware", () => {
-  const mockNext = vi.fn(() => new Response("OK"));
+  const mockNext = vi.fn(() => new Response("OK")) as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
