@@ -20,13 +20,14 @@
     "db:reset": "prisma migrate reset"
   },
   "devDependencies": {
+    "@types/node": "^22",
     "prisma": "catalog:",
-    "typescript": "^5.9.2",
-    "@types/node": "^22"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@prisma/client": "catalog:",
     "@prisma/adapter-pg": "catalog:",
+    "@prisma/client": "catalog:",
+    "dotenv": "^17.4.2",
     "ioredis": "catalog:"
   }
 }

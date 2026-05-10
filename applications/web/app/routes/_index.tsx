@@ -75,6 +75,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
     const tokenInput = form.querySelector<HTMLInputElement>("#recaptcha-token");
 
+    console.log(siteKey, tokenInput);
     if (window.grecaptcha && siteKey && tokenInput) {
       try {
         const token = await window.grecaptcha.execute(siteKey, { action: "shorten" });

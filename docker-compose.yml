@@ -3,7 +3,9 @@ services:
     image: postgres:16-alpine
     ports:
       - "5432:5432"  # Uncomment for local development access
+    env_file: .env
     environment:
+      # Override defaults for container networking
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-urlshortener}
@@ -31,13 +33,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_RECAPTCHA_SITE_KEY: ${VITE_RECAPTCHA_SITE_KEY}
     ports:
       - "3000:3000"
+    env_file: .env
     environment:
-      - NODE_ENV=production
-      - PUBLIC_URL=http://localhost:3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-urlshortener}?schema=public
-      - REDIS_URL=redis://cache:6379
+      # Override development defaults for Docker production environment
+      NODE_ENV: production
+      PUBLIC_URL: http://localhost:3000
+      # Use service names instead of localhost for container-to-container communication
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-urlshortener}?schema=public
+      REDIS_URL: redis://cache:6379
+
     depends_on:
       db:
         condition: service_healthy

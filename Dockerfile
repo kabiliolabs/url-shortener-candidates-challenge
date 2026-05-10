@@ -9,6 +9,8 @@ COPY applications/web/package.json ./applications/web/
 RUN pnpm install --frozen-lockfile
 
 FROM base AS build
+ARG VITE_RECAPTCHA_SITE_KEY
+ENV VITE_RECAPTCHA_SITE_KEY=$VITE_RECAPTCHA_SITE_KEY
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/infra/database/node_modules ./infra/database/node_modules
 COPY --from=dependencies /app/applications/web/node_modules ./applications/web/node_modules

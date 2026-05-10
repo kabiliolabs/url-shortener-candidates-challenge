@@ -13,7 +13,7 @@ A production-quality URL shortener built as a monorepo with React Router v7 (SSR
 - **Structured Logging** — pino JSON logging with request/response middleware
 - **Security Headers** — X-Content-Type-Options, X-Frame-Options, Referrer-Policy
 - **Graceful Shutdown** — Clean teardown of Prisma and Redis connections
-- **92 Passing Tests** — Vitest 4.x with @testing-library/react
+- **91 Passing Tests** — Vitest 4.x with @testing-library/react
 
 ## Tech Stack
 
@@ -80,8 +80,6 @@ docker compose up --build
 ```
 
 Migrations run automatically on container startup via `docker-entrypoint.sh`.
-
-> **Note:** Database and Redis ports are not exposed to the host by default for security. To access them locally for development, uncomment the `ports` sections in `docker-compose.yml`.
 
 Open `http://localhost:3000`
 
