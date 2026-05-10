@@ -6,11 +6,28 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "test": "turbo run test",
+    "test:coverage": "vitest run --coverage",
     "clean": "turbo run clean && rm -rf .turbo",
     "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
   },
   "packageManager": "pnpm@10.20.0",
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "recharts>react": "19",
+        "recharts>react-dom": "19"
+      }
+    },
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  },
   "devDependencies": {
-    "turbo": "^2.7.4"
+    "@vitest/coverage-v8": "^4.1.5",
+    "turbo": "^2.7.4",
+    "vitest": "^4.1.5"
   }
 }

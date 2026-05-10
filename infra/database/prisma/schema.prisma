@@ -1,0 +1,30 @@
+generator client {
+  provider      = "prisma-client-js"
+  engineType    = "library"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ShortenedUrl {
+  id          Int      @id @default(autoincrement())
+  shortCode   String   @unique @db.VarChar(14)
+  originalUrl String   @db.Text
+  createdAt   DateTime @default(now())
+  clicks      Click[]
+}
+
+model Click {
+  id             BigInt       @id @default(autoincrement())
+  shortenedUrl   ShortenedUrl @relation(fields: [shortenedUrlId], references: [id], onDelete: Cascade)
+  shortenedUrlId Int
+  clickedAt      DateTime     @default(now())
+  ipAddress      String?      @db.VarChar(45)
+  userAgent      String?      @db.Text
+  referer        String?      @db.Text
+
+  @@index([shortenedUrlId])
+  @@index([clickedAt])
+}

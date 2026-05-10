@@ -10,6 +10,17 @@
       "persistent": true
     },
     "typecheck": {},
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "inputs": [
+        "src/**/*.ts",
+        "app/**/*.{ts,tsx}",
+        "**/*.test.{ts,tsx}",
+        "vitest.config.ts",
+        "vitest.setup.ts"
+      ]
+    },
     "clean": {
       "cache": false
     }

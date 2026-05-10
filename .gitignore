@@ -143,3 +143,5 @@ vite.config.ts.timestamp-*
 
 # Claude code
 .claude/settings.local.json
+.idea/
+.agent-context/

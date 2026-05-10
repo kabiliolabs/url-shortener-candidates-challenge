@@ -7,9 +7,11 @@ export default defineConfig({
   envDir: "../..",
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   ssr: {
-    noExternal: ["@url-shortener/engine"],
+    noExternal: ["@url-shortener/database"],
+    external: ["@prisma/client", "ioredis", "pino", "pino-pretty", "thread-stream", "rate-limiter-flexible"],
   },
   optimizeDeps: {
-    include: ["@url-shortener/engine"],
+    include: ["@url-shortener/database"],
+    exclude: ["@prisma/client", ".prisma", "prisma", "ioredis", "pino", "pino-pretty", "thread-stream", "rate-limiter-flexible"],
   },
 });
