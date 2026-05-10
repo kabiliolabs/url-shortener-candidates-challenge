@@ -61,11 +61,18 @@ url-shortener/
 └── docker-entrypoint.sh
 ```
 
+## Credentials setup (local & Docker)
+Configure the .env file with your environment variables (see table below). You can use the provided `.env.example` as a template
+and fill the missing values.
+
+```bash
+cp .env.example .env
+```
+
 ## Local Setup
 
 ```bash
 pnpm install
-cp .env.example .env
 docker compose up db cache -d                          # Start PostgreSQL and Redis
 pnpm --filter @url-shortener/database db:migrate:dev   # Run database migrations
 pnpm dev
