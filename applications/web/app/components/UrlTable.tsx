@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Badge } from "~/components/ui";
 import { Sparkline } from "~/components/Sparkline";
-import { truncateUrl, formatDate } from "~/services/url.helpers";
+import { truncateUrl } from "~/services/url.helpers";
 
 interface UrlTableEntry {
   id: number;
@@ -35,7 +35,6 @@ export function UrlTable({ urls, baseUrl }: UrlTableProps) {
             <th scope="col">Original URL</th>
             <th scope="col">Clicks</th>
             <th scope="col">Trend</th>
-            <th scope="col">Created</th>
             <th scope="col"><span className="sr-only">Actions</span></th>
           </tr>
         </thead>
@@ -60,9 +59,6 @@ export function UrlTable({ urls, baseUrl }: UrlTableProps) {
               </td>
               <td>
                 <Sparkline data={entry.sparklineData} />
-              </td>
-              <td className="text-sm text-base-content/70">
-                {formatDate(entry.createdAt)}
               </td>
               <td>
                 <Link

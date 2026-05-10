@@ -90,8 +90,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <main className="min-h-screen bg-base-200 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl space-y-6">
+    <main className="min-h-screen bg-base-200 flex justify-center px-4">
+      <div className="w-full max-w-2xl space-y-6 mt-[calc(30vh)]">
         <Card title="URL Shortener">
           <ShortenForm onSubmit={handleSubmit} />
 
@@ -104,7 +104,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           )}
         </Card>
 
-        <Card title="Your URLs">
+        <Card title="Recently shortened URLs">
           <UrlTable urls={urls} baseUrl={loaderData.baseUrl} />
         </Card>
       </div>

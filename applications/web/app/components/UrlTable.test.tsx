@@ -102,16 +102,4 @@ describe("UrlTable", () => {
       expect(statsLinks[1]).toHaveAttribute("href", "/stats/def456");
     });
   });
-
-  it("displays formatted dates", async () => {
-    const { container } = renderWithRouter(
-      <UrlTable urls={mockUrls} baseUrl={baseUrl} />,
-    );
-    const formattedDate1 = new Date("2025-01-15").toLocaleDateString();
-    const formattedDate2 = new Date("2025-01-16").toLocaleDateString();
-    await waitFor(() => {
-      expect(container.textContent).toContain(formattedDate1);
-      expect(container.textContent).toContain(formattedDate2);
-    });
-  });
 });
