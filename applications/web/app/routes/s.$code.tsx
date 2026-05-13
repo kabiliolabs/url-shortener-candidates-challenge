@@ -1,15 +1,21 @@
 import { redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import { GetUrlUseCase, TrackClickUseCase } from "@url-shortener/engine";
+import { PrismaUrlRepository } from "../infrastructure/prisma-url-repository";
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const { code } = params;
+  const repository = new PrismaUrlRepository();
+  const getUrl = new GetUrlUseCase(repository);
+  const trackClick = new TrackClickUseCase(repository);
 
-  const url = shortenedUrls.get(code);
+  const shortenedUrl = await getUrl.execute(code);
 
-  if (!url) {
+  if (!shortenedUrl) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  return redirect(url);
+  await trackClick.execute(code);
+
+  return redirect(shortenedUrl.originalUrl.value);
 }

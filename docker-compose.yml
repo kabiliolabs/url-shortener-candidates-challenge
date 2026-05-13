@@ -8,3 +8,9 @@ services:
     environment:
       - NODE_ENV=production
       - PUBLIC_URL=http://localhost:3000
+      - DATABASE_URL=file:/app/applications/web/data/prod.db
+    volumes:
+      - db_data:/app/applications/web/data
+
+volumes:
+  db_data:
