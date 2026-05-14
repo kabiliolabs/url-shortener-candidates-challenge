@@ -1,4 +1,4 @@
-import type { Route } from "./+types/api.track.$code";
+import type { Route } from "./+types/api.track-click.$code";
 import { TrackClickUseCase } from "@url-shortener/engine";
 import { PrismaUrlRepository } from "../infrastructure/prisma-url-repository";
 

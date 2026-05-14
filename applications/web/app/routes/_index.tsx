@@ -7,7 +7,7 @@ import {
   InvalidUrlError,
   RateLimitExceededError,
 } from "@url-shortener/engine";
-import { shortenRateLimiter } from "../infrastructure/rate-limiters";
+import { shortenRateLimiter } from "../infrastructure/shorten-rate-limiter";
 import { PrismaUrlRepository } from "../infrastructure/prisma-url-repository";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -36,6 +36,13 @@ export async function loader() {
   };
 }
 
+function toErrorMessage(err: unknown): string {
+  if (err instanceof RateLimitExceededError) return "Too many requests. Please try again later.";
+  if (err instanceof UrlRequiredError) return "Please enter a URL";
+  if (err instanceof InvalidUrlError) return "Please enter a valid URL";
+  return "Something went wrong";
+}
+
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   let rawUrl = formData.get("url") as string;
@@ -58,16 +65,7 @@ export async function action({ request }: Route.ActionArgs) {
       error: null,
     };
   } catch (err) {
-    if (err instanceof RateLimitExceededError) {
-      return { shortCode: null, error: "Too many requests. Please try again later." };
-    }
-    if (err instanceof UrlRequiredError) {
-      return { shortCode: null, error: "Please enter a URL" };
-    }
-    if (err instanceof InvalidUrlError) {
-      return { shortCode: null, error: "Please enter a valid URL" };
-    }
-    return { shortCode: null, error: "Something went wrong" };
+    return { shortCode: null, error: toErrorMessage(err) };
   }
 }
 

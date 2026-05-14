@@ -1,5 +1,5 @@
 import { ShortenedUrl } from "../domain/shortened-url";
-import type { UrlRepository } from "../domain/url-repository";
+import type { UrlRepository } from "../domain/url-repository.port";
 import { UrlNotFoundError } from "./url-not-found-error";
 
 export class GetUrlUseCase {

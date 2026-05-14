@@ -1,16 +1,16 @@
 import { describe, it, expect, vi } from "vitest";
-import { GetUrlUseCase } from "./get-url.use-case";
+import { GetUrlUseCase } from "./find-url-by-code.use-case";
 import { UrlNotFoundError } from "./url-not-found-error";
 import { ShortenedUrl } from "../domain/shortened-url";
 import { OriginalUrl } from "../domain/original-url";
 import { ShortCode } from "../domain/short-code";
-import type { UrlRepository } from "../domain/url-repository";
+import type { UrlRepository } from "../domain/url-repository.port";
 
 function makeRepository(overrides: Partial<UrlRepository> = {}): UrlRepository {
   return {
     save: vi.fn(),
+    update: vi.fn(),
     findByCode: vi.fn(),
-    incrementClicks: vi.fn(),
     findAll: vi.fn(),
     ...overrides,
   };

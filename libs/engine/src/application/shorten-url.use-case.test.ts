@@ -1,14 +1,14 @@
 import { describe, it, expect, vi } from "vitest";
 import { ShortenUrlUseCase } from "./shorten-url.use-case";
 import { RateLimitExceededError } from "./rate-limit-exceeded-error";
-import type { UrlRepository } from "../domain/url-repository";
+import type { UrlRepository } from "../domain/url-repository.port";
 import type { RateLimiterPort } from "./ports/rate-limiter.port";
 
 function makeRepository(overrides: Partial<UrlRepository> = {}): UrlRepository {
   return {
     save: vi.fn().mockResolvedValue(undefined),
+    update: vi.fn(),
     findByCode: vi.fn(),
-    incrementClicks: vi.fn(),
     findAll: vi.fn(),
     ...overrides,
   };

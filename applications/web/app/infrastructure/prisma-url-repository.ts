@@ -31,27 +31,24 @@ export class PrismaUrlRepository implements UrlRepository {
     );
   }
 
-  async incrementClicks(code: string): Promise<void> {
+  async update(url: ShortenedUrl): Promise<void> {
     await prisma.shortenedUrl.update({
-      where: { shortCode: code },
-      data: { clicks: { increment: 1 } },
+      where: { shortCode: url.shortCode.value },
+      data: { clicks: url.clicks },
     });
   }
 
   async findAll(): Promise<ShortenedUrl[]> {
-    const records = await prisma.shortenedUrl.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const records = await prisma.shortenedUrl.findMany();
 
-    return records.map(
-      (r: { id: string; shortCode: string; originalUrl: string; clicks: number; createdAt: Date }) =>
-        new ShortenedUrl(
-          r.id,
-          ShortCode.from(r.shortCode),
-          OriginalUrl.fromStorage(r.originalUrl),
-          r.clicks,
-          r.createdAt
-        )
+    return records.map((r) =>
+      new ShortenedUrl(
+        r.id,
+        ShortCode.from(r.shortCode),
+        OriginalUrl.fromStorage(r.originalUrl),
+        r.clicks,
+        r.createdAt
+      )
     );
   }
 }
