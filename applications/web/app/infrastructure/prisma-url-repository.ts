@@ -15,6 +15,22 @@ export class PrismaUrlRepository implements UrlRepository {
     });
   }
 
+  async findByOriginalUrl(originalUrl: string): Promise<ShortenedUrl | null> {
+    const record = await prisma.shortenedUrl.findFirst({
+      where: { originalUrl },
+    });
+
+    if (!record) return null;
+
+    return new ShortenedUrl(
+      record.id,
+      ShortCode.from(record.shortCode),
+      OriginalUrl.fromStorage(record.originalUrl),
+      record.clicks,
+      record.createdAt
+    );
+  }
+
   async findByCode(code: string): Promise<ShortenedUrl | null> {
     const record = await prisma.shortenedUrl.findUnique({
       where: { shortCode: code },

@@ -123,6 +123,13 @@ export default function Index() {
     ? `${baseUrl}/s/${actionData.shortCode}`
     : null;
 
+  const sortedUrls = actionData?.shortCode
+    ? [
+        ...urls.filter((u) => u.shortCode === actionData.shortCode),
+        ...urls.filter((u) => u.shortCode !== actionData.shortCode),
+      ]
+    : urls;
+
   return (
     <main className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
@@ -176,14 +183,14 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        {urls.length > 0 && (
+        {sortedUrls.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Recent URLs</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <ul className="divide-y max-h-80 overflow-y-auto">
-                {urls.map((url) => (
+                {sortedUrls.map((url) => (
                   <UrlRow key={url.id} url={url} baseUrl={baseUrl} />
                 ))}
               </ul>

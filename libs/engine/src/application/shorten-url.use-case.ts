@@ -9,13 +9,18 @@ export class ShortenUrlUseCase {
   constructor(
     private readonly repository: UrlRepository,
     private readonly rateLimiter: RateLimiterPort,
-  ) {}
+  ) { }
 
   async execute(rawUrl: string, clientId: string): Promise<ShortenedUrl> {
     if (!this.rateLimiter.isAllowed(clientId)) {
       throw new RateLimitExceededError();
     }
+    
     const originalUrl = OriginalUrl.create(rawUrl);
+    const existing = await this.repository.findByOriginalUrl(originalUrl.value);
+
+    if (existing) return existing;
+    
     const shortened = ShortenedUrl.create(randomUUID(), originalUrl);
     await this.repository.save(shortened);
     return shortened;
