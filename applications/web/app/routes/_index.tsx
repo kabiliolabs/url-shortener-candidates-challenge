@@ -1,4 +1,5 @@
 import { Form, useActionData, useLoaderData, useNavigation, useFetcher } from "react-router";
+import { useState, useEffect } from "react";
 import type { Route } from "./+types/_index";
 import {
   ShortenUrlUseCase,
@@ -110,6 +111,13 @@ export default function Index() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const [urlValue, setUrlValue] = useState("");
+
+  useEffect(() => {
+    if (actionData?.shortCode) {
+      setUrlValue("");
+    }
+  }, [actionData?.shortCode]);
 
   const shortenedUrl = actionData?.shortCode
     ? `${baseUrl}/s/${actionData.shortCode}`
@@ -133,6 +141,8 @@ export default function Index() {
                 name="url"
                 placeholder="https://example.com/very/long/url"
                 required
+                value={urlValue}
+                onChange={(e) => setUrlValue(e.target.value)}
                 className={`flex-1 ${actionData?.error ? "border-destructive focus-visible:ring-destructive" : ""}`}
               />
               <Button type="submit" disabled={isSubmitting}>
