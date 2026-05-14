@@ -1,3 +1,7 @@
+import isURL from "validator/lib/isURL";
+import { UrlRequiredError } from "./url-required-error";
+import { InvalidUrlError } from "./invalid-url-error";
+
 export class OriginalUrl {
   private constructor(readonly value: string) {}
 
@@ -9,22 +13,35 @@ export class OriginalUrl {
     const trimmed = raw.trim();
 
     if (!trimmed) {
-      throw new Error("URL is required");
+      throw new UrlRequiredError();
     }
 
     let parsed: URL;
     try {
       parsed = new URL(trimmed);
     } catch {
-      throw new Error("Invalid URL format");
+      throw new InvalidUrlError("Invalid URL format");
     }
 
     if (!["http:", "https:"].includes(parsed.protocol)) {
-      throw new Error("URL must use http or https protocol");
+      throw new InvalidUrlError("URL must use http or https protocol");
     }
 
-    if (!parsed.hostname.includes(".") && parsed.hostname !== "localhost") {
-      throw new Error("URL must have a valid domain");
+    const isLocalhost = parsed.hostname === "localhost";
+    if (!isLocalhost) {
+      const valid = isURL(trimmed, {
+        protocols: ["http", "https"],
+        require_protocol: true,
+        require_tld: true,
+      });
+
+      if (!valid) {
+        throw new InvalidUrlError(
+          parsed.hostname.includes(".")
+            ? "Invalid URL format"
+            : "URL must have a valid domain"
+        );
+      }
     }
 
     return new OriginalUrl(parsed.toString());

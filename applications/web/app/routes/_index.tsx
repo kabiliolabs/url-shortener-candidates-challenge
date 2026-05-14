@@ -3,7 +3,11 @@ import type { Route } from "./+types/_index";
 import {
   ShortenUrlUseCase,
   ListUrlsUseCase,
+  UrlRequiredError,
+  InvalidUrlError,
+  RateLimitExceededError,
 } from "@url-shortener/engine";
+import { shortenRateLimiter } from "../infrastructure/rate-limiters";
 import { PrismaUrlRepository } from "../infrastructure/prisma-url-repository";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -34,22 +38,36 @@ export async function loader() {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const rawUrl = formData.get("url") as string;
+  let rawUrl = formData.get("url") as string;
+  if (rawUrl && !/^https?:\/\//i.test(rawUrl)) {
+    rawUrl = `https://${rawUrl}`;
+  }
+
+  const clientId =
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown";
 
   try {
     const repository = new PrismaUrlRepository();
-    const shortenUrl = new ShortenUrlUseCase(repository);
-    const shortened = await shortenUrl.execute(rawUrl);
+    const shortenUrl = new ShortenUrlUseCase(repository, shortenRateLimiter);
+    const shortened = await shortenUrl.execute(rawUrl, clientId);
 
     return {
       shortCode: shortened.shortCode.value,
       error: null,
     };
   } catch (err) {
-    return {
-      shortCode: null,
-      error: err instanceof Error ? err.message : "Something went wrong",
-    };
+    if (err instanceof RateLimitExceededError) {
+      return { shortCode: null, error: "Too many requests. Please try again later." };
+    }
+    if (err instanceof UrlRequiredError) {
+      return { shortCode: null, error: "Please enter a URL" };
+    }
+    if (err instanceof InvalidUrlError) {
+      return { shortCode: null, error: "Please enter a valid URL" };
+    }
+    return { shortCode: null, error: "Something went wrong" };
   }
 }
 
@@ -113,7 +131,7 @@ export default function Index() {
           <CardContent className="pt-6">
             <Form method="post" className="flex gap-2">
               <Input
-                type="url"
+                type="text"
                 name="url"
                 placeholder="https://example.com/very/long/url"
                 required
@@ -156,7 +174,7 @@ export default function Index() {
               <CardTitle className="text-base">Recent URLs</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <ul className="divide-y">
+              <ul className="divide-y max-h-80 overflow-y-auto">
                 {urls.map((url) => (
                   <UrlRow key={url.id} url={url} baseUrl={baseUrl} />
                 ))}
