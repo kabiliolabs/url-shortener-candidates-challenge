@@ -15,7 +15,7 @@ export class ShortenUrlUseCase {
     if (!this.rateLimiter.isAllowed(clientId)) {
       throw new RateLimitExceededError();
     }
-    
+      
     const originalUrl = OriginalUrl.create(rawUrl);
     const existing = await this.repository.findByOriginalUrl(originalUrl.value);
 

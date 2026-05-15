@@ -11,6 +11,7 @@ function makeRepository(overrides: Partial<UrlRepository> = {}): UrlRepository {
     save: vi.fn(),
     update: vi.fn(),
     findByCode: vi.fn(),
+    findByOriginalUrl: vi.fn(),
     findAll: vi.fn(),
     ...overrides,
   };
