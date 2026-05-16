@@ -8,9 +8,9 @@ datasource db {
 }
 
 model ShortenedUrl {
-  id          String   @id
+  id          String   @id @default(uuid())
   shortCode   String   @unique
-  originalUrl String
+  originalUrl String   @unique
   clicks      Int      @default(0)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime
 }

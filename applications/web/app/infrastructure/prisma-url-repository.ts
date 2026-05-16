@@ -16,7 +16,7 @@ export class PrismaUrlRepository implements UrlRepository {
   }
 
   async findByOriginalUrl(originalUrl: string): Promise<ShortenedUrl | null> {
-    const record = await prisma.shortenedUrl.findFirst({
+    const record = await prisma.shortenedUrl.findUnique({
       where: { originalUrl },
     });
 
