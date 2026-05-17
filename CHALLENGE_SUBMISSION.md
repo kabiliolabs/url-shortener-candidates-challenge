@@ -6,7 +6,7 @@ I refactored the original monolithic, in-memory URL shortener into a clean, laye
 
 **Architecture**
 - Extracted a `libs/engine` package with three layers: domain, application, and port interfaces. The domain holds value objects (`OriginalUrl`, `ShortCode`, `ShortenedUrl`) that encapsulate their own validation; the application layer holds four use cases (`ShortenUrl`, `FindUrlByCode`, `ListUrls`, `TrackClick`); ports (`UrlRepository`, `RateLimiterPort`) keep the domain decoupled from infrastructure.
-- Replaced the 9-possibility code generator with a 7-character alphanumeric `ShortCode` (~62⁷ ≈ 3.5 trillion combinations), eliminating practical collision risk.
+- Replaced the 9-possibility code generator with a 7-character alphanumeric `ShortCode` (~62⁷ ≈ 3.5 trillion combinations), eliminating practical collision risk. The use case also retries up to 3 times on a short-code unique-constraint violation, making the astronomically-rare collision safe to handle.
 
 **Persistence**
 - Replaced in-memory storage with SQLite via Prisma. Added a unique constraint on `originalUrl` so submitting the same URL twice returns the existing short link instead of creating a duplicate.
@@ -26,8 +26,7 @@ The biggest risks in the original code were collision-prone codes, no persistenc
 ## What I Would Do With More Time
 
 - **Redis-backed rate limiter** — the current one resets on restart and doesn't work correctly if the app scales to multiple instances.
-- **Persistent click tracking** — currently clicks are tracked only when the user clicks a link in the UI (via an async `fetcher`). A server-side redirect that atomically increments the counter on every hit would be more accurate.
-- **Collision handling on `save`** — the use case generates a short code but doesn't retry if there's a DB-level unique constraint violation on the code itself (extremely unlikely but not impossible). A retry loop with exponential backoff would handle this safely.
+- **Persistent click tracking** — server-side tracking works correctly when a short URL (`/s/:code`) is visited directly. The UI list bypasses the redirect route by opening the original URL directly and firing a separate fetcher to `/api/track/:code`; if that client-side request fails, that click is lost. A server-enforced redirect for every access path would make counting fully reliable.
 - **Pagination** — the URL list loads all rows; for a real service this needs cursor-based pagination.
 - **Auth / ownership** — without authentication there is no way to delete or manage your own links.
 - **E2E tests** — Playwright tests covering the happy path and error states would complement the unit tests.
