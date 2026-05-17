@@ -59,6 +59,17 @@ describe("ShortenUrlUseCase", () => {
     expect(repository.save).not.toHaveBeenCalled();
   });
 
+  it("throws the last error after exhausting all retries on save failure", async () => {
+    const error = new Error("unique constraint violation");
+    const repository = makeRepository({
+      save: vi.fn().mockRejectedValue(error),
+    });
+    const useCase = new ShortenUrlUseCase(repository, makeRateLimiter());
+
+    await expect(useCase.execute("https://example.com", "127.0.0.1")).rejects.toThrow("unique constraint violation");
+    expect(repository.save).toHaveBeenCalledTimes(3);
+  });
+
   it("returns existing URL without saving when original URL already exists", async () => {
     const existing = new ShortenedUrl(
       "existing-id",

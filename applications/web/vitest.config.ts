@@ -5,5 +5,9 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: "node",
+    coverage: {
+      include: ["app/infrastructure/**/*.ts"],
+      exclude: ["app/infrastructure/prisma-client.ts"],
+    },
   },
 });

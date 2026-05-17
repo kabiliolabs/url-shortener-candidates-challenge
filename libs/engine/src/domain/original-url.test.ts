@@ -53,3 +53,10 @@ describe("OriginalUrl.fromStorage", () => {
     expect(url.value).toBe("https://ww/");
   });
 });
+
+describe("OriginalUrl.toString", () => {
+  it("returns the URL string", () => {
+    const url = OriginalUrl.create("https://example.com");
+    expect(url.toString()).toBe("https://example.com/");
+  });
+});

@@ -37,3 +37,10 @@ describe("ShortCode.from", () => {
     expect(() => ShortCode.from("   ")).toThrow("Short code cannot be empty");
   });
 });
+
+describe("ShortCode.toString", () => {
+  it("returns the code string", () => {
+    const code = ShortCode.from("abc1234");
+    expect(code.toString()).toBe("abc1234");
+  });
+});
