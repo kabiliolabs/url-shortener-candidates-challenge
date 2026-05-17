@@ -1,32 +1,63 @@
-import { Form, useActionData } from "react-router";
+import { Form, useActionData, useLoaderData, useNavigation, useFetcher } from "react-router";
+import { useState, useEffect } from "react";
 import type { Route } from "./+types/_index";
 import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
+  UrlRequiredError,
+  InvalidUrlError,
+  RateLimitExceededError,
 } from "@url-shortener/engine";
+import { makeShortenUrlUseCase, makeListUrlsUseCase } from "../infrastructure/container";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 
-export function loader() {
+export async function loader() {
+  const urls = await makeListUrlsUseCase().execute();
+
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl: process.env.PUBLIC_URL ?? "",
+    urls: urls.map((u) => ({
+      id: u.id,
+      shortCode: u.shortCode.value,
+      originalUrl: u.originalUrl.value,
+      clicks: u.clicks,
+      createdAt: u.createdAt.toISOString(),
+    })),
   };
+}
+
+function toErrorMessage(err: unknown): string {
+  if (err instanceof RateLimitExceededError) return "Too many requests. Please try again later.";
+  if (err instanceof UrlRequiredError) return "Please enter a URL";
+  if (err instanceof InvalidUrlError) return "Please enter a valid URL";
+  return "Something went wrong";
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const rawUrl = formData.get("url") as string;
 
-  if (!url) {
-    return { error: "URL is required" };
+  const clientId =
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown";
+
+  try {
+    const shortened = await makeShortenUrlUseCase().execute(rawUrl, clientId);
+
+    return {
+      shortCode: shortened.shortCode.value,
+      error: null,
+    };
+  } catch (err) {
+    return { shortCode: null, error: toErrorMessage(err) };
   }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -36,61 +67,125 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
-  const actionData = useActionData<typeof action>();
+function UrlRow({ url }: { url: { id: string; shortCode: string; originalUrl: string; clicks: number } }) {
+  const fetcher = useFetcher();
+  const optimisticClicks = fetcher.state !== "idle" ? url.clicks + 1 : url.clicks;
+
+  function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    window.open(url.originalUrl, "_blank", "noopener,noreferrer");
+    fetcher.submit(null, { method: "post", action: `/api/track/${url.shortCode}` });
+  }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <li className="flex items-center justify-between px-6 py-3 gap-4">
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <a
+          href={url.originalUrl}
+          onClick={handleClick}
+          className="text-sm font-mono text-primary hover:underline cursor-pointer"
+        >
+          /{url.shortCode}
+        </a>
+        <p className="text-xs text-muted-foreground truncate">{url.originalUrl}</p>
+      </div>
+      <Badge variant="secondary" className="shrink-0">
+        {optimisticClicks} {optimisticClicks === 1 ? "click" : "clicks"}
+      </Badge>
+    </li>
+  );
+}
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
+export default function Index() {
+  const { baseUrl, urls } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  const [urlValue, setUrlValue] = useState("");
 
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
+  useEffect(() => {
+    if (actionData?.shortCode) {
+      setUrlValue("");
+    }
+  }, [actionData?.shortCode]);
 
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
-        )}
+  const shortenedUrl = actionData?.shortCode
+    ? `${baseUrl}/s/${actionData.shortCode}`
+    : null;
 
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
+  const sortedUrls = actionData?.shortCode
+    ? [
+        ...urls.filter((u) => u.shortCode === actionData.shortCode),
+        ...urls.filter((u) => u.shortCode !== actionData.shortCode),
+      ]
+    : urls;
+
+  return (
+    <main className="min-h-screen bg-background py-12 px-4">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">URL Shortener</h1>
+          <p className="text-muted-foreground">
+            Paste a long URL and get a short one instantly
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="pt-6">
+            <Form method="post" className="flex gap-2">
+              <Input
+                type="text"
+                name="url"
+                placeholder="https://example.com/very/long/url"
+                required
+                value={urlValue}
+                onChange={(e) => setUrlValue(e.target.value)}
+                className={`flex-1 ${actionData?.error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+              />
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Shortening…" : "Shorten"}
+              </Button>
+            </Form>
+
+            {shortenedUrl && (
+              <div className="mt-4 p-3 bg-muted rounded-md flex items-center justify-between gap-2">
+                <a
+                  href={shortenedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-mono text-primary hover:underline truncate"
+                >
+                  {shortenedUrl}
+                </a>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(shortenedUrl)}
+                >
+                  Copy
+                </Button>
+              </div>
+            )}
+
+            {actionData?.error && (
+              <p className="mt-3 text-sm text-destructive">{actionData.error}</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {sortedUrls.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Recent URLs</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ul className="divide-y max-h-80 overflow-y-auto">
+                {sortedUrls.map((url) => (
+                  <UrlRow key={url.id} url={url} />
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
         )}
       </div>
     </main>
