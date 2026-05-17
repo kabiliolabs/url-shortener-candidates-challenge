@@ -9,7 +9,7 @@ import type { UrlRepository } from "../domain/url-repository.port";
 function makeRepository(overrides: Partial<UrlRepository> = {}): UrlRepository {
   return {
     save: vi.fn(),
-    update: vi.fn(),
+    incrementClicks: vi.fn(),
     findByCode: vi.fn(),
     findByOriginalUrl: vi.fn(),
     findAll: vi.fn(),

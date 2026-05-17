@@ -2,14 +2,11 @@ import { Form, useActionData, useLoaderData, useNavigation, useFetcher } from "r
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/_index";
 import {
-  ShortenUrlUseCase,
-  ListUrlsUseCase,
   UrlRequiredError,
   InvalidUrlError,
   RateLimitExceededError,
 } from "@url-shortener/engine";
-import { shortenRateLimiter } from "../infrastructure/shorten-rate-limiter";
-import { PrismaUrlRepository } from "../infrastructure/prisma-url-repository";
+import { makeShortenUrlUseCase, makeListUrlsUseCase } from "../infrastructure/container";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import {
@@ -21,9 +18,7 @@ import {
 import { Badge } from "../components/ui/badge";
 
 export async function loader() {
-  const repository = new PrismaUrlRepository();
-  const listUrls = new ListUrlsUseCase(repository);
-  const urls = await listUrls.execute();
+  const urls = await makeListUrlsUseCase().execute();
 
   return {
     baseUrl: process.env.PUBLIC_URL ?? "",
@@ -57,9 +52,7 @@ export async function action({ request }: Route.ActionArgs) {
     "unknown";
 
   try {
-    const repository = new PrismaUrlRepository();
-    const shortenUrl = new ShortenUrlUseCase(repository, shortenRateLimiter);
-    const shortened = await shortenUrl.execute(rawUrl, clientId);
+    const shortened = await makeShortenUrlUseCase().execute(rawUrl, clientId);
 
     return {
       shortCode: shortened.shortCode.value,

@@ -10,7 +10,7 @@ import { OriginalUrl } from "../domain/original-url";
 function makeRepository(overrides: Partial<UrlRepository> = {}): UrlRepository {
   return {
     save: vi.fn().mockResolvedValue(undefined),
-    update: vi.fn(),
+    incrementClicks: vi.fn(),
     findByCode: vi.fn().mockResolvedValue(null),
     findByOriginalUrl: vi.fn().mockResolvedValue(null),
     findAll: vi.fn().mockResolvedValue([]),

@@ -5,6 +5,7 @@ export { ShortenedUrl } from "./domain/shortened-url";
 export type { UrlRepository } from "./domain/url-repository.port";
 export { DomainError } from "./domain/domain-error";
 export { InvalidUrlError } from "./domain/invalid-url-error";
+export { InvalidShortCodeError } from "./domain/invalid-short-code-error";
 export { UrlRequiredError } from "./domain/url-required-error";
 
 // Application

@@ -5,7 +5,6 @@ export class ListUrlsUseCase {
   constructor(private readonly repository: UrlRepository) {}
 
   async execute(): Promise<ShortenedUrl[]> {
-    const urls = await this.repository.findAll();
-    return urls.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return this.repository.findAll();
   }
 }
