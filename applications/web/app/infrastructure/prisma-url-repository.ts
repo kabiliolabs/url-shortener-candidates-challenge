@@ -1,5 +1,5 @@
 import type { UrlRepository } from "@url-shortener/engine";
-import { ShortenedUrl, ShortCode, OriginalUrl } from "@url-shortener/engine";
+import { ShortenedUrl, ShortCode, OriginalUrl, ShortCodeCollisionError } from "@url-shortener/engine";
 import { prisma } from "./prisma-client";
 
 type PrismaRecord = { id: string; shortCode: string; originalUrl: string; clicks: number; createdAt: Date };
@@ -16,15 +16,23 @@ function toEntity(r: PrismaRecord): ShortenedUrl {
 
 export class PrismaUrlRepository implements UrlRepository {
   async save(url: ShortenedUrl): Promise<void> {
-    await prisma.shortenedUrl.create({
-      data: {
-        id: url.id,
-        shortCode: url.shortCode.value,
-        originalUrl: url.originalUrl.value,
-        clicks: url.clicks,
-        createdAt: url.createdAt,
-      },
-    });
+    try {
+      await prisma.shortenedUrl.create({
+        data: {
+          id: url.id,
+          shortCode: url.shortCode.value,
+          originalUrl: url.originalUrl.value,
+          clicks: url.clicks,
+          createdAt: url.createdAt,
+        },
+      });
+    } catch (err: unknown) {
+      // P2002 = unique constraint violation (short code collision)
+      if (err instanceof Error && (err as { code?: string }).code === "P2002") {
+        throw new ShortCodeCollisionError();
+      }
+      throw err;
+    }
   }
 
   async incrementClicks(code: string): Promise<ShortenedUrl | null> {

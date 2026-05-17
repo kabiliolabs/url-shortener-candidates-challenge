@@ -3,6 +3,7 @@ import { ShortenUrlUseCase } from "./shorten-url.use-case";
 import { RateLimitExceededError } from "./rate-limit-exceeded-error";
 import type { UrlRepository } from "../domain/url-repository.port";
 import type { RateLimiterPort } from "./ports/rate-limiter.port";
+import { ShortCodeCollisionError } from "../domain/short-code-collision-error";
 import { ShortenedUrl } from "../domain/shortened-url";
 import { ShortCode } from "../domain/short-code";
 import { OriginalUrl } from "../domain/original-url";
@@ -39,7 +40,7 @@ describe("ShortenUrlUseCase", () => {
     const repository = makeRepository();
     const useCase = new ShortenUrlUseCase(repository, makeRateLimiter());
 
-    await expect(useCase.execute("not-a-url", "127.0.0.1")).rejects.toThrow("Invalid URL format");
+    await expect(useCase.execute("http://", "127.0.0.1")).rejects.toThrow("Invalid URL format");
     expect(repository.save).not.toHaveBeenCalled();
   });
 
@@ -59,15 +60,26 @@ describe("ShortenUrlUseCase", () => {
     expect(repository.save).not.toHaveBeenCalled();
   });
 
-  it("throws the last error after exhausting all retries on save failure", async () => {
-    const error = new Error("unique constraint violation");
+  it("retries on ShortCodeCollisionError and throws after exhausting attempts", async () => {
+    const collision = new ShortCodeCollisionError();
     const repository = makeRepository({
-      save: vi.fn().mockRejectedValue(error),
+      save: vi.fn().mockRejectedValue(collision),
     });
     const useCase = new ShortenUrlUseCase(repository, makeRateLimiter());
 
-    await expect(useCase.execute("https://example.com", "127.0.0.1")).rejects.toThrow("unique constraint violation");
+    await expect(useCase.execute("https://example.com", "127.0.0.1")).rejects.toThrow(ShortCodeCollisionError);
     expect(repository.save).toHaveBeenCalledTimes(3);
+  });
+
+  it("propagates non-collision errors immediately without retrying", async () => {
+    const dbError = new Error("connection lost");
+    const repository = makeRepository({
+      save: vi.fn().mockRejectedValue(dbError),
+    });
+    const useCase = new ShortenUrlUseCase(repository, makeRateLimiter());
+
+    await expect(useCase.execute("https://example.com", "127.0.0.1")).rejects.toThrow("connection lost");
+    expect(repository.save).toHaveBeenCalledTimes(1);
   });
 
   it("returns existing URL without saving when original URL already exists", async () => {

@@ -25,8 +25,13 @@ describe("OriginalUrl.create", () => {
     expect(() => OriginalUrl.create("   ")).toThrow("URL is required");
   });
 
+  it("auto-prefixes https:// when no protocol is given", () => {
+    const url = OriginalUrl.create("example.com");
+    expect(url.value).toBe("https://example.com/");
+  });
+
   it("throws when URL format is invalid", () => {
-    expect(() => OriginalUrl.create("not-a-url")).toThrow("Invalid URL format");
+    expect(() => OriginalUrl.create("http://")).toThrow("Invalid URL format");
   });
 
   it("throws when protocol is ftp", () => {

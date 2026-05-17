@@ -2,14 +2,16 @@ import { ShortenUrlUseCase, TrackClickUseCase, ListUrlsUseCase } from "@url-shor
 import { PrismaUrlRepository } from "./prisma-url-repository";
 import { shortenRateLimiter } from "./shorten-rate-limiter";
 
+const repository = new PrismaUrlRepository();
+
 export function makeShortenUrlUseCase(): ShortenUrlUseCase {
-  return new ShortenUrlUseCase(new PrismaUrlRepository(), shortenRateLimiter);
+  return new ShortenUrlUseCase(repository, shortenRateLimiter);
 }
 
 export function makeTrackClickUseCase(): TrackClickUseCase {
-  return new TrackClickUseCase(new PrismaUrlRepository());
+  return new TrackClickUseCase(repository);
 }
 
 export function makeListUrlsUseCase(): ListUrlsUseCase {
-  return new ListUrlsUseCase(new PrismaUrlRepository());
+  return new ListUrlsUseCase(repository);
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { GetUrlUseCase } from "./find-url-by-code.use-case";
+import { FindUrlByCodeUseCase } from "./find-url-by-code.use-case";
 import { UrlNotFoundError } from "./url-not-found-error";
 import { ShortenedUrl } from "../domain/shortened-url";
 import { OriginalUrl } from "../domain/original-url";
@@ -17,7 +17,7 @@ function makeRepository(overrides: Partial<UrlRepository> = {}): UrlRepository {
   };
 }
 
-describe("GetUrlUseCase", () => {
+describe("FindUrlByCodeUseCase", () => {
   it("returns the shortened URL when found", async () => {
     const stored = new ShortenedUrl(
       "id-1",
@@ -27,7 +27,7 @@ describe("GetUrlUseCase", () => {
       new Date()
     );
     const repository = makeRepository({ findByCode: vi.fn().mockResolvedValue(stored) });
-    const useCase = new GetUrlUseCase(repository);
+    const useCase = new FindUrlByCodeUseCase(repository);
 
     const result = await useCase.execute("abc1234");
     expect(result).toBe(stored);
@@ -35,7 +35,7 @@ describe("GetUrlUseCase", () => {
 
   it("throws UrlNotFoundError when code does not exist", async () => {
     const repository = makeRepository({ findByCode: vi.fn().mockResolvedValue(null) });
-    const useCase = new GetUrlUseCase(repository);
+    const useCase = new FindUrlByCodeUseCase(repository);
 
     await expect(useCase.execute("missing")).rejects.toThrow(UrlNotFoundError);
   });

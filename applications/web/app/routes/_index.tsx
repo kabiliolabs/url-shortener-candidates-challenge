@@ -41,10 +41,7 @@ function toErrorMessage(err: unknown): string {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  let rawUrl = formData.get("url") as string;
-  if (rawUrl && !/^https?:\/\//i.test(rawUrl)) {
-    rawUrl = `https://${rawUrl}`;
-  }
+  const rawUrl = formData.get("url") as string;
 
   const clientId =
     request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
@@ -70,7 +67,7 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-function UrlRow({ url, baseUrl }: { url: { id: string; shortCode: string; originalUrl: string; clicks: number }; baseUrl: string }) {
+function UrlRow({ url }: { url: { id: string; shortCode: string; originalUrl: string; clicks: number } }) {
   const fetcher = useFetcher();
   const optimisticClicks = fetcher.state !== "idle" ? url.clicks + 1 : url.clicks;
 
@@ -184,7 +181,7 @@ export default function Index() {
             <CardContent className="p-0">
               <ul className="divide-y max-h-80 overflow-y-auto">
                 {sortedUrls.map((url) => (
-                  <UrlRow key={url.id} url={url} baseUrl={baseUrl} />
+                  <UrlRow key={url.id} url={url} />
                 ))}
               </ul>
             </CardContent>

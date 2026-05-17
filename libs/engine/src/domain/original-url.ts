@@ -16,9 +16,11 @@ export class OriginalUrl {
       throw new UrlRequiredError();
     }
 
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
     let parsed: URL;
     try {
-      parsed = new URL(trimmed);
+      parsed = new URL(normalized);
     } catch {
       throw new InvalidUrlError("Invalid URL format");
     }
@@ -29,7 +31,7 @@ export class OriginalUrl {
 
     const isLocalhost = parsed.hostname === "localhost";
     if (!isLocalhost) {
-      const valid = isURL(trimmed, {
+      const valid = isURL(normalized, {
         protocols: ["http", "https"],
         require_protocol: true,
         require_tld: true,
