@@ -1,15 +1,16 @@
+import { CodeNotFoundError } from "@url-shortener/engine";
 import { redirect } from "react-router";
+import { getEngine } from "~/lib/engine.server";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
 
-export function loader({ params }: Route.LoaderArgs) {
-  const { code } = params;
-
-  const url = shortenedUrls.get(code);
-
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+export async function loader({ params }: Route.LoaderArgs) {
+  try {
+    const longUrl = await getEngine().resolveShortCode(params.code);
+    return redirect(longUrl);
+  } catch (err) {
+    if (err instanceof CodeNotFoundError) {
+      throw new Response("Short link not found", { status: 404 });
+    }
+    throw err;
   }
-
-  return redirect(url);
 }

@@ -1,0 +1,29 @@
+// Prisma 7: generator switched to the new `prisma-client` provider with a
+// required custom output path. Datasource `url` is no longer set here — it
+// moved to prisma.config.ts so the CLI reads it from the environment and the
+// runtime passes it explicitly via the PrismaPg adapter.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Stored in Postgres as PARTITION BY HASH (code) with 64 child partitions.
+// Prisma cannot model partitioned-table DDL, so the partitioning is enforced
+// by a hand-written migration (see prisma/migrations/*_partition_shortened_url).
+// The PK is composite (id, code) because Postgres requires partition columns
+// to be included in primary keys — code stays globally unique via @unique.
+model ShortenedUrl {
+  id            BigInt    @default(autoincrement())
+  code          String    @unique
+  longUrl       String    @db.VarChar(2048)
+  createdAt     DateTime  @default(now())
+  clickCount    Int       @default(0)
+  lastClickedAt DateTime?
+
+  @@id([id, code])
+  @@map("shortened_url")
+}
