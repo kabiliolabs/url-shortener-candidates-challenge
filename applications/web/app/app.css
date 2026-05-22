@@ -1,15 +1,100 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:
+    "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+}
+
+/*
+ * Kabilio-inspired palette: cream canvas, indigo primary, pastel accents,
+ * full-pill buttons, big light-weight display headings. We override a few
+ * Radix Themes tokens directly so the Theme provider's accent="indigo" +
+ * gray="sand" pair lands on the exact cream Kabilio uses (#f3f0ec)
+ * instead of Radix' default sand-1.
+ */
+
+:root,
+.radix-themes {
+  /* Page canvas — warm cream, not pure white. */
+  --color-background: #f3f0ec;
+  --gray-1: #f3f0ec;
+  --gray-2: #ebe7e1;
+
+  /* Custom pastel surfaces for highlight cards. */
+  --pastel-lavender: #ddd5fd;
+  --pastel-lavender-soft: #ece7fe;
+  --pastel-sky: #dfeafe;
+  --pastel-blush: #f8d5e4;
+  --pastel-sage: #d7dacf;
+  --ink-900: #111827;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  background: var(--color-background);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+/* Display headings adopt the Kabilio look: light weight, tight tracking. */
+.display-heading {
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+/* Pill chip used above the hero. */
+.eyebrow-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  background: var(--pastel-lavender-soft);
+  color: var(--accent-11);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Soft animated gradient blob behind the hero — adds depth without noise. */
+.hero-blob {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-blob::before,
+.hero-blob::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.7;
+}
+.hero-blob::before {
+  top: -120px;
+  left: -80px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, var(--pastel-lavender) 0%, transparent 70%);
+}
+.hero-blob::after {
+  top: 40px;
+  right: -120px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, var(--pastel-blush) 0%, transparent 70%);
+}
+
+/* Code chip styling for short link previews. */
+.code-chip {
+  font-family:
+    "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }

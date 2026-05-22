@@ -1,3 +1,5 @@
+import { Theme } from "@radix-ui/themes";
+import "@radix-ui/themes/styles.css";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,7 +8,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
+import { Toaster } from "sonner";
 import type { Route } from "./+types/root";
 import "./app.css";
 
@@ -17,9 +19,11 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.gstatic.com",
     crossOrigin: "anonymous",
   },
+  // Manrope mirrors the Aeonik vibe Kabilio uses — geometric, friendly,
+  // optical-sized; Geist Mono pairs with it for the code chips.
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap",
   },
 ];
 
@@ -33,7 +37,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        {/*
+         * Theme tuned to match kabilio.es exactly:
+         * - accent="indigo" hits #6366f1 (Radix indigo-9)
+         * - gray="sand" gives a warm cream/sand neutral; app.css further
+         *   pins --gray-1 to the exact Kabilio cream (#f3f0ec)
+         * - radius="full" matches the pill-shaped buttons across the site
+         * - scaling="105%" gives the airy, premium feel Kabilio uses
+         */}
+        <Theme
+          accentColor="indigo"
+          grayColor="sand"
+          radius="full"
+          scaling="105%"
+          appearance="light"
+          panelBackground="solid"
+        >
+          {children}
+          <Toaster richColors closeButton theme="light" position="bottom-right" />
+        </Theme>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -62,11 +84,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="container mx-auto p-6 pt-16">
+      <h1 className="text-3xl font-semibold">{message}</h1>
+      <p className="mt-2 text-gray-600">{details}</p>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="mt-6 w-full overflow-x-auto rounded-lg bg-gray-100 p-4 text-sm">
           <code>{stack}</code>
         </pre>
       )}

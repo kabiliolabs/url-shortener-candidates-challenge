@@ -1,10 +1,73 @@
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: shortener
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d shortener"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "6379:6379"
+
+  # One-shot migration runner. Exits 0 on success; web waits on completion.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://app:app@db:5432/shortener
+    command: ["sh", "-c", "cd /app/libs/engine && pnpm exec prisma migrate deploy"]
+
   web:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PUBLIC_URL: http://localhost:3000
+      DATABASE_URL: postgresql://app:app@db:5432/shortener?connection_limit=10
+      REDIS_URL: redis://redis:6379
+      RATE_LIMIT_MAX: "10"
+      RATE_LIMIT_WINDOW_SEC: "60"
+      CACHE_TTL_SEC: "3600"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PUBLIC_URL=http://localhost:3000
+
+volumes:
+  db_data:
