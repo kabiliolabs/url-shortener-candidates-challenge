@@ -1,32 +1,57 @@
-import { Form, useActionData } from "react-router";
+import { useActionData } from "react-router";
 import type { Route } from "./+types/_index";
+import { ShortenedUrlResult } from "~/components/shortened-url-result";
+import { UrlList } from "~/components/url-list";
+import { UrlShortenerForm } from "~/components/url-shortener-form";
 import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+  createShortenedUrl,
+  getFormError,
+  toShortUrlListItem,
+} from "~/server/short-url-route-data.server";
+import {
+  createShortUrlForRequest,
+  listShortUrlsForRequest,
+} from "~/server/short-url.server";
+import {
+  assertCreateShortUrlRequestIsAllowed,
+  assertUrlDoesNotPointToShortener,
+} from "~/server/security.server";
 
-export function loader() {
+export async function loader() {
+  const shortUrls = await listShortUrlsForRequest();
+
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl: createShortenedUrl(""),
+    shortUrls: shortUrls.map(toShortUrlListItem),
   };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const url = formData.get("url");
 
-  if (!url) {
+  if (typeof url !== "string") {
     return { error: "URL is required" };
   }
 
-  const shortCode = generateShortCode();
+  try {
+    assertCreateShortUrlRequestIsAllowed(request);
+    assertUrlDoesNotPointToShortener(url);
 
-  shortenedUrls.set(shortCode, url);
+    const shortUrl = await createShortUrlForRequest({ originalUrl: url });
 
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+    return {
+      shortenedUrl: createShortenedUrl(shortUrl.code),
+    };
+  } catch (error) {
+    const formError = getFormError(error);
+
+    if (formError) {
+      return { error: formError };
+    }
+
+    throw error;
+  }
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -37,61 +62,27 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
+  const { baseUrl, shortUrls } = loaderData;
   const actionData = useActionData<typeof action>();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <main className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950 sm:px-6 lg:px-8">
+      <div className="mx-auto grid w-full max-w-5xl gap-8">
+        <header className="grid gap-2">
+          <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+            URL shortener
+          </p>
+          <h1 className="text-3xl font-semibold text-zinc-950 sm:text-4xl">
+            Create and track short links
+          </h1>
+        </header>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
+        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
+          <UrlShortenerForm baseUrl={baseUrl} error={actionData?.error} />
+          <ShortenedUrlResult shortenedUrl={actionData?.shortenedUrl} />
+        </section>
 
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
-
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
-        )}
-
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
+        <UrlList shortUrls={shortUrls} />
       </div>
     </main>
   );

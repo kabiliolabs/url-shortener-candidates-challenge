@@ -1,10 +1,47 @@
 services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-url_shortener}
+      POSTGRES_USER: ${POSTGRES_USER:-url_shortener}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-url_shortener}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   web:
     build:
       context: .
       dockerfile: Dockerfile
+      target: development
+    command: sh -c "pnpm db:generate && pnpm db:deploy && pnpm --filter web dev --host 0.0.0.0"
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-5173}:5173"
     environment:
-      - NODE_ENV=production
-      - PUBLIC_URL=http://localhost:3000
+      NODE_ENV: ${NODE_ENV:-development}
+      PUBLIC_URL: "http://${PUBLIC_HOST:-localhost}:${WEB_PORT:-5173}"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-url_shortener}:${POSTGRES_PASSWORD:-url_shortener}@db:5432/${POSTGRES_DB:-url_shortener}?schema=public"
+    volumes:
+      - .:/app
+      - root-node-modules:/app/node_modules
+      - web-node-modules:/app/applications/web/node_modules
+      - engine-node-modules:/app/libs/engine/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  root-node-modules:
+  web-node-modules:
+  engine-node-modules:

@@ -6,11 +6,17 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "quality": "pnpm typecheck && pnpm test && pnpm build",
+    "db:generate": "pnpm --filter web db:generate",
+    "db:migrate": "pnpm --filter web db:migrate",
+    "db:deploy": "pnpm --filter web db:deploy",
     "clean": "turbo run clean && rm -rf .turbo",
     "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
-    "turbo": "^2.7.4"
+    "turbo": "^2.7.4",
+    "vitest": "^4.1.6"
   }
 }

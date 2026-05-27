@@ -1,0 +1,24 @@
+name: Quality
+
+on:
+  pull_request:
+
+jobs:
+  quality:
+    name: Docker quality checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build web image
+        run: docker compose build web
+
+      - name: Run quality checks
+        run: docker compose run --rm --no-deps web pnpm quality
+
+      - name: Stop Docker services
+        if: always()
+        run: docker compose down -v --remove-orphans

@@ -1,8 +1,8 @@
-# Welcome to React Router!
+# Web Application
 
-A modern, production-ready template for building full-stack React applications using React Router.
+A React Router v7 full-stack application for the URL shortener.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+This package is part of the Docker-managed workspace. Do not install or run dependencies directly from this folder.
 
 ## Features
 
@@ -14,74 +14,40 @@ A modern, production-ready template for building full-stack React applications u
 - 🎉 TailwindCSS for styling
 - 📖 [React Router docs](https://reactrouter.com/)
 
-## Getting Started
+## Development
 
-### Installation
-
-Install the dependencies:
+Run the application from the repository root:
 
 ```bash
-npm install
+cp .env.example .env
+docker compose up --build
 ```
 
-### Development
+The application will be available at `http://localhost:5173`.
 
-Start the development server with HMR:
+## Package Commands
+
+Run package commands through Docker:
 
 ```bash
-npm run dev
+docker compose run --rm web pnpm --filter web typecheck
+docker compose run --rm web pnpm --filter web build
 ```
 
-Your application will be available at `http://localhost:5173`.
+## Build Output
 
-## Building for Production
+React Router writes the production build to `applications/web/build`:
 
-Create a production build:
-
-```bash
-npm run build
+```txt
+build/
+  client/    # Static assets
+  server/    # Server-side code
 ```
 
 ## Deployment
 
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
+The repository root `Dockerfile` contains the production image target. See the root [README.md](../../README.md) for Docker commands.
 
 ## Styling
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+This package uses Tailwind CSS. Keep shared UI styles and components in the web application, and keep domain logic in `libs/engine`.
