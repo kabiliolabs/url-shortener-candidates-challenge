@@ -1,15 +1,27 @@
 import { redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import { AppError } from "@url-shortener/engine";
+import { urlShortenerContainer } from "~/server/url-shortener-container.server";
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const { code } = params;
 
-  const url = shortenedUrls.get(code);
+  try {
+    const redirectTo = await urlShortenerContainer.redirectToOriginalUrlUseCase.execute({
+      shortCode: code,
+    });
 
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+    await urlShortenerContainer.trackClickUseCase.execute({
+      shortCode: code,
+      clickedAt: new Date(),
+    });
+
+    return redirect(redirectTo.originalUrl);
+  } catch (error) {
+    if (error instanceof AppError && error.statusCode === 404) {
+      throw new Response("Not Found", { status: 404 });
+    }
+
+    throw new Response("Unable to redirect right now", { status: 500 });
   }
-
-  return redirect(url);
 }
