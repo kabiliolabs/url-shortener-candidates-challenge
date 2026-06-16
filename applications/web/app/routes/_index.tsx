@@ -1,32 +1,87 @@
-import { Form, useActionData } from "react-router";
+import { AppError } from "@url-shortener/engine";
+import { useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { z } from "zod";
+import { ShortenedUrlResult } from "~/features/url-shortener/components/shortened-url-result";
+import { UrlShortenerForm } from "~/features/url-shortener/components/url-shortener-form";
+import { UrlStatsTable } from "~/features/url-stats/components/url-stats-table";
+import { resolveBaseUrl } from "~/server/base-url.server";
+import { getRequestClientKey } from "~/server/request.server";
+import { urlShortenerContainer } from "~/server/url-shortener-container.server";
 
-export function loader() {
+const createUrlSchema = z.object({
+  url: z.string().trim().url("Please provide a valid URL."),
+});
+
+type ActionData = {
+  shortenedUrl?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+};
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const baseUrl = resolveBaseUrl(request);
+  const stats = await urlShortenerContainer.getUrlStatsUseCase.execute({ limit: 20 });
+
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl,
+    stats: stats.map((item) => ({
+      shortCode: item.shortCode,
+      originalUrl: item.originalUrl,
+      clickCount: item.clickCount,
+      createdAt: item.createdAt.toISOString(),
+      lastClickedAt: item.lastClickedAt?.toISOString() ?? null,
+    })),
   };
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  const baseUrl = resolveBaseUrl(request);
+
+  try {
+    const clientKey = getRequestClientKey(request);
+    urlShortenerContainer.rateLimiter.consume(clientKey);
+
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+    const result = createUrlSchema.safeParse({
+      url: formData.get("url"),
+    });
 
-  if (!url) {
-    return { error: "URL is required" };
+    if (!result.success) {
+      return {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: result.error.issues[0]?.message ?? "Invalid URL.",
+        },
+      } satisfies ActionData;
+    }
+
+    const created = await urlShortenerContainer.createShortUrlUseCase.execute({
+      originalUrl: result.data.url,
+    });
+
+    return {
+      shortenedUrl: `${baseUrl}/s/${created.shortCode}`,
+    } satisfies ActionData;
+  } catch (error) {
+    if (error instanceof AppError) {
+      return {
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      } satisfies ActionData;
+    }
+
+    return {
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Unexpected error while creating short URL.",
+      },
+    } satisfies ActionData;
   }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -37,61 +92,18 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData<ActionData>();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
-
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
-
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
-
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
-        )}
-
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#dbeafe,_transparent_50%),radial-gradient(circle_at_bottom_right,_#cffafe,_transparent_40%),linear-gradient(#f8fafc,#eef2ff)] px-4 py-10">
+      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <UrlShortenerForm error={actionData?.error?.message} />
+          {actionData?.shortenedUrl && (
+            <ShortenedUrlResult shortUrl={actionData.shortenedUrl} />
+          )}
+        </div>
+        <UrlStatsTable rows={loaderData.stats} baseUrl={loaderData.baseUrl} />
       </div>
     </main>
   );
