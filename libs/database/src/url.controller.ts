@@ -15,6 +15,7 @@ export async function createUrl(fullUrl: string): Promise<Url> {
             where: { id: existingUrl.id },
             data: { shortenCount: existingUrl.shortenCount + 1 },
         });
+        console.log("Updated url:", existingUrl);
         return existingUrl;
     }
 
@@ -36,3 +37,17 @@ export async function createUrl(fullUrl: string): Promise<Url> {
 export async function getAllUrls(): Promise<Url[]> {
     return await prisma.url.findMany();
 }
+
+export async function resolveShortCode(shortCode: string): Promise<string | null> {
+    const record = await prisma.url.findUnique({
+      where: { shortCode },
+    });
+    if (!record) {
+      return null;
+    }
+    await prisma.url.update({
+      where: { id: record.id },
+      data: { clickCount: { increment: 1 } },
+    });
+    return record.url;
+  }
