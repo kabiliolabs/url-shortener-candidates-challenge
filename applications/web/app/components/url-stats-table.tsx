@@ -7,17 +7,19 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import type { UrlStats } from "~/lib/url-stats";
+
+import type { Url } from "~/lib/urls.types";
 
 type UrlStatsTableProps = {
-  urls: UrlStats[];
+  urls: Url[];
   baseUrl: string;
 };
 
 function formatDate(isoDate: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "UTC",
   }).format(new Date(isoDate));
 }
 
@@ -59,14 +61,7 @@ export function UrlStatsTable({ urls, baseUrl }: UrlStatsTableProps) {
                 </a>
               </TableCell>
               <TableCell>
-                <a
-                  href={shortLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-sm text-primary hover:underline"
-                >
-                  {record.shortCode}
-                </a>
+                {record.shortCode}
               </TableCell>
               <TableCell className="text-right">
                 <Badge variant="secondary">{record.shortenCount}</Badge>

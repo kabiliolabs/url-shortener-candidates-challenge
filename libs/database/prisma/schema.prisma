@@ -7,13 +7,15 @@ datasource db {
   provider = "postgresql"
 }
 
-model Url {
-  id        Int      @id @default(autoincrement())
-  url       String   @unique
-  shortCode String   @unique
-  shortenCount Int   @default(1)
-  clickCount Int     @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model UrlDatabase {
+  id           Int      @id @default(autoincrement())
+  url          String   @unique
+  shortCode    String   @unique
+  shortenCount Int      @default(1)
+  clickCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("Url")
 }
 

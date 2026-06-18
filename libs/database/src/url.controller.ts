@@ -1,53 +1,68 @@
 import { generateShortCode } from "@url-shortener/engine";
-import type { Url } from "../generated/prisma/browser.js";
+import type { UrlDatabase } from "../generated/prisma/browser.js";
 import { prisma } from "./prisma.js";
 
-export async function createUrl(fullUrl: string): Promise<Url> {
-    const existingUrl = await prisma.url.findUnique({
-        where: { url: fullUrl },
+import { Prisma } from "../generated/prisma/client.js";
+import { AppError } from "./errors.js";
+
+export async function createUrl(fullUrl: string): Promise<UrlDatabase> {
+  try {
+    const existingUrl = await prisma.urlDatabase.findUnique({
+      where: { url: fullUrl },
     });
 
-    /**
-     * If the URL already exists, update the record
-     */
     if (existingUrl) {
-        await prisma.url.update({
-            where: { id: existingUrl.id },
-            data: { shortenCount: existingUrl.shortenCount + 1 },
-        });
-        console.log("Updated url:", existingUrl);
-        return existingUrl;
+      return await prisma.urlDatabase.update({
+        where: { id: existingUrl.id },
+        data: { shortenCount: { increment: 1 } },
+      });
     }
 
-    /**
-     * If the URL does not exist, create a new record
-     */
     const shortCode = generateShortCode();
 
-    const record = await prisma.url.create({
-        data: {
-            url: fullUrl,
-            shortCode,
-        },
+    return await prisma.urlDatabase.create({
+      data: { url: fullUrl, shortCode },
     });
-    console.log("Created url:", record);
-    return record;
+  } catch (error: unknown) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002" // Unique constraint violation
+    ) {
+      throw new AppError("This URL already exists", "URL_ALREADY_EXISTS");
+    }
+
+    throw new AppError("Failed to shorten URL", "DATABASE_ERROR");
+  }
 }
 
-export async function getAllUrls(): Promise<Url[]> {
-    return await prisma.url.findMany();
+export async function getAllUrls(): Promise<UrlDatabase[]> {
+    try {
+        return await prisma.urlDatabase.findMany();
+    } catch (error: unknown) {
+        throw new AppError("Failed to get all URLs", "DATABASE_ERROR");
+    }
 }
 
 export async function resolveShortCode(shortCode: string): Promise<string | null> {
-    const record = await prisma.url.findUnique({
-      where: { shortCode },
-    });
-    if (!record) {
-      return null;
-    }
-    await prisma.url.update({
-      where: { id: record.id },
-      data: { clickCount: { increment: 1 } },
-    });
-    return record.url;
+    try {
+        const record = await prisma.urlDatabase.findUnique({
+          where: { shortCode },
+        });
+        if (!record) {
+          return null;
+        }
+        await prisma.urlDatabase.update({
+          where: { id: record.id },
+          data: { clickCount: { increment: 1 } },
+        });
+        return record.url;
+      } catch (error: unknown) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2025"
+        ) {
+          return null;
+        }
+        throw new AppError("Failed to resolve short code", "DATABASE_ERROR");
+      }
   }
