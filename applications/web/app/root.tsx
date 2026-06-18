@@ -1,7 +1,9 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
+  NavLink,
   Outlet,
   Scripts,
   ScrollRestoration,
@@ -42,7 +44,41 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b">
+        <nav className="container mx-auto flex items-center gap-6 px-4 py-3">
+          <Link to="/" className="font-medium">
+            URL Shortener
+          </Link>
+          <div className="flex gap-4 text-sm">
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                isActive
+                  ? "font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }
+              end
+            >
+              Shorten
+            </NavLink>
+            <NavLink
+              to="/urls"
+              className={({ isActive }) =>
+                isActive
+                  ? "font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }
+            >
+              Statistics
+            </NavLink>
+          </div>
+        </nav>
+      </header>
+      <Outlet />
+    </div>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

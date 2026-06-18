@@ -5,7 +5,8 @@
 ```
 url-shortener/
 ├── applications/web/    # React + React Router v7
-└── libs/engine/         # Domain logic
+├── libs/database/     # Prisma ORM + PostgreSQL
+└── libs/engine/       # Domain logic
 ```
 
 | Technology                                    | Description                                                                                       |
@@ -23,10 +24,24 @@ url-shortener/
 ```bash
 pnpm install
 cp .env.example .env
+docker compose up db -d
+pnpm db:migrate
 pnpm dev
 ```
 
 Open `http://localhost:5173`
+
+### Database (Prisma + PostgreSQL)
+
+PostgreSQL runs on port **5433** (to avoid conflicts with a local Postgres on 5432).
+
+```bash
+docker compose up db -d      # Start PostgreSQL
+pnpm db:migrate              # Apply migrations
+pnpm db:generate             # Regenerate Prisma Client
+pnpm db:studio               # Open Prisma Studio
+pnpm db:seed                 # Run getting started script
+```
 
 ## Docker Setup
 

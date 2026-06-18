@@ -1,15 +1,21 @@
 import { redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import { resolveShortCode, AppError } from "@url-shortener/database";
 
-export function loader({ params }: Route.LoaderArgs) {
-  const { code } = params;
-
-  const url = shortenedUrls.get(code);
-
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+export async function loader({ params }: Route.LoaderArgs) {
+  try {
+    const url = await resolveShortCode(params.code);
+    if (!url) {
+      throw new Response("Not Found", { status: 404 });
+    }
+    return redirect(url);
+  } catch (error) {
+    if (error instanceof Response) {
+      throw error;
+    }
+    if (error instanceof AppError) {
+      throw new Response(error.message, { status: 500 });
+    }
+    throw new Response("Internal Server Error", { status: 500 });
   }
-
-  return redirect(url);
 }

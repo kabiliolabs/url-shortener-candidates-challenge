@@ -7,9 +7,21 @@
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "clean": "turbo run clean && rm -rf .turbo",
-    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
+    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules",
+    "db:generate": "pnpm --filter @url-shortener/database db:generate",
+    "db:migrate": "pnpm --filter @url-shortener/database db:migrate",
+    "db:push": "pnpm --filter @url-shortener/database db:push",
+    "db:studio": "pnpm --filter @url-shortener/database db:studio",
+    "db:seed": "pnpm --filter @url-shortener/database exec tsx script.ts"
   },
   "packageManager": "pnpm@10.20.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  },
   "devDependencies": {
     "turbo": "^2.7.4"
   }

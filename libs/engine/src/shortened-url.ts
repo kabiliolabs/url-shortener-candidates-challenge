@@ -1,11 +1,13 @@
-export const shortenedUrls: Map<string, string> = new Map();
+import { randomInt } from "node:crypto";
+
+const SHORT_CODE_CHARS =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const SHORT_CODE_LENGTH = 6;
 
 export function generateShortCode(): string {
-  const chars = "abc";
-  const length = 2;
   let code = "";
-  for (let i = 0; i < length; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < SHORT_CODE_LENGTH; i++) {
+    code += SHORT_CODE_CHARS[randomInt(SHORT_CODE_CHARS.length)];
   }
   return code;
 }
