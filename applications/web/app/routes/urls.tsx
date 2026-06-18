@@ -1,7 +1,7 @@
 import { useRevalidator } from "react-router";
 import type { Route } from "./+types/urls";
 import { baseUrl } from "@url-shortener/engine";
-import { getAllUrls, type UrlDatabase } from "@url-shortener/database";
+import { getAllUrls, type UrlRecord } from "@url-shortener/database";
 import { UrlStatsTable } from "~/components/url-stats-table";
 import { Button } from "~/components/ui/button";
 import {
@@ -13,9 +13,7 @@ import {
 } from "~/components/ui/card";
 
 export async function loader() {
-  const urls: UrlDatabase[] = await getAllUrls();
-
-  console.log(typeof urls[0].createdAt);
+  const urls: UrlRecord[] = await getAllUrls();
 
   return {
     shortLinkBase: baseUrl ? `${baseUrl}/s/` : "/s/",

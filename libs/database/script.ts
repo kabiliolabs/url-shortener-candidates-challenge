@@ -1,5 +1,5 @@
 import { prisma } from "./src/prisma.js";
-import { createUrl } from "./src/url.controller.js";
+import { createUrl } from "./src/url.service.js";
 
 async function main(): Promise<void> {
   const fullUrl = process.argv[2];
