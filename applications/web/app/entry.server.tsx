@@ -1,10 +1,12 @@
 import { PassThrough } from "node:stream";
+import { randomBytes } from "node:crypto";
 import type { EntryContext } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
-import { SECURITY_HEADERS } from "~/.server/security-headers";
+import { NonceContext } from "~/nonce";
+import { securityHeaders } from "~/.server/security-headers";
 
 export const streamTimeout = 5_000;
 
@@ -16,19 +18,26 @@ export default function handleRequest(
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;
+    // Fresh nonce per request: advertised in the CSP and stamped on every
+    // inline script (React's streaming runtime via the `nonce` option below,
+    // React Router's bootstrap via <Scripts nonce> in root.tsx).
+    const nonce = randomBytes(16).toString("base64");
     const userAgent = request.headers.get("user-agent");
     const readyOption =
       userAgent && isbot(userAgent) ? "onAllReady" : "onShellReady";
 
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={routerContext} url={request.url} />,
+      <NonceContext.Provider value={nonce}>
+        <ServerRouter context={routerContext} url={request.url} />
+      </NonceContext.Provider>,
       {
+        nonce,
         [readyOption]() {
           shellRendered = true;
           const body = new PassThrough();
           const stream = createReadableStreamFromReadable(body);
           responseHeaders.set("Content-Type", "text/html");
-          for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+          for (const [key, value] of Object.entries(securityHeaders(nonce))) {
             responseHeaders.set(key, value);
           }
           resolve(
