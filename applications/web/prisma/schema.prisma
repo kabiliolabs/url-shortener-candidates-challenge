@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ShortenedUrl {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  originalUrl String
+  createdAt   DateTime @default(now())
+  clicks      Click[]
+
+  @@map("shortened_urls")
+}
+
+model Click {
+  id        String       @id @default(cuid())
+  urlId     String
+  url       ShortenedUrl @relation(fields: [urlId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  referer   String?
+  userAgent String?
+
+  @@index([urlId])
+  @@map("clicks")
+}
