@@ -1,98 +1,134 @@
-import { Form, useActionData } from "react-router";
+import { data, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/_index";
+import { InvalidUrlError, RetryExhaustedError } from "@url-shortener/engine";
 import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+  buildShortUrl,
+  getPublicBaseUrl,
+  getUrlRepository,
+  getUrlShortener,
+} from "~/.server/container";
+import { checkRateLimit, getClientIp } from "~/.server/rate-limit";
+import { UrlForm } from "~/components/url-form";
+import { UrlList, type UrlListItem } from "~/components/url-list";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { Alert, AlertTitle, AlertDescription } from "~/components/ui/alert";
 
-export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
-}
-
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
-
-  if (!url) {
-    return { error: "URL is required" };
-  }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
-}
-
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: "URL Shortener" },
-    { name: "description", content: "Shorten your URLs quickly and easily" },
+    {
+      name: "description",
+      content: "Shorten your URLs quickly and track clicks",
+    },
   ];
 }
 
-export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
+export async function loader(_: Route.LoaderArgs) {
+  const urls = await getUrlRepository().list();
+  const items: UrlListItem[] = urls.map((u) => ({
+    code: u.code,
+    originalUrl: u.originalUrl,
+    shortUrl: buildShortUrl(u.code),
+    clickCount: u.clickCount,
+    lastClickedAt: u.lastClickedAt ? u.lastClickedAt.toISOString() : null,
+    createdAt: u.createdAt.toISOString(),
+  }));
+  return { urls: items, baseUrl: getPublicBaseUrl() };
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const ip = getClientIp(request);
+  const limit = checkRateLimit(ip);
+  if (!limit.allowed) {
+    return data(
+      { error: `Too many requests. Try again in ${limit.retryAfterSeconds}s.` },
+      { status: 429 },
+    );
+  }
+
+  const formData = await request.formData();
+  const url = String(formData.get("url") ?? "");
+
+  try {
+    const created = await getUrlShortener().shorten(url);
+    return { shortUrl: buildShortUrl(created.code), code: created.code };
+  } catch (error) {
+    if (error instanceof InvalidUrlError) {
+      return data({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof RetryExhaustedError) {
+      return data(
+        { error: "Could not generate a unique code. Please try again." },
+        { status: 503 },
+      );
+    }
+    console.error("Failed to shorten URL", error);
+    return data(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 },
+    );
+  }
+}
+
+export default function Index() {
+  const { urls, baseUrl } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const shortUrl =
+    actionData && "shortUrl" in actionData ? actionData.shortUrl : undefined;
+  const error =
+    actionData && "error" in actionData ? actionData.error : undefined;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <main className="mx-auto max-w-3xl px-4 py-12 flex flex-col gap-8">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">URL Shortener</h1>
+        <p className="text-sm text-[var(--color-muted-foreground)]">
+          Paste a long URL to get a short link. Links start with {baseUrl}/s/
+        </p>
+      </header>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
+      <Card>
+        <CardHeader>
+          <CardTitle>Shorten a URL</CardTitle>
+          <CardDescription>Only http and https links are allowed.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <UrlForm error={error} />
+          {shortUrl && (
+            <Alert variant="success">
+              <AlertTitle>Your short link is ready</AlertTitle>
+              <AlertDescription>
+                <a
+                  href={shortUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono underline underline-offset-4 break-all"
+                >
+                  {shortUrl}
+                </a>
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
-
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
-        )}
-
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Your links</CardTitle>
+          <CardDescription>
+            {urls.length} link(s), with click statistics.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <UrlList urls={urls} />
+        </CardContent>
+      </Card>
     </main>
   );
 }

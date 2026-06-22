@@ -1,4 +1,6 @@
 FROM node:20-alpine AS base
+# Prisma's query engine on Alpine needs OpenSSL (libssl/libcrypto) present.
+RUN apk add --no-cache openssl
 RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 WORKDIR /app
 
@@ -13,6 +15,8 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=dependencies /app/applications/web/node_modules ./applications/web/node_modules
 COPY . .
+# Generate the Prisma client before bundling so the server build can resolve it.
+RUN pnpm --filter web exec prisma generate
 RUN pnpm build
 
 FROM base AS production
@@ -20,11 +24,14 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/applications/web/node_modules ./applications/web/node_modules
 COPY --from=build /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=build /app/applications/web/build ./applications/web/build
+COPY --from=build /app/applications/web/prisma ./applications/web/prisma
 COPY libs/engine/src ./libs/engine/src
 COPY applications/web/package.json ./applications/web/
 COPY libs/engine/package.json ./libs/engine/
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY docker-entrypoint.sh ./applications/web/docker-entrypoint.sh
+RUN chmod +x ./applications/web/docker-entrypoint.sh
 
 WORKDIR /app/applications/web
 EXPOSE 3000
-CMD ["pnpm", "start"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

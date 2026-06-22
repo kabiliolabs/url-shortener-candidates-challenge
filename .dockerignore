@@ -1,13 +1,39 @@
+# Dependencies (reinstalled inside the image)
 node_modules
 **/node_modules
+.pnpm-store
+**/.pnpm-store
+
+# Version control
 .git
 .gitignore
+
+# Docs & markdown (not needed at runtime)
 *.md
+**/*.md
+docs
+
+# Env files (secrets) — DATABASE_URL etc. are passed via compose
 .env
 .env.*
 !.env.example
+
+# Build output & caches (regenerated during the image build)
 **/dist
 **/build
 **/.react-router
 .turbo
 **/.turbo
+
+# Tests & coverage (not shipped in the runtime image)
+**/*.test.ts
+**/*.test.tsx
+**/vitest.config.ts
+coverage
+**/coverage
+
+# Editor / OS cruft
+.idea
+.vscode
+**/.DS_Store
+*.log

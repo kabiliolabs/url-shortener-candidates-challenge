@@ -7,7 +7,9 @@ import {
   ScrollRestoration,
 } from "react-router";
 
+import { useContext } from "react";
 import type { Route } from "./+types/root";
+import { NonceContext } from "./nonce";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -24,6 +26,7 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const nonce = useContext(NonceContext);
   return (
     <html lang="en">
       <head>
@@ -34,8 +37,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
@@ -62,11 +65,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="mx-auto max-w-xl px-4 py-20 text-center flex flex-col gap-3">
+      <h1 className="text-4xl font-semibold tracking-tight">{message}</h1>
+      <p className="text-[var(--color-muted-foreground)]">{details}</p>
+      <a
+        href="/"
+        className="text-[var(--color-primary)] underline underline-offset-4"
+      >
+        Back to home
+      </a>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="mt-4 w-full overflow-x-auto rounded-md bg-[var(--color-muted)] p-4 text-left text-xs">
           <code>{stack}</code>
         </pre>
       )}
