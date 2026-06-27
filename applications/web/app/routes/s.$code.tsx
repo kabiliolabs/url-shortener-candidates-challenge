@@ -1,15 +1,17 @@
-import { redirect } from "react-router";
-import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import { redirect } from 'react-router';
+import type { Route } from './+types/s.$code';
+import { recordClick, NotFoundError } from '@url-shortener/engine';
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const { code } = params;
 
-  const url = shortenedUrls.get(code);
-
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+  try {
+    const shortUrl = await recordClick(code);
+    return redirect(shortUrl.originalUrl, 302);
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      throw new Response('Not Found', { status: 404 });
+    }
+    throw err;
   }
-
-  return redirect(url);
 }
