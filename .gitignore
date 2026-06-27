@@ -143,3 +143,13 @@ vite.config.ts.timestamp-*
 
 # Claude code
 .claude/settings.local.json
+
+# SQLite database files
+data/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Prisma migration lock (generated, not committed)
+prisma/migrations/migration_lock.toml

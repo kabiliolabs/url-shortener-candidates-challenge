@@ -20,11 +20,17 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/applications/web/node_modules ./applications/web/node_modules
 COPY --from=build /app/libs/engine/node_modules ./libs/engine/node_modules
 COPY --from=build /app/applications/web/build ./applications/web/build
+COPY --from=build /app/libs/engine/prisma ./libs/engine/prisma
+COPY --from=build /app/libs/engine/prisma.config.ts ./libs/engine/prisma.config.ts
 COPY libs/engine/src ./libs/engine/src
 COPY applications/web/package.json ./applications/web/
 COPY libs/engine/package.json ./libs/engine/
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY docker-entrypoint.sh ./
+
+RUN mkdir -p /app/data && chmod +x /app/docker-entrypoint.sh
 
 WORKDIR /app/applications/web
 EXPOSE 3000
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["pnpm", "start"]
