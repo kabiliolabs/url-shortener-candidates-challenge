@@ -26,10 +26,10 @@ export function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className={`shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
+      className={`shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer border transition-colors outline-none ${
         copied
-          ? 'bg-green-100 border-green-300 text-green-700'
-          : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+          ? 'bg-(--color-success-bg) border-(--color-success-border) text-(--color-accent)'
+          : 'bg-white/5 border-(--color-border) text-(--color-muted) hover:text-white hover:border-white/20'
       }`}
     >
       {copied ? 'Copied!' : 'Copy'}

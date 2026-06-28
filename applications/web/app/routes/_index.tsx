@@ -66,28 +66,33 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const isSubmitting = navigation.state === 'submitting';
 
   return (
-    <main className="min-h-screen bg-gray-50 py-16 px-4">
+    <main className="min-h-screen bg-(--color-bg) py-16 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
 
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">URL Shortener</h1>
-          <p className="mt-1 text-gray-500 text-sm">Paste a long URL and get a short link instantly.</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            URL{' '}
+            <span className="glow-accent text-(--color-accent)">Shortener</span>
+          </h1>
+          <p className="mt-1 text-sm text-(--color-muted)">
+            Paste a long URL and get a short link instantly.
+          </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="card-border rounded-2xl p-6 bg-(--color-paper)">
           <Form method="post" className="flex flex-col gap-4">
             <div className="flex gap-2">
               <input
                 type="text"
                 name="url"
                 placeholder="https://example.com/very/long/url"
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="glow-input flex-1 px-4 py-2.5 rounded-lg text-sm outline-none transition-colors bg-(--color-bg) border border-(--color-border) text-white placeholder:text-(--color-subtle)"
                 aria-label="URL to shorten"
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="glow-btn bg-(--color-accent) text-(--color-bg) px-5 py-2.5 text-sm font-semibold rounded-lg cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
               >
                 {isSubmitting ? 'Shortening...' : 'Shorten'}
               </button>
@@ -95,19 +100,19 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
             <div aria-live="polite">
               {actionData?.error && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-                  <span className="text-red-500 text-xs">&#9679;</span>
-                  <p className="text-sm text-red-600">{actionData.error}</p>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-(--color-error-bg) border border-(--color-error-border)">
+                  <span className="text-xs text-(--color-error)">&#9679;</span>
+                  <p className="text-sm text-(--color-error)">{actionData.error}</p>
                 </div>
               )}
               {actionData?.shortUrl && (
-                <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
-                  <span className="text-green-500 text-base">&#10003;</span>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-(--color-success-bg) border border-(--color-success-border)">
+                  <span className="text-(--color-accent)">&#10003;</span>
                   <a
                     href={actionData.shortUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 text-sm font-mono text-blue-700 hover:underline break-all"
+                    className="flex-1 text-sm font-mono break-all text-(--color-accent) hover:text-(--color-accent-light) transition-colors hover:underline"
                   >
                     {actionData.shortUrl}
                   </a>
@@ -119,29 +124,34 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         </div>
 
         {urls.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-700">Recent links</h2>
+          <div className="card-border rounded-2xl overflow-hidden bg-(--color-paper)">
+            <div className="px-6 py-4 border-b border-(--color-border)">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-(--color-subtle)">
+                Recent links
+              </h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-xs uppercase tracking-wide text-gray-400 bg-gray-50">
+                <thead className="bg-(--color-thead-bg) text-xs uppercase tracking-wide text-(--color-subtle)">
+                  <tr>
                     <th className="px-6 py-3 text-left font-medium">Original URL</th>
                     <th className="px-6 py-3 text-left font-medium">Short URL</th>
                     <th className="px-6 py-3 text-right font-medium">Clicks</th>
                     <th className="px-6 py-3 text-right font-medium">Created</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {urls.map((url) => (
-                    <tr key={url.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-3 max-w-xs truncate text-gray-600">
+                    <tr
+                      key={url.id}
+                      className="border-t border-(--color-border-row) hover:bg-(--color-row-hover) transition-colors"
+                    >
+                      <td className="px-6 py-3 max-w-xs truncate">
                         <a
                           href={url.originalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:text-gray-900 hover:underline"
+                          className="text-(--color-muted) hover:text-white transition-colors hover:underline"
                         >
                           {url.originalUrl}
                         </a>
@@ -151,15 +161,15 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                           href={buildShortUrl(url.code, publicUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                          className="text-(--color-accent) hover:text-(--color-accent-light) transition-colors hover:underline"
                         >
                           {buildShortUrl(url.code, publicUrl)}
                         </a>
                       </td>
-                      <td className="px-6 py-3 text-right text-gray-600 tabular-nums">
+                      <td className="px-6 py-3 text-right tabular-nums text-(--color-muted)">
                         {url.clickCount}
                       </td>
-                      <td className="px-6 py-3 text-right text-gray-400 tabular-nums">
+                      <td className="px-6 py-3 text-right tabular-nums text-(--color-subtle)">
                         {new Date(url.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
@@ -171,8 +181,10 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         )}
 
         {urls.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-6 py-12 text-center">
-            <p className="text-sm text-gray-400">No links shortened yet. Paste a URL above to get started.</p>
+          <div className="card-border rounded-2xl px-6 py-12 text-center bg-(--color-paper)">
+            <p className="text-sm text-(--color-subtle)">
+              No links shortened yet. Paste a URL above to get started.
+            </p>
           </div>
         )}
 
