@@ -97,10 +97,10 @@ The hierarchy I chose is small by design:
 
 ```
 AppError
-├── ValidationError   (400)
-├── NotFoundError     (404)
-├── ConflictError     (409)
-└── RateLimitError    (429)
+|-- ValidationError   (400)
+|-- NotFoundError     (404)
+|-- ConflictError     (409)
+`-- RateLimitError    (429)
 ```
 
 Each class carries a machine-readable `code` and a human-readable message. Routes catch `AppError` subclasses and map them to the appropriate HTTP status. Anything that is not an `AppError` becomes a generic 500 with a safe message. Nothing internal reaches the client.
