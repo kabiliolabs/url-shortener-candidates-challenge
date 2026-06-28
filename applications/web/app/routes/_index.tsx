@@ -12,9 +12,12 @@ import {
 import { CopyButton } from '~/components/CopyButton';
 
 export async function loader() {
-  const urls = await listShortUrls();
   const publicUrl = process.env.PUBLIC_URL ?? '';
-  return { urls, publicUrl };
+  const urls = (await listShortUrls()).map(url => ({
+    ...url,
+    shortUrl: buildShortUrl(url.code, publicUrl),
+  }));
+  return { urls };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -60,7 +63,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { urls, publicUrl } = loaderData;
+  const { urls } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
@@ -123,7 +126,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           </Form>
         </div>
 
-        {urls.length > 0 && (
+        {urls.length > 0 ? (
           <div className="card-border rounded-2xl overflow-hidden bg-(--color-paper)">
             <div className="px-6 py-4 border-b border-(--color-border)">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-(--color-subtle)">
@@ -141,7 +144,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {urls.map((url) => (
+                  {urls.map(url => (
                     <tr
                       key={url.id}
                       className="border-t border-(--color-border-row) hover:bg-(--color-row-hover) transition-colors"
@@ -158,12 +161,12 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                       </td>
                       <td className="px-6 py-3 font-mono">
                         <a
-                          href={buildShortUrl(url.code, publicUrl)}
+                          href={url.shortUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-(--color-accent) hover:text-(--color-accent-light) transition-colors hover:underline"
                         >
-                          {buildShortUrl(url.code, publicUrl)}
+                          {url.shortUrl}
                         </a>
                       </td>
                       <td className="px-6 py-3 text-right tabular-nums text-(--color-muted)">
@@ -178,9 +181,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
               </table>
             </div>
           </div>
-        )}
-
-        {urls.length === 0 && (
+        ) : (
           <div className="card-border rounded-2xl px-6 py-12 text-center bg-(--color-paper)">
             <p className="text-sm text-(--color-subtle)">
               No links shortened yet. Paste a URL above to get started.
