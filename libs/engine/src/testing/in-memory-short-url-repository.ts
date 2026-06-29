@@ -5,14 +5,6 @@ import type {
 } from "../domain/ports/short-url-repository";
 import type { ShortenedUrl } from "../domain/shortened-url";
 
-/**
- * In-memory `ShortUrlRepository` for unit tests. Mirrors the production
- * adapter's contract — notably it throws {@link DuplicateCodeError} on a code
- * conflict, so the create use-case's retry path can be exercised without a DB.
- *
- * Lives in `testing/` (not `infrastructure/`) and is intentionally NOT
- * re-exported from the production `index.ts`.
- */
 export class InMemoryShortUrlRepository implements ShortUrlRepository {
   private readonly byCode = new Map<string, ShortenedUrl>();
   private seq = 0;

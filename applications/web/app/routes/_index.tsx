@@ -1,32 +1,51 @@
-import { Form, useActionData } from "react-router";
+import { Form, useActionData, data } from "react-router";
 import type { Route } from "./+types/_index";
+import { InvalidUrlError } from "@url-shortener/engine";
+import { baseUrl } from "../.server/config";
+import { createShortUrl } from "../.server/short-url";
 import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+  createShortUrlRateLimiter,
+  getClientIp,
+} from "../.server/rate-limit";
+
+type ActionData = { shortenedUrl?: string; error?: string };
 
 export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
+  return { baseUrl: `${baseUrl}/s/` };
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
-
-  if (!url) {
-    return { error: "URL is required" };
+  if (!createShortUrlRateLimiter.tryConsume(getClientIp(request))) {
+    return data<ActionData>(
+      { error: "Too many requests. Please slow down and try again shortly." },
+      { status: 429 },
+    );
   }
 
-  const shortCode = generateShortCode();
+  const formData = await request.formData();
+  const url = (formData.get("url") ?? "").toString().trim();
 
-  shortenedUrls.set(shortCode, url);
+  if (!url) {
+    return data<ActionData>({ error: "URL is required" }, { status: 400 });
+  }
 
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+  try {
+    const created = await createShortUrl({ url });
+    const result: ActionData = { shortenedUrl: `${baseUrl}/s/${created.code}` };
+    return result;
+  } catch (error) {
+    if (error instanceof InvalidUrlError) {
+      return data<ActionData>(
+        { error: "Please enter a valid http:// or https:// URL." },
+        { status: 400 },
+      );
+    }
+    console.error("Failed to create short URL", error);
+    return data<ActionData>(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 },
+    );
+  }
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -41,7 +60,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const actionData = useActionData<typeof action>();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
+    <main className="min-h-screen flex items-center justify-center bg-linear-to-br from-lime-400 via-pink-500 to-cyan-300">
       <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
         <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
           ~*~ URL Shortener ~*~

@@ -4,7 +4,6 @@ import type { ShortUrlRepository } from "../domain/ports/short-url-repository";
 import type { CodeGenerator } from "../domain/ports/code-generator";
 import type { ShortenedUrl } from "../domain/shortened-url";
 
-/** How many code-generation attempts before giving up on collisions. */
 const DEFAULT_MAX_ATTEMPTS = 5;
 
 export type CreateShortUrlDeps = {
@@ -22,15 +21,9 @@ export type CreateShortUrl = (
   input: CreateShortUrlInput,
 ) => Promise<ShortenedUrl>;
 
-/**
- * Build the "create short URL" use-case.
- *
- * Flow: validate the URL via the `OriginalUrl` value object, generate a code,
- * and try to persist it. Code uniqueness is enforced by storage (a UNIQUE
- * constraint), which surfaces as `DuplicateCodeError`; on conflict we generate
- * a fresh code and retry, up to `maxAttempts`, then rethrow. Retry lives here,
- * not in the repository — storage and code generation stay decoupled.
- */
+// On a code collision (DuplicateCodeError from storage), retry with a fresh
+// code up to maxAttempts. Retry lives here, not in the repository, so storage
+// and code generation stay decoupled.
 export function createShortUrlUseCase({
   repository,
   codeGenerator,
