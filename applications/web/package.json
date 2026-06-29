@@ -10,6 +10,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@prisma/client": "^6.5.0",
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",
     "@url-shortener/engine": "workspace:*",
@@ -24,6 +25,7 @@
     "@types/node": "^22",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "prisma": "^6.5.0",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
