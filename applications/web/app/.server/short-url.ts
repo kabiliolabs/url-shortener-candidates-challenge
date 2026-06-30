@@ -30,3 +30,5 @@ export const createShortUrl = createShortUrlUseCase({
 });
 
 export const resolveShortUrl = resolveShortUrlUseCase({ repository });
+
+export const findAllShortUrls = () => repository.findAll();

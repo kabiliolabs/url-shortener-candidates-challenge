@@ -1,5 +1,6 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -9,6 +10,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { SiteHeader } from "./components/site-header";
+import { Card } from "./components/card";
+import { buttonClassName } from "./components/button";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -19,7 +23,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap",
   },
 ];
 
@@ -46,30 +50,46 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let eyebrow = "Error";
+  let title = "Something went wrong";
+  let details = "An unexpected error occurred. Please try again.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+    eyebrow = String(error.status);
+    if (error.status === 404) {
+      title = "Page not found";
+      details = "The page you're looking for doesn't exist or has moved.";
+    } else {
+      details = error.statusText || details;
+    }
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <SiteHeader />
+      <main className="mx-auto flex w-full max-w-3xl flex-1 items-center px-5 py-16">
+        <Card className="w-full p-8 sm:p-10">
+          <p className="font-mono text-sm font-medium text-brand-600">
+            {eyebrow}
+          </p>
+          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-slate-900">
+            {title}
+          </h1>
+          <p className="mt-3 text-slate-600">{details}</p>
+          <Link to="/" className={buttonClassName("primary", "mt-6")}>
+            Back to home
+          </Link>
+          {stack && (
+            <pre className="mt-6 overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
+              <code>{stack}</code>
+            </pre>
+          )}
+        </Card>
+      </main>
+    </div>
   );
 }
