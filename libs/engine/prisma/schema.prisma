@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Url {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  longUrl       String
+  urlHash       String    @unique
+  clickCount    Int       @default(0)
+  lastClickedAt DateTime?
+  createdAt     DateTime  @default(now())
+}

@@ -1,15 +1,28 @@
-import { redirect } from "react-router";
+import { UrlNotFoundError } from "@url-shortener/engine";
+import { data, redirect } from "react-router";
+import { engine } from "~/lib/engine.server";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const { code } = params;
 
-  const url = shortenedUrls.get(code);
+  try {
+    const shortenedUrl = await engine.resolveUrl(code);
+    const response = redirect(shortenedUrl.longUrl);
 
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+    // Best-effort, non-blocking: the redirect above is the critical path and
+    // must never be delayed or broken by a stats-recording failure.
+    void engine.recordClick(code).catch((error: unknown) => {
+      console.error(
+        `Failed to record click for code "${code}": ${error instanceof Error ? error.message : String(error)}`,
+      );
+    });
+
+    return response;
+  } catch (error) {
+    if (error instanceof UrlNotFoundError) {
+      throw data("Not Found", { status: 404 });
+    }
+    throw error;
   }
-
-  return redirect(url);
 }

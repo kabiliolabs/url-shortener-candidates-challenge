@@ -1,15 +1,45 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "db:generate": {
+      "cache": false
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "db:generate"],
       "outputs": ["dist/**", "build/**"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "typecheck": {},
+    "typecheck": {
+      "dependsOn": ["^build", "db:generate"]
+    },
+    "test": {
+      "dependsOn": ["^build", "db:generate"],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["//#lint:biome"],
+      "outputs": []
+    },
+    "format:check": {
+      "dependsOn": ["//#format:check:biome"],
+      "outputs": []
+    },
+    "format": {
+      "dependsOn": ["//#format:biome"],
+      "cache": false
+    },
+    "//#lint:biome": {
+      "outputs": []
+    },
+    "//#format:check:biome": {
+      "outputs": []
+    },
+    "//#format:biome": {
+      "cache": false
+    },
     "clean": {
       "cache": false
     }

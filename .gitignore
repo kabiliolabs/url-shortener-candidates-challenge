@@ -143,3 +143,9 @@ vite.config.ts.timestamp-*
 
 # Claude code
 .claude/settings.local.json
+
+# Gentle AI / SDD tooling
+.atl/
+
+# CodeGraph index
+.codegraph/
