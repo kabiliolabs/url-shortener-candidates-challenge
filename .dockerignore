@@ -8,6 +8,7 @@ node_modules
 !.env.example
 **/dist
 **/build
+**/tsconfig.tsbuildinfo
 **/.react-router
 .turbo
 **/.turbo

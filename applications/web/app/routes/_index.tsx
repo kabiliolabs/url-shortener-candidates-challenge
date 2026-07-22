@@ -1,10 +1,7 @@
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { baseUrl } from "@url-shortener/engine";
+import { ApiError, createShortUrl } from "../lib/api.server";
 
 export function loader() {
   return {
@@ -14,19 +11,19 @@ export function loader() {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const url = formData.get("url");
 
-  if (!url) {
+  if (typeof url !== "string") {
     return { error: "URL is required" };
   }
 
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+  try {
+    return { shortenedUrl: (await createShortUrl(url)).shortUrl };
+  } catch (error) {
+    return {
+      error: error instanceof ApiError ? error.message : "Unable to shorten this URL. Please try again.",
+    };
+  }
 }
 
 export function meta({}: Route.MetaArgs) {

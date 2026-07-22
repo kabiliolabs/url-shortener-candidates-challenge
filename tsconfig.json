@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "applications/web" },
+    { "path": "applications/api" },
     { "path": "libs/engine" }
   ]
 }
