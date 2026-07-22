@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model ShortenedUrl {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  code      String   @unique
+  url       String
+  createdAt DateTime @default(now())
+  clicks    Int      @default(0)
+
+  @@index([createdAt(sort: Desc)])
+  @@map("shortened_urls")
+}
