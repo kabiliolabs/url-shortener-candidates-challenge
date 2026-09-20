@@ -2,36 +2,46 @@
 
 ## Tech Stack
 
-```
-url-shortener/
-├── applications/web/    # React + React Router v7
-└── libs/engine/         # Domain logic
-```
-
 | Technology                                    | Description                                                                                       |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | [pnpm](https://pnpm.io/)                      | Fast, disk-efficient package manager with built-in monorepo support via workspaces                |
 | [Turbo](https://turbo.build/)                 | High-performance build system for monorepos. Runs tasks in parallel and caches results            |
 | [React](https://react.dev/)                   | Library for building user interfaces with components                                              |
-| [React Router v7](https://reactrouter.com/)   | Full-stack React framework. Handles routing, data loading (loaders), mutations (actions), and SSR |
 | [TypeScript](https://www.typescriptlang.org/) | Typed superset of JavaScript for catching errors at compile time                                  |
-| [Tailwind CSS](https://tailwindcss.com/)      | Utility-first CSS framework for rapid UI development                                              |
+| [Radix](https://www.radix-ui.com/)            | Open source component library optimized for fast development                                      |
 | [Vite](https://vite.dev/)                     | Fast build tool and dev server with hot module replacement                                        |
-
-## Local Setup
-
-```bash
-pnpm install
-cp .env.example .env
-pnpm dev
-```
-
-Open `http://localhost:5173`
 
 ## Docker Setup
 
+Clone the repo and checkout the appropriate branch
+
 ```bash
-docker-compose up --build
+git clone git@github.com:remi-cab/url-shortener-candidates-challenge.git
+
+
+cd /path/to/url-shortener-candidates-challenge
+
+
+git checkout remi
 ```
 
-Open `http://localhost:3000`
+Copy the .env.example file
+
+```bash
+cp ./apps/api/.env.example ./apps/api/.env
+```
+
+Start the application with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+If running for the first time, apply the Prisma database migrations:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shortener?schema=public" \
+  pnpm --filter api exec prisma migrate deploy
+```
+
+Open `http://localhost:8080`

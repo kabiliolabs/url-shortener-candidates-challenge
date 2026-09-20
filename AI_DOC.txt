@@ -1,0 +1,211 @@
+
+1. Find Turborepo monorepo example
+
+### commit message :
+hello-monorepo
+
+i want to add a nodejs express typescript helloworld backend to the with-vite-react monorepo
+
+tell me about the error in with-react-vite/apps/api/tsconfig.json
+
+why does with-react-vite/apps/web/tsconfig.json does not give error ?
+
+------------------------------------
+
+2. Containerize
+
+### commit message :
+containerized the applications
+
+add a Dockerfile for each app in monorepo/apps ; add a docker-compose to the monorepo/ folder to start apps in containers
+
+explain the full monorepo/apps/api/Dockerfile
+
+tell me more about corepackk
+
+give me pros and cons of having 
+RUN npm install --global pnpm@11.24.0
+instead of
+RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
+
+the Corepack approach has pnpm's version hard coded. how does that keep pnpm version aligned with "packageManager": "pnpm@11.24.0" ?
+
+------------------------------------
+
+3. Nginx research
+
+### Not a commit
+
+why does the browser ask 5 times for favicon.ico each time i refresh ?
+
+from 1 to 10, how overkill is it to have an nginx media server just for favicon.ico ?
+
+where in the monorepo/apps/web/ is the query for favicon.ico ?
+
+where in my setup does Nginx serves the compiled Vite frontend ?
+
+------------------------------------
+
+4. Adding Prisma
+
+### commit message :
+added basic Prisma functionality in api
+
+im using prisma as ord. i created a postgres database in prisma and they gave me the following instruction :
+Copy the connection string and add it to your `.env` as `DATABASE_URL` :
+postgres://example-blablabla
+
+do i still need the following folders ?
+monorepo/apps/api/.agents
+monorepo/apps/api/.claude
+monorepo/apps/api/.cursor
+monorepo/apps/api/.devin
+
+in the api app, setup a route that pushes random data in the prisma db
+
+what does --no-cache do ?
+
+this solution seems incorrect, is it of redeeming importance to run the dummy url command ?
+
+go with the cleaner alternative
+
+this line in the api's dockerfile seems not clean 
+RUN cd /app && node_modules/.pnpm/node_modules/.bin/prisma generate
+
+in the api's dockerfile, why is there 2 times "prisma generate" being executed ?
+
+is that common behaviour ? is that best practice ?
+
+you say 
+> The important best-practice rule is:
+> Prisma Client must be generated in the same dependency tree that the runtime container uses.
+but you also say
+> The two commands operate on different dependency trees:
+> The first generates Prisma Client for TypeScript compilation.
+> pnpm deploy creates a separate production tree.
+> The second generates Prisma Client inside that production tree for runtime.
+isn't that contradictory ?
+
+why does prisma.config.ts give an error on line 5 in the ide ?
+
+------------------------------------
+
+6. Sample frontend
+
+### commit message :
+added basic frontend
+
+tell me what the turbo commands from monorepo/package.json execute in each app
+
+reproduce https://t.ly/ web page in my web app
+
+what is the monorepo/apps/web/src/vite-env.d.ts file used for ?
+
+separate "Free to use. No account needed." from "Free to use. No account needed. By clicking “Shorten URL”, you agree to our [Terms](http://localhost:5173/#terms) and [Privacy Policy](http://localhost:5173/#privacy)." ; make it stand out 
+
+give them a tic icon ; add "QR Codes" to the phrase list
+
+change every occurence of "T.LY" to "FOO.bar"
+
+derive the color palette from the following colors :
+#F87060
+#CDD7D6
+#714955
+#52796F
+#1E1B18
+
+------------------------------------
+
+7. Core backend routes
+
+### commit message :
+added shortening route in api
+added cors middleware
+
+tell me about the most basic url shortening api there could be 
+
+add this core system to monorepo apps api
+
+remove the RandomData table and its corresponding route
+
+what would be a cleaner way to write index.ts using more than just one file ?
+
+in the shortLinkRouter.get route, addd a click counter that records in the same db entry how as the url and code the number of times the code was accessed
+
+link the form button "Shorten URL" in the web app to the /shorten route in the api app
+
+tell me more about the CORS headers for frontend requests.
+
+would it be cleaner to have that function in a cors.ts file in a middleware folder ?
+
+------------------------------------
+
+8. Simpler UI
+
+### commit message :
+removed pricing developers faq sections from web page
+added explicit error messages
+
+make the web app way more minimalistic
+
+address the deprecation of type FormEvent imported at line 2 of main.tsx in web app
+
+how would i go about having more descriptive error messages concerning what is wrong with the url passed to the api
+
+give me the list of all error messages that native `type="url"` validation can return 
+
+------------------------------------
+
+9. Postgres database + CORS middleware
+
+### commit message :
+added postgres container and volume + linked api with local db
+added CORS options to CORS middleware
+
+what would be cleaner and/or a better practice :
+> the current url validation method in a utils/file
+> a url validation middleware
+
+add a postgres docker container to the docker compose and set it as DB for prisma 
+
+what would a production monorepo/apps/api/src/middleware/cors.ts corsMiddleware look like ?
+
+how would you adapt my cors.ts to fit the process.env.CORS_ORIGINS workflow
+
+what does response.header("Vary", "Origin"); do
+
+test my corsMiddleware
+
+------------------------------------
+
+10. Radix components
+
+### commit message :
+added Radix components
+
+use a radix button for the "Shorten URL" button in web app
+
+remove the tooltip for when the form input is empty ;
+put the "Please fill out this field" as an error message
+
+use a radix card around the form input and button
+
+use a radix text field for the form input
+
+make it wide ; make the button as high as the text field
+
+when i focus the form input, there are 2 outlines ; one is correct and the other one cuts the input horizontally 
+
+make the focus outline the accent color 
+
+in main.tsx, how would a clean file structure look like ?
+
+------------------------------------
+
+11. final touches
+
+### Not a commit
+
+are there incoherences in the monorepo codebase ?
+
+tell me more about problem #1

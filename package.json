@@ -1,16 +1,19 @@
 {
-  "name": "url-shortener",
-  "version": "1.0.0",
+  "name": "with-vite-react",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "typecheck": "turbo typecheck",
-    "clean": "turbo run clean && rm -rf .turbo",
-    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
-  "packageManager": "pnpm@10.20.0",
   "devDependencies": {
-    "turbo": "^2.7.4"
-  }
+    "eslint": "10.9.1",
+    "prettier": "3.9.6",
+    "turbo": "^2.10.13"
+  },
+  "engines": {
+    "node": ">=24.20.0"
+  },
+  "packageManager": "pnpm@11.24.0"
 }
