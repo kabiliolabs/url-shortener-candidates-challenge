@@ -79,7 +79,7 @@ Conventions:
   - `seq 50 | xargs -P 50 -I{} curl -s -o /dev/null http://localhost:3000/s/<code>` → `clicks` increases by exactly 50
   - `pnpm typecheck && pnpm test` pass
 
-- [ ] **T7 — README running instructions** ⏱3
+- [x] **T7 — README running instructions** ⏱3
   Update `README.md`:
   - **Local Setup:** `pnpm install`, `cp .env.example .env`, `docker compose up -d db`, `pnpm --filter web db:migrate`, `pnpm dev`
   - **Docker Setup** section (required by the challenge): `docker compose up --build`, then open :3000
