@@ -25,7 +25,7 @@ Conventions:
   - rejections: empty → `required`; `example.com` → `missingScheme`; `//evil.com` → `invalid`; `ftp:` and `java\nscript:` → `scheme`; `https://user:pass@x` → `credentials`; self-host (any case) → `selfLink`; 2049 characters → `tooLong`
   - acceptance: a subdomain or other port of `PUBLIC_URL` is accepted
 
-- [ ] **T2 — Port and use cases** ⏱12
+- [x] **T2 — Port and use cases** ⏱12
   Add:
   - `ports/short-url-repository.ts` (`create`, `recordClick`, `listNewestFirst`)
   - `domain/errors.ts` (`ShortCodeTakenError`, `ShortCodeGenerationError`)
