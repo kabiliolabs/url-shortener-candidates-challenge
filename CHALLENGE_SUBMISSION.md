@@ -66,6 +66,13 @@ Full reasoning is in [`specs/2-hour-challenge/`](./specs/2-hour-challenge/) (pro
 2. **UI polish.** Small reusable Tailwind components (button, input, card, field error), a copy-to-clipboard button that shows a message if copying fails, a card layout for `/urls` on mobile, and a proper visual redesign. Migrating those components to shadcn/Radix would come after.
 3. **More tests:** config parsing, plus integration tests for the Prisma repository against a real Postgres (see below).
 
+**Gaps found when verifying against the spec** (see [`verify.md`](./specs/2-hour-challenge/verify.md))
+- **Browser verification pass:** check for React hydration warnings in the console, the loading state and disabled button during submit, and the layout at phone width. These were only checked by reading the code or with `curl`.
+- **A specific message when code generation gives up** after 5 collisions. Today the user gets the generic "Something went wrong" message, not one explaining that it's safe to retry.
+- **Durable click recording.** Clicks are written without waiting, so a redirect is never blocked. The downside is that a click whose write fails, or is still in flight when the process crashes, is lost (the failure is logged). A small outbox or queue, or the Redis buffer below, would make it at-least-once.
+- **A linter and formatter:** the repo has no ESLint or Prettier config, so code style isn't enforced (see CI below).
+- **Move the in-memory test repository out of `libs/engine/src/`** into a test-only folder, so it can't be mistaken for a storage option.
+
 **Performance and scale**
 - **Redis cache for redirects,** so the most frequent request skips Postgres. Click counts would be buffered and flushed in batches, which also removes contention on the row of a very popular link.
 - **Rate limiting shared across instances (Redis),** once the app runs as more than one instance.
@@ -83,7 +90,7 @@ Full reasoning is in [`specs/2-hour-challenge/`](./specs/2-hour-challenge/) (pro
 
 **Quality and operations**
 - **Integration tests against a real Postgres** (Testcontainers) and **end-to-end tests** (Playwright).
-- **CI pipeline** (typecheck, lint, test, Docker build), plus ESLint and Prettier config.
+- **CI pipeline** (typecheck, lint, test, Docker build).
 - **Production hardening:** a slimmer image (no dev dependencies, non-root user), healthchecks, structured logging and metrics.
 
 ## AI Usage

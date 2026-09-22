@@ -88,7 +88,7 @@ Conventions:
   *Covers:* D2
   *Verify:* following the README from a fresh clone works, both locally and with Docker.
 
-- [ ] **T8 — CHALLENGE_SUBMISSION "What I Did" (last)** ⏱2
+- [x] **T8 — CHALLENGE_SUBMISSION "What I Did" (last)** ⏱2
   Fill in "What I Did" with what was actually implemented and why it was prioritized. Reconcile the "Decisions" and "What I Would Do With More Time" sections with what was built, and update AI Usage.
   *Covers:* D2
   *Verify:* no template comment is left unanswered, and nothing is described as done that wasn't built.
