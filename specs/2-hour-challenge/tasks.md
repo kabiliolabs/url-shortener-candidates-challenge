@@ -38,7 +38,7 @@ Conventions:
   - **FollowShortUrl:** 3 follows → `clicks 3` and `lastClickedAt` from the injected clock; unknown or malformed code → `null` (a malformed code doesn't call the repository)
   - **ListShortUrls:** newest first
 
-- [ ] **T3 — Postgres and Prisma** ⏱12
+- [x] **T3 — Postgres and Prisma** ⏱12
   - a `db` service in `docker-compose.yml` (`postgres:17-alpine`, `pg_isready` healthcheck, `pgdata` volume); `DATABASE_URL` in `.env.example`
   - `@prisma/client@7.10.0` and `@prisma/adapter-pg@7.10.0` in `web`, plus the devDependencies `prisma@7.10.0` and `dotenv`
   - `prisma/schema.prisma` (the design's model; output `generated/prisma`, gitignored) and `prisma.config.ts` (loads `../../.env`)
