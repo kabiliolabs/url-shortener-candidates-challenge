@@ -1,32 +1,30 @@
-import { Form, useActionData } from "react-router";
+import { data, Form, useNavigation } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
-
-export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
-}
+import { UrlValidationError } from "@url-shortener/engine";
+import { shortenUrl } from "~/.server/container";
+import { shortLinkFor } from "~/.server/config";
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const field = formData.get("url");
+  const input = typeof field === "string" ? field : "";
 
-  if (!url) {
-    return { error: "URL is required" };
+  try {
+    const shortUrl = await shortenUrl.execute(input);
+    return {
+      shortLink: shortLinkFor(shortUrl.shortCode),
+      originalUrl: shortUrl.originalUrl,
+    };
+  } catch (error) {
+    if (error instanceof UrlValidationError) {
+      return data({ error: error.message, input }, { status: 400 });
+    }
+    console.error("Failed to shorten URL", error);
+    return data(
+      { error: "Something went wrong. Please try again.", input },
+      { status: 500 },
+    );
   }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -36,63 +34,67 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
-  const actionData = useActionData<typeof action>();
+export default function Index({ actionData }: Route.ComponentProps) {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  const error = actionData && "error" in actionData ? actionData : null;
+  const result = actionData && "shortLink" in actionData ? actionData : null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-16">
+      <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+        Shorten a URL
+      </h1>
 
-        <Form method="post" className="flex flex-col gap-6">
+      <Form method="post" className="flex flex-col gap-2" noValidate>
+        <label htmlFor="url" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Long URL
+        </label>
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
-            type="text"
+            id="url"
+            type="url"
             name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
+            placeholder="https://example.com/a/very/long/path"
+            defaultValue={error?.input}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "url-error" : "url-notice"}
+            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 aria-invalid:border-red-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
-
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
-
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Shortening…" : "Shorten"}
+          </button>
+        </div>
+        {error && (
+          <p id="url-error" role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error.error}
+          </p>
         )}
+        <p id="url-notice" className="text-xs text-gray-500 dark:text-gray-400">
+          Shortened links are listed publicly. Don't shorten private URLs.
+        </p>
+      </Form>
 
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
-      </div>
+      {result && (
+        <div className="rounded-md border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+          <p className="text-sm text-green-800 dark:text-green-300">Your short link:</p>
+          <a
+            href={result.shortLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="break-all font-mono text-lg text-blue-700 underline dark:text-blue-400"
+          >
+            {result.shortLink}
+          </a>
+          <p className="mt-1 break-all text-xs text-gray-600 dark:text-gray-400">
+            → {result.originalUrl}
+          </p>
+        </div>
+      )}
     </main>
   );
 }
