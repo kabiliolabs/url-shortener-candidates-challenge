@@ -24,12 +24,16 @@ export class InMemoryShortUrlRepository implements ShortUrlRepository {
     return { ...shortUrl };
   }
 
-  async recordClick(shortCode: string, at: Date): Promise<ShortUrl | null> {
+  async findByCode(shortCode: string): Promise<ShortUrl | null> {
     const shortUrl = this.rows.get(shortCode);
-    if (!shortUrl) return null;
+    return shortUrl ? { ...shortUrl } : null;
+  }
+
+  async recordClick(shortCode: string, at: Date): Promise<void> {
+    const shortUrl = this.rows.get(shortCode);
+    if (!shortUrl) return;
     shortUrl.clicks += 1;
     shortUrl.lastClickedAt = at;
-    return { ...shortUrl };
   }
 
   async listNewestFirst(): Promise<ShortUrl[]> {

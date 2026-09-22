@@ -93,7 +93,14 @@ Conventions:
   *Covers:* D2
   *Verify:* no template comment is left unanswered, and nothing is described as done that wasn't built.
 
-**Total ⏱ about 65 minutes.**
+- [x] **T9 — Click tracking must not block redirects** (added after T6)
+  Resolve with `findByCode`, then record the click without awaiting it; failures go to an injected reporter that logs on the server. Port: add `findByCode`; `recordClick` returns `void` and does nothing when the code doesn't exist (Prisma `updateMany`).
+  *Covers:* R5 (tracking failure scenario), R4
+  *Verify:*
+  - unit tests: a failing `recordClick` still returns the URL and calls the reporter; an unknown code doesn't record a click; the existing counting tests still pass
+  - Docker: with a temporary trigger that rejects `UPDATE`s on `short_urls`, a short link still redirects with 302 and the server logs the failure; after the trigger is removed, 50 concurrent redirects add exactly 50 clicks
+
+**Total ⏱ about 65 minutes** (plus T9).
 
 ---
 
@@ -105,7 +112,7 @@ Conventions:
 | R2 Unique codes | T1, T2, T4 | ✅ |
 | R3 Validation | T1, T2, T4 | ✅ |
 | R4 Redirect | T1, T2, T4, T5 | ✅ |
-| R5 Click tracking | T2, T4, T6 (concurrency) | ✅ |
+| R5 Click tracking | T2, T4, T6 (concurrency), T9 (failure isolation) | ✅ |
 | R6 Persistence | T3, T4, T6 | ✅ |
 | R7 Stats list | T2, T5 | ✅ |
 | R8 UX | T4 (loading state, disabled button, inline error, notice) | ⚠️ partial: copy button, clipboard failure and mobile layout are deferred |

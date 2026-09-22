@@ -7,7 +7,6 @@ import {
 import { Prisma, type PrismaClient } from "../../../generated/prisma/client";
 
 const UNIQUE_CONSTRAINT_VIOLATION = "P2002";
-const RECORD_NOT_FOUND = "P2025";
 
 export class PrismaShortUrlRepository implements ShortUrlRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -23,17 +22,16 @@ export class PrismaShortUrlRepository implements ShortUrlRepository {
     }
   }
 
-  async recordClick(shortCode: string, at: Date): Promise<ShortUrl | null> {
-    try {
-      // A single UPDATE with an in-database increment, so concurrent clicks are never lost.
-      return await this.prisma.shortUrl.update({
-        where: { shortCode },
-        data: { clicks: { increment: 1 }, lastClickedAt: at },
-      });
-    } catch (error) {
-      if (hasPrismaCode(error, RECORD_NOT_FOUND)) return null;
-      throw error;
-    }
+  findByCode(shortCode: string): Promise<ShortUrl | null> {
+    return this.prisma.shortUrl.findUnique({ where: { shortCode } });
+  }
+
+  async recordClick(shortCode: string, at: Date): Promise<void> {
+    // In-database increment so concurrent clicks are never lost; updateMany is a no-op for a missing row instead of throwing.
+    await this.prisma.shortUrl.updateMany({
+      where: { shortCode },
+      data: { clicks: { increment: 1 }, lastClickedAt: at },
+    });
   }
 
   listNewestFirst(): Promise<ShortUrl[]> {

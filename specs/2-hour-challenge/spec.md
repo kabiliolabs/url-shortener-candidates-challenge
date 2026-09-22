@@ -109,7 +109,7 @@ Before validating, the system SHALL trim leading and trailing whitespace from th
 
 ## R5 — Click tracking
 
-Each successful redirect SHALL increase the link's click count by exactly 1 and record the time of that click as its last-clicked time.
+Each successful redirect SHALL increase the link's click count by exactly 1 and record the time of that click as its last-clicked time. Click tracking is secondary to redirecting: a failure to record a click SHALL NOT block or delay the redirect.
 
 - **GIVEN** a link with 0 clicks
   **WHEN** it is followed 3 times
@@ -123,6 +123,12 @@ Each successful redirect SHALL increase the link's click count by exactly 1 and 
 - **GIVEN** a newly created link
   **WHEN** it has never been followed
   **THEN** its click count is 0 and it has no last-clicked time.
+- **GIVEN** an existing link, and recording the click fails (e.g. the write is rejected or times out) while reading still works
+  **WHEN** the short link is followed
+  **THEN** the user is still redirected (302) to the original URL, the failure is logged on the server, and that click isn't counted.
+- **GIVEN** the data store can't be read at all
+  **WHEN** a short link is followed
+  **THEN** a generic error page is shown (there's no known target to redirect to).
 
 ## R6 — Persistence
 

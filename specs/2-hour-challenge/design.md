@@ -34,16 +34,17 @@ A simplified hexagonal architecture with three pieces. Nothing is added beyond w
 
 - **`libs/engine`** holds every business rule: code generation, URL validation and normalization, collision retry, and click recording. It depends only on `node:crypto` and the WHATWG `URL`. It is unit-tested against an in-memory fake repository (D1).
 - **Routes** are thin: parse the form or params, call a use case, and map the result or domain error to an HTTP response.
-- **The Prisma repository** is the only code that talks to Postgres. It translates Prisma errors into domain errors (`P2002` → `ShortCodeTakenError`, `P2025` → `null`).
+- **The Prisma repository** is the only code that talks to Postgres. It translates Prisma errors into domain errors (`P2002` → `ShortCodeTakenError`).
 - **A custom Express server** (`server.js` + `server/app.ts`) replaces `react-router-serve`. We confirmed `react-router-serve` 7.12.0 creates its handler without `getLoadContext`, so loaders and actions can't see the client IP that R9 needs. The files follow React Router's official `node-custom-server` template: Vite middleware in dev, static files plus the built handler in production. Express's `trust proxy` setting handles `TRUST_PROXY`: with it set to `1`, `req.ip` is the rightmost `X-Forwarded-For` entry; with it off, `req.ip` is the socket address. That is exactly R9.
-- **Click counting (R5)** is one atomic SQL statement, `UPDATE … SET clicks = clicks + 1, last_clicked_at = $now WHERE short_code = $code RETURNING *` (Prisma `update` with `{ increment: 1 }`). Resolving the link and counting the click take one round trip, and concurrent clicks can't be lost.
+- **Redirects never depend on click tracking (R5).** `FollowShortUrl` first **resolves** the link with a primary-key read (`findByCode`), then **records the click without awaiting it**. The click is one atomic statement, `UPDATE … SET clicks = clicks + 1, last_clicked_at = $now WHERE short_code = $code` (Prisma `updateMany` with `{ increment: 1 }`, which doesn't throw when the row is missing), so concurrent clicks can't be lost. A failed or slow write is caught and passed to an injected error reporter, which logs it on the server. The redirect has already been returned, so it's neither blocked nor delayed.
+  *(Revised after T6: the original design resolved and counted in one `UPDATE … RETURNING`, so any write failure turned the redirect into a 500.)*
 
 ### Use cases (`libs/engine/src/application/`)
 
 | Use case | Input → output | Rules |
 |---|---|---|
 | `ShortenUrl` | raw form string → `ShortUrl` | `normalizeOriginalUrl(raw, publicUrl)` (throws `UrlValidationError`) → up to 5 attempts of `generateShortCode()` + `repository.create()`; retries only on `ShortCodeTakenError`; after 5 → `ShortCodeGenerationError` |
-| `FollowShortUrl` | code → original URL or `null` | `isValidShortCode(code)`, otherwise `null` without querying the database → `repository.recordClick(code, now())` |
+| `FollowShortUrl` | code → original URL or `null` | `isValidShortCode(code)`, otherwise `null` without querying the database → `repository.findByCode(code)` → if found, fire `repository.recordClick(code, now())` without awaiting it; a rejection goes to the injected `reportClickTrackingError` |
 | `ListShortUrls` | — → `ShortUrl[]` newest first | pass-through; it exists so routes depend only on use cases, never on persistence |
 
 The generator and the clock are passed into the constructors (with real defaults), so tests can trigger collisions and control time.
@@ -131,7 +132,8 @@ interface ShortUrl { shortCode: string; originalUrl: string; clicks: number; cre
 
 interface ShortUrlRepository {
   create(input: { shortCode: string; originalUrl: string }): Promise<ShortUrl>;  // throws ShortCodeTakenError
-  recordClick(shortCode: string, at: Date): Promise<ShortUrl | null>;            // atomic increment; null if missing
+  findByCode(shortCode: string): Promise<ShortUrl | null>;
+  recordClick(shortCode: string, at: Date): Promise<void>;                       // atomic increment; no-op if missing
   listNewestFirst(): Promise<ShortUrl[]>;
 }
 ```
@@ -154,7 +156,7 @@ The `_index` UI uses `useNavigation().state === "submitting"` for the loading st
 | R2 Unique codes | `engine/domain/short-code.ts` (crypto `randomInt`, base62, 7 chars); retry loop in `shorten-url.ts`; primary-key constraint in `schema.prisma`; `P2002` mapping in `prisma-short-url-repository.ts` |
 | R3 Validation + normalization | `engine/domain/original-url.ts`; message shown via `field-error.tsx` in `_index.tsx` |
 | R4 Redirect | `web/app/routes/s.$code.tsx` (302 / 404); `isValidShortCode` in `short-code.ts`; not-found UI in `root.tsx` `ErrorBoundary` |
-| R5 Click tracking | `engine/application/follow-short-url.ts`; atomic `update … { increment: 1 }` in `prisma-short-url-repository.ts` |
+| R5 Click tracking | `engine/application/follow-short-url.ts` (resolve first, track without awaiting); atomic `updateMany … { increment: 1 }` in `prisma-short-url-repository.ts`; errors logged via the reporter wired in `container.ts` |
 | R6 Persistence | Postgres via `prisma-short-url-repository.ts`; `pgdata` volume in `docker-compose.yml` |
 | R7 Stats list | `engine/application/list-short-urls.ts`; `web/app/routes/urls.tsx`; `@@index([createdAt])` |
 | R8 UX | `_index.tsx` (pending state, notice), `components/copy-button.tsx` (Clipboard API with failure message), responsive Tailwind in `components/*` and `urls.tsx` (cards on mobile, table from `md` up) |
@@ -171,7 +173,8 @@ The `_index` UI uses `useNavigation().state === "submitting"` for the loading st
 - **A `RateLimiter` port in the engine.** Rate limiting is a delivery-layer concern with a single implementation. A concrete class is enough, and the interface gets extracted when the Redis version (in "more time") arrives.
 - **Checking whether a code exists before inserting it.** It has a race condition. Relying on the primary-key constraint plus retry is atomic.
 - **Reading, adding one and writing back for clicks.** Concurrent clicks would overwrite each other and be lost (R5).
-- **Separate "resolve" and "count click" calls.** Two round trips on the busiest path, and they can disagree. One `UPDATE … RETURNING` does both.
+- **Resolving and counting in one `UPDATE … RETURNING`.** It saves a round trip, but it couples the redirect to the write: a lock timeout, a read-only failover or any write error turns a working link into a 500. A primary-key read plus a write that isn't awaited costs one extra fast query, and the write is no longer on the redirect's critical path.
+- **Awaiting the click write inside a try/catch.** It stops failures from blocking the redirect, but a slow write (e.g. contention on the row of a popular link) would still delay it.
 - **shadcn/ui or Radix.** The CLI setup, extra dependencies and path configuration in a monorepo cost too much of the 2h budget for four simple components. The hand-written components use the same Tailwind patterns and can be migrated later.
 - **Validation in the route, or with Zod.** The rules are domain logic and must be unit-testable without the framework. A single string field doesn't justify a schema library.
 - **`Math.random`, a counter, or a hash for codes.** Covered in the proposal. They are predictable, enumerable, or collide.
@@ -185,6 +188,7 @@ The `_index` UI uses `useNavigation().state === "submitting"` for the loading st
 | Vite bundling the generated Prisma client, and `@prisma/client` resolving at runtime | `@prisma/client` and the adapter are direct dependencies of `web`, so they resolve from its `node_modules`; verify with `pnpm build && node server.js` before building Docker |
 | Alpine + Prisma migrate engine | `apk add openssl`; switch to `node:22-slim` if it still fails |
 | R5 concurrency can't be proven by unit tests against the fake repository | It relies on a single atomic SQL `UPDATE`; verify manually with parallel `curl` requests. Integration tests are in "more time". |
+| Click writes that aren't awaited are lost if they fail, or if the process exits before they finish | A click count may be slightly low after a write failure or a crash; each failure is logged. This relies on a long-running Node server (true for `react-router-serve`); a serverless deployment would need a queue. |
 | The rate limiter is per instance and resets on restart | Accepted and documented in R9; Redis is in "more time" |
 | `/urls` has no limit on how many rows it returns | Fine at challenge scale; pagination is in "more time" |
 | A hot row: one very popular link means many concurrent `UPDATE`s on the same row | Acceptable at this scale; buffered counters in Redis are in "more time" |

@@ -11,10 +11,10 @@ I prioritized the defects that lose or misroute users' data, then the features t
 - **Architecture:** domain logic and use cases (`ShortenUrl`, `FollowShortUrl`, `ListShortUrls`) live in `libs/engine` behind a `ShortUrlRepository` port. The web app holds the Prisma adapter, a composition root and thin routes.
 - **Unique short codes:** 7 base62 characters from a cryptographic RNG, instead of the original 9 possible codes. Uniqueness is enforced by the primary key, with retries on collision. Existing links can no longer be overwritten.
 - **Input validation:** URLs are normalized with the WHATWG parser, http/https only, with no embedded credentials, no self-links and a 2048-character limit. Each case has a specific message shown next to the field.
-- **Click statistics:** every redirect (302) increments a counter atomically and records the last-clicked time. A `/urls` page lists all links newest first with their stats.
+- **Click statistics:** every redirect (302) increments a counter atomically and records the last-clicked time. Tracking can't block the redirect: if the write fails, the user is still redirected and the error is logged. A `/urls` page lists all links newest first with their stats.
 - **Error handling:** a generic message when something unexpected fails (details are logged on the server only), a proper 404 page for unknown codes, and fail-fast configuration.
 - **UX basics:** the button is disabled while a submission is in progress, the input is kept after a validation error, a notice says links are public, there's header navigation, and dark-mode styles are included.
-- **Tests:** 50 Vitest unit tests for the engine (validation rules, code format, collision retry, click counting, ordering), which need no database.
+- **Tests:** 53 Vitest unit tests for the engine (validation rules, code format, collision retry, click counting, redirects surviving tracking failures, ordering), which need no database.
 - **Docker and docs:** `docker compose up --build` runs Postgres and the app, and the README covers local and Docker setup.
 
 **Verified by hand:**
@@ -36,7 +36,7 @@ Full reasoning is in [`specs/2-hour-challenge/`](./specs/2-hour-challenge/) (pro
 
 **Persistence (Postgres + Prisma 7)**
 - **`shortCode` is the primary key.** Every redirect is a primary-key lookup, and the key's uniqueness backs the collision retry. No extra index is needed.
-- **Resolving and counting in one call.** Each redirect makes a single repository call (a Prisma `update` with `{ increment: 1 }`) that increments `clicks` inside the database, sets `lastClickedAt` and returns the target URL. Clicks aren't lost under concurrency: 50 parallel requests produced exactly 50 clicks.
+- **Redirects don't depend on click tracking.** The redirect first resolves the link with a primary-key read, then records the click without awaiting it: an atomic in-database `clicks + 1`, with failures caught and logged. My first version resolved and counted in a single `UPDATE … RETURNING`. It saved a query, but any write failure (a lock timeout, a read-only failover) turned a working link into a 500. The trade-off: if a write fails or the process crashes mid-write, that click is lost, and the loss is logged. Clicks still aren't lost under concurrency: 50 parallel requests produced exactly 50 clicks.
 - **The redirect route renders a component.** With only a loader, React Router treats it as a resource route, so a 404 came back as bare text. A no-op component makes unknown codes render the proper not-found page.
 - **`timestamptz` columns, snake_case table and column names, an index on `createdAt`** for the newest-first stats list.
 - **Deliberately not stored:** a unique `originalUrl` (it would merge different users' stats) and the creator's IP (privacy).
