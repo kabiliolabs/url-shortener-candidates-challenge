@@ -47,7 +47,7 @@ Conventions:
   *Covers:* R6, R11 (db service)
   *Verify:* `docker compose up -d db` → `healthy`. `pnpm --filter web db:migrate --name init` creates the migration. `\d short_urls` shows the expected columns, the primary key and the `created_at` index.
 
-- [ ] **T4 — Replace in-memory storage with Postgres** ⏱10
+- [x] **T4 — Replace in-memory storage with Postgres** ⏱10
   - `app/.server/config.ts`: requires `PUBLIC_URL` and `DATABASE_URL` and throws an error naming any that's missing; `shortLinkFor(code)` via `new URL`
   - `app/.server/persistence/prisma-client.ts` (one client cached on `globalThis`, using `PrismaPg`) and `prisma-short-url-repository.ts` (`P2002` → `ShortCodeTakenError`; `recordClick` = atomic `update` with `{ increment: 1 }`, and `P2025` → `null`)
   - `app/.server/container.ts`

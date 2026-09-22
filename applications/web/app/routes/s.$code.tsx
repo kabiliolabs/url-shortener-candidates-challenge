@@ -1,15 +1,14 @@
-import { redirect } from "react-router";
+import { data, redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import { followShortUrl } from "~/.server/container";
 
-export function loader({ params }: Route.LoaderArgs) {
-  const { code } = params;
+export async function loader({ params }: Route.LoaderArgs) {
+  const originalUrl = await followShortUrl.execute(params.code);
 
-  const url = shortenedUrls.get(code);
-
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+  if (!originalUrl) {
+    throw data("Short link not found", { status: 404 });
   }
 
-  return redirect(url);
+  // 302, not 301: browsers cache permanent redirects and those visits would never be counted.
+  return redirect(originalUrl, 302);
 }
