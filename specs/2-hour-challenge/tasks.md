@@ -65,7 +65,7 @@ Conventions:
   - starting without `PUBLIC_URL` → an error naming it
   - `grep -rn "shortenedUrls\|shortened-url\|base-url" libs applications --include=*.ts --include=*.tsx` finds nothing
 
-- [ ] **T5 — Stats page and error pages** ⏱6
+- [x] **T5 — Stats page and error pages** ⏱6
   Add the `urls` route in `routes.ts` and `routes/urls.tsx`: a loader using `ListShortUrls`; dates formatted on the server in UTC; "Never" when a link has no clicks; an empty state; long URLs truncated with `title` holding the full value; a simple Tailwind table. In `root.tsx`, add header navigation (Shorten / Stats) and an `ErrorBoundary` with a 404 page and "Back to home" link, plus a generic 500 message.
   *Covers:* R7, R4 (not-found page), R1 (generic error)
   *Verify:* links are listed newest first with all fields, and a never-clicked link shows "Never". With an empty table, the empty state appears. After following a link and reloading, the count is updated. An unknown code shows the 404 page with the home link. There are no hydration warnings.

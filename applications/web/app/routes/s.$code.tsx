@@ -12,3 +12,9 @@ export async function loader({ params }: Route.LoaderArgs) {
   // 302, not 301: browsers cache permanent redirects and those visits would never be counted.
   return redirect(originalUrl, 302);
 }
+
+// Never rendered (the loader always redirects or throws), but a default export makes this a UI route
+// instead of a resource route, so a 404 renders the root ErrorBoundary rather than a bare text response.
+export default function ShortLinkRedirect() {
+  return null;
+}
