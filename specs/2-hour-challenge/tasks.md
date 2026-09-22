@@ -70,7 +70,7 @@ Conventions:
   *Covers:* R7, R4 (not-found page), R1 (generic error)
   *Verify:* links are listed newest first with all fields, and a never-clicked link shows "Never". With an empty table, the empty state appears. After following a link and reloading, the count is updated. An unknown code shows the 404 page with the home link. There are no hydration warnings.
 
-- [ ] **T6 — Docker end to end** ⏱8
+- [x] **T6 — Docker end to end** ⏱8
   `Dockerfile`: `node:22-alpine` + `apk add openssl`; the build runs `prisma generate`; the production stage copies `prisma/` and `prisma.config.ts`; `CMD` = `prisma migrate deploy && pnpm start`. Compose: `web` depends on `db: service_healthy` and gets `DATABASE_URL`.
   *Covers:* R11, R6, R5 (concurrency check)
   *Verify:*
