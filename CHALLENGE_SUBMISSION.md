@@ -4,6 +4,27 @@
 
 <!-- Briefly describe what you implemented or improved. What did you prioritize and why? -->
 
+I prioritized the defects that lose or misroute users' data, then the features the challenge requires, then running it all in Docker. Everything was built from a spec in small commits on `feat/2-hour-challenge`.
+
+**Implemented**
+- **Persistence:** Postgres + Prisma 7 replace the in-memory `Map`, which has been removed. Links and stats survive restarts. The schema is managed with migrations, and Docker applies them on startup.
+- **Architecture:** domain logic and use cases (`ShortenUrl`, `FollowShortUrl`, `ListShortUrls`) live in `libs/engine` behind a `ShortUrlRepository` port. The web app holds the Prisma adapter, a composition root and thin routes.
+- **Unique short codes:** 7 base62 characters from a cryptographic RNG, instead of the original 9 possible codes. Uniqueness is enforced by the primary key, with retries on collision. Existing links can no longer be overwritten.
+- **Input validation:** URLs are normalized with the WHATWG parser, http/https only, with no embedded credentials, no self-links and a 2048-character limit. Each case has a specific message shown next to the field.
+- **Click statistics:** every redirect (302) increments a counter atomically and records the last-clicked time. A `/urls` page lists all links newest first with their stats.
+- **Error handling:** a generic message when something unexpected fails (details are logged on the server only), a proper 404 page for unknown codes, and fail-fast configuration.
+- **UX basics:** the button is disabled while a submission is in progress, the input is kept after a validation error, a notice says links are public, there's header navigation, and dark-mode styles are included.
+- **Tests:** 50 Vitest unit tests for the engine (validation rules, code format, collision retry, click counting, ordering), which need no database.
+- **Docker and docs:** `docker compose up --build` runs Postgres and the app, and the README covers local and Docker setup.
+
+**Verified by hand:**
+- a clean `docker compose down -v && up --build`
+- data surviving a restart
+- 50 concurrent redirects adding exactly 50 clicks
+- the README steps followed from a fresh clone
+
+**Not done:** per-IP rate limiting and UI polish (see below). I didn't check for React hydration warnings in a real browser, and the Prisma repository only has manual end-to-end coverage.
+
 ### Decisions and trade-offs
 
 Full reasoning is in [`specs/2-hour-challenge/`](./specs/2-hour-challenge/) (proposal → spec → design).
@@ -15,7 +36,8 @@ Full reasoning is in [`specs/2-hour-challenge/`](./specs/2-hour-challenge/) (pro
 
 **Persistence (Postgres + Prisma 7)**
 - **`shortCode` is the primary key.** Every redirect is a primary-key lookup, and the key's uniqueness backs the collision retry. No extra index is needed.
-- **One atomic `UPDATE … RETURNING` per redirect.** It increments `clicks`, sets `lastClickedAt` and returns the target URL in a single round trip, with no lost clicks under concurrency.
+- **Resolving and counting in one call.** Each redirect makes a single repository call (a Prisma `update` with `{ increment: 1 }`) that increments `clicks` inside the database, sets `lastClickedAt` and returns the target URL. Clicks aren't lost under concurrency: 50 parallel requests produced exactly 50 clicks.
+- **The redirect route renders a component.** With only a loader, React Router treats it as a resource route, so a 404 came back as bare text. A no-op component makes unknown codes render the proper not-found page.
 - **`timestamptz` columns, snake_case table and column names, an index on `createdAt`** for the newest-first stats list.
 - **Deliberately not stored:** a unique `originalUrl` (it would merge different users' stats) and the creator's IP (privacy).
 
@@ -68,8 +90,12 @@ Full reasoning is in [`specs/2-hour-challenge/`](./specs/2-hour-challenge/) (pro
 
 I used **Claude Code** (Claude Opus 5.5) as a pair programmer, prompted to act as a senior software engineer. I made the decisions: I set the direction, questioned the suggestions and approved each step before any code was written.
 
-**How I used it so far**
+**How I used it**
 
+- **Spec-driven workflow.** I drove the work through custom slash commands: `/sdd-spec` → `/sdd-design` → `/sdd-tasks` → `/sdd-implement`. Each phase produced a reviewed document in `specs/2-hour-challenge/`. I answered the spec's open questions myself (URL length, 302 vs 301, scheme-less input, credentials in URLs, bot clicks) and cut the plan from about 2h40 to about 1 hour.
+- **Implementation under verification.** The agent implemented one task at a time. It ran typecheck and tests, checked each task's behavior against the running app (curl, psql, Docker), and made one commit per task. Two issues came up this way and were fixed at the document level first:
+  - the design's validation order contradicted the spec (`//evil.com` would have been told "missing scheme")
+  - the redirect route returned a bare-text 404 instead of the not-found page
 - **Audit before coding.** In plan mode (read-only), the agent reviewed the repo and listed what the app currently does and its defects, ranked by severity. Top findings: code collisions that silently overwrite links, an open redirect caused by missing URL validation, in-memory state, and broken `PUBLIC_URL` handling.
 - **Scoping and planning.** It turned `CHALLENGE_DESCRIPTION.md` into a prioritized ~2h plan plus a "with more time" backlog. I added items to the backlog, such as a Redis redirect cache and a domain blocklist.
 - **Design discussions.** I asked it to justify choices before accepting them: the short-code generator, the data model and indexing.
@@ -88,6 +114,12 @@ Result: a 7-character base62 code from `node:crypto` `randomInt`. It is unpredic
 > Let's define the table containing the data: it should have shortCode (primary key), originalUrl, clicks (counter for stats), createdAt. Any other suggestion?
 
 Result: added `lastClickedAt` and an index on `createdAt`, used `timestamptz` and snake_case table/column names, and explicitly left out a unique `originalUrl` (it would merge different users' stats) and the creator's IP (a privacy concern).
+
+> Also we have plan for more than one hour, so reduce implementation of tasks to 1 more hour per priority, the rest should be added into the "what would I do with more time".
+
+Result: the task list was cut to 8 tasks (about 65 minutes). Rate limiting and UI polish moved to the "more time" list, with their design notes kept.
+
+> /sdd-implement 2-hour-challenge implement all tasks
 
 ## Feedback
 
