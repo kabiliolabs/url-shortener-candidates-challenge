@@ -123,4 +123,4 @@ Result: the task list was cut to 8 tasks (about 65 minutes). Rate limiting and U
 
 ## Feedback
 
-<!-- Any feedback on the challenge? Was it clear? Too easy/hard? Suggestions? -->
+This is a good exercise and a good way to see how the engineers work, prioritize work and use AI. It is a little overwhealming the amount of work to do and the time restriction, but that's part of the challenge, to known how to prioritize work, plan for the future and keep deadlines.
