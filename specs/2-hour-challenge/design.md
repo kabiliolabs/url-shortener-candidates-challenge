@@ -53,8 +53,11 @@ The generator and the clock are passed into the constructors (with real defaults
 The checks run in this order. The first failure wins, and each failure has its own `reason` and user-facing message:
 
 1. trim; empty → `required`: "Please enter a URL."
-2. no `scheme:` prefix (e.g. `example.com`) → `missingScheme`: "Your URL should start with http:// or https://" (OQ4)
-3. `new URL(input)` throws (this includes `//evil.com`) → `invalid`: "This doesn't look like a valid URL."
+2. `new URL(input)` throws:
+   - it would parse with `https://` in front and doesn't start with `/` (e.g. `example.com`) → `missingScheme`: "Your URL should start with http:// or https://" (OQ4)
+   - otherwise (e.g. `not a url`, `//evil.com`) → `invalid`: "This doesn't look like a valid URL."
+   *(Revised during T1: checking "no scheme" before parsing gave `//evil.com` and `not a url` the missing-scheme message, which contradicts R3.)*
+3. *(merged into 2)*
 4. `url.protocol` not `http:` or `https:` → `scheme`: "Only http and https URLs are allowed."
 5. `url.username || url.password` → `credentials`: the OQ6 message
 6. `url.host === new URL(publicUrl).host` (the parser already lowercased both) → `selfLink`: "Links to this service can't be shortened."

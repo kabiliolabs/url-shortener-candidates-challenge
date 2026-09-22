@@ -12,7 +12,7 @@ Conventions:
 
 ---
 
-- [ ] **T1 — Engine domain: short codes and URL validation** ⏱12
+- [x] **T1 — Engine domain: short codes and URL validation** ⏱12
   Add `vitest` to `libs/engine`, a `test` script, a `test` task in `turbo.json` and a root `test` script. Drop the engine's dead `build`/`dev` scripts. Add:
   - `domain/short-url.ts` (entity type)
   - `domain/short-code.ts` (`generateShortCode` with `crypto.randomInt` in base62, 7 characters; `isValidShortCode`)
