@@ -73,6 +73,11 @@ Full reasoning is in [`specs/2-hour-challenge/`](./specs/2-hour-challenge/) (pro
 - **A linter and formatter:** the repo has no ESLint or Prettier config, so code style isn't enforced (see CI below).
 - **Move the in-memory test repository out of `libs/engine/src/`** into a test-only folder, so it can't be mistaken for a storage option.
 
+**Findings from the independent code review** (see [`review.md`](./specs/2-hour-challenge/review.md): six reviewers, no high-severity bugs, nothing changed yet)
+- **Database pool limits and timeouts** on the Prisma `pg` adapter. Without them, a slow database could let hanging click writes fill the connection pool and stall redirects (top priority).
+- **`lastClickedAt` must never go backwards** when click writes commit out of order (`GREATEST` in SQL), and a **specific message for scheme-less input with a port** (`example.com:8080`). Both were found by both blind reviewers.
+- **Other review findings:** trailing-dot and loopback aliases of our own host get past the self-link check; limits on request-body size; a tiebreaker for the stats ordering; retrying migrations at startup plus a restart policy; a least-privilege database user.
+
 **Performance and scale**
 - **Redis cache for redirects,** so the most frequent request skips Postgres. Click counts would be buffered and flushed in batches, which also removes contention on the row of a very popular link.
 - **Rate limiting shared across instances (Redis),** once the app runs as more than one instance.
@@ -103,6 +108,7 @@ I used **Claude Code** (Claude Opus 5.5) as a pair programmer, prompted to act a
 - **Implementation under verification.** The agent implemented one task at a time. It ran typecheck and tests, checked each task's behavior against the running app (curl, psql, Docker), and made one commit per task. Two issues came up this way and were fixed at the document level first:
   - the design's validation order contradicted the spec (`//evil.com` would have been told "missing scheme")
   - the redirect route returned a bare-text 404 instead of the not-found page
+- **Independent review.** After verifying, a `/review` run launched six reviewers in parallel with no shared context (maintainability, two blind correctness reviewers, security, resilience, reliability). The combined report is in [`review.md`](./specs/2-hour-challenge/review.md).
 - **Audit before coding.** In plan mode (read-only), the agent reviewed the repo and listed what the app currently does and its defects, ranked by severity. Top findings: code collisions that silently overwrite links, an open redirect caused by missing URL validation, in-memory state, and broken `PUBLIC_URL` handling.
 - **Scoping and planning.** It turned `CHALLENGE_DESCRIPTION.md` into a prioritized ~2h plan plus a "with more time" backlog. I added items to the backlog, such as a Redis redirect cache and a domain blocklist.
 - **Design discussions.** I asked it to justify choices before accepting them: the short-code generator, the data model and indexing.
