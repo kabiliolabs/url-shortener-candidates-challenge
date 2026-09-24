@@ -2,7 +2,16 @@
 
 ## What I Did
 
-<!-- Briefly describe what you implemented or improved. What did you prioritize and why? -->
+### Problems found in the initial codebase
+
+- **Code generator:** alphabet `"abc"` and length 2 give only 9 possible codes. It never checks for collisions (a new URL can overwrite an existing one) and uses `Math.random()`, which is predictable.
+- **Storage:** a globally exported, mutable `Map`. Data is lost on restart and anything can write to it.
+- **No domain model:** a URL is a bare string in a `Map`, with no click count or timestamps.
+- **Config:** `PUBLIC_URL` is read at import time with no validation. If it's missing, the action returns `"undefined/s/xx"`.
+- **No validation:** the action only checks that the field is non-empty. The redirect route sends users to whatever string was stored, including `javascript:` and `data:` URLs.
+- **Separation of concerns:** routes talk directly to the storage `Map`, with no service or repository layer.
+- **Missing:** click statistics, a list view, loading states, error handling, tests, and persistence.
+- **UI:** intentionally chaotic, with no reusable components.
 
 ## What I Would Do With More Time
 
