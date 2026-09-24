@@ -48,4 +48,7 @@ When the app returned a generic error after wiring, I pasted the terminal output
 
 ## Feedback
 
-<!-- Any feedback on the challenge? Was it clear? Too easy/hard? Suggestions? -->
+It has been a pretty cool challenge. Working with an AI agent showed me how much it can speed things up, and it helped me build all of this in roughly 2 hours.
+The time limit is about right if your environment is already set up; otherwise you may need an extra 30 minutes, which isn't a big deal if you have an agent helping you. Most of my setup time went on the Node version (the project needs Node 20+ but nothing enforces it) and on the native SQLite dependency, which needs a prebuilt binary that isn't available for every version. Adding an `.nvmrc` or an `engines` field and a short note about this in the README would make the first setup smoother.
+The instructions were clear, and I documented my progress in this file as I went along.
+Thanks for giving me the opportunity to do this challenge.
