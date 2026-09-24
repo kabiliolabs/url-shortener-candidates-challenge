@@ -1,15 +1,17 @@
-import { redirect } from "react-router";
+import { data, redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import { UrlNotFoundError } from "@url-shortener/engine";
+import { urlShortener } from "../lib/container.server";
 
-export function loader({ params }: Route.LoaderArgs) {
-  const { code } = params;
-
-  const url = shortenedUrls.get(code);
-
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+export async function loader({ params }: Route.LoaderArgs) {
+  try {
+    // Resolving also counts the click.
+    const url = await urlShortener.resolve(params.code);
+    return redirect(url.originalUrl);
+  } catch (error) {
+    if (error instanceof UrlNotFoundError) {
+      throw data("Short link not found", { status: 404 });
+    }
+    throw error;
   }
-
-  return redirect(url);
 }

@@ -148,3 +148,6 @@ vite.config.ts.timestamp-*
 libs/engine/src/generated
 *.db
 *.db-journal
+
+#Wire
+data/

@@ -4,4 +4,8 @@ packages:
 
 onlyBuiltDependencies:
   - '@prisma/engines'
+  - better-sqlite3
   - prisma
+
+overrides:
+  better-sqlite3: 12.11.1

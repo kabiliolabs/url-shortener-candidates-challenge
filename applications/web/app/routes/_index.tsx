@@ -1,32 +1,33 @@
-import { Form, useActionData } from "react-router";
+import { Form, data, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { DomainError } from "@url-shortener/engine";
+import { getPublicUrl, urlShortener } from "../lib/container.server";
+
+type ActionResult = { shortenedUrl?: string; error?: string };
 
 export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
+  return { baseUrl: `${getPublicUrl()}/s/` };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
 
-  if (!url) {
-    return { error: "URL is required" };
+  try {
+    const created = await urlShortener.shorten(formData.get("url"));
+    return data<ActionResult>(
+      { shortenedUrl: `${getPublicUrl()}/s/${created.code}` },
+      { status: 201 },
+    );
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return data<ActionResult>({ error: error.message }, { status: 400 });
+    }
+    console.error(error);
+    return data<ActionResult>(
+      { error: "Something went wrong, please try again" },
+      { status: 500 },
+    );
   }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
 }
 
 export function meta({}: Route.MetaArgs) {
