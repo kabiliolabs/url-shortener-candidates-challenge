@@ -16,3 +16,11 @@ export class UrlNotFoundError extends DomainError {
     super(`No URL found for code "${code}"`);
   }
 }
+
+export class InvalidUrlError extends DomainError {}
+
+export class CodeGenerationError extends DomainError {
+  constructor() {
+    super("Could not generate a unique short code, please try again");
+  }
+}

@@ -35,8 +35,6 @@ export class InMemoryUrlRepository implements UrlRepository {
   }
 
   async list(): Promise<ShortUrl[]> {
-    return [...this.urls.values()].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
+    return [...this.urls.values()].reverse();
   }
 }
