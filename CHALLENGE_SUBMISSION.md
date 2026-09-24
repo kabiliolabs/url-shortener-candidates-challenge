@@ -22,10 +22,12 @@
 - **Tests:** Vitest unit tests for the service using an in-memory repository and a deterministic generator (collisions, invalid input, click counting).
 - **Web wiring:** routes depend only on the service through a server-only composition root (`container.server.ts`), so the UI layer knows nothing about Prisma. Domain errors map to meaningful 400 messages, unknown codes return 404, and unexpected errors are logged and shown as a generic 500. The old global `Map` and unchecked redirect are gone: only validated http(s) URLs are ever stored and redirected to.
 - **Tooling:** pinned `better-sqlite3` to 12.11.1 with a pnpm override. Version 13.x had no prebuilt Windows binary and forced a native compile, which broke installs.
+- **Docker:** multi-stage image on node:22-slim that generates the Prisma client at build time, applies migrations on start, and keeps the SQLite file in a named volume so data survives container restarts. A `.dockerignore` stops host `node_modules` (Windows binaries) from overwriting the image's.
 
 ## What I Would Do With More Time
 
 - Add an integration test that runs the same cases against `PrismaUrlRepository`, to prove it behaves like the in-memory one.
+- Slim down the Docker image (prune dev dependencies with `pnpm deploy`) and run as a non-root user.
 
 ## AI Usage
 
