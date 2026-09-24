@@ -20,6 +20,8 @@
 - **Service and validation:** `UrlShortenerService` (shorten, resolve, list) depends only on those interfaces. Zod and `URL` validation allow only http(s) and limit length, which blocks `javascript:` and `data:` URLs. Code collisions are handled by retrying on a unique-constraint error rather than check-then-insert, which isn't safe under concurrency.
 - **Persistence:** Prisma 7 with SQLite behind the repository interface, with an atomic click increment. Prisma is pinned to v7 rather than `latest`, which currently points to a pre-release.
 - **Tests:** Vitest unit tests for the service using an in-memory repository and a deterministic generator (collisions, invalid input, click counting).
+- **Web wiring:** routes depend only on the service through a server-only composition root (`container.server.ts`), so the UI layer knows nothing about Prisma. Domain errors map to meaningful 400 messages, unknown codes return 404, and unexpected errors are logged and shown as a generic 500. The old global `Map` and unchecked redirect are gone: only validated http(s) URLs are ever stored and redirected to.
+- **Tooling:** pinned `better-sqlite3` to 12.11.1 with a pnpm override. Version 13.x had no prebuilt Windows binary and forced a native compile, which broke installs.
 
 ## What I Would Do With More Time
 
@@ -33,6 +35,8 @@ Example prompts:
 - "This is the challenge description, help me plan what to prioritize in ~2 hours."
 - "Here is the engine folder and the route files, what flaws do you see?"
 - "This test fails, here is the output" (led to a fix for a timestamp tie in the sort order, plus a Vitest config so it ignores compiled `dist/` files).
+
+When the app returned a generic error after wiring, I pasted the terminal output into the chat. The first diagnosis (pin the web app's dependency) was only partly right; the real cause was a second copy of the native dependency pulled in by the Prisma adapter. Reading the install logs together led to a workspace-wide override.
 
 ## Feedback
 
