@@ -13,6 +13,13 @@
 - **Missing:** click statistics, a list view, loading states, error handling, tests, and persistence.
 - **UI:** intentionally chaotic, with no reusable components.
 
+---
+
+### Work done
+- Added `UrlShortenerService` (shorten, resolve, list) depending only on repository and generator interfaces.
+- Validation with Zod and `URL`: http(s) only, length limit, blocks `javascript:` and `data:` URLs in the domain layer.
+- Unit tests (Vitest) with an in-memory repository and a deterministic generator, covering collisions, invalid input and click counting.
+
 ## What I Would Do With More Time
 
 <!-- What would you tackle next if you had more time? -->
