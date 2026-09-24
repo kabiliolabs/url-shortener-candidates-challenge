@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { UrlTable } from "../components/url-table";
 import { getPublicUrl, urlShortener } from "../lib/container.server";
 import { cn } from "../lib/utils";
+import { createLinkLimiter, getClientIp } from "../lib/rate-limiter.server";
 
 type ActionResult = { shortenedUrl?: string; error?: string };
 
@@ -20,6 +21,15 @@ export async function loader() {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  
+  const limit = createLinkLimiter.check(getClientIp(request));
+  if (!limit.allowed) {
+    return data<ActionResult>(
+      { error: `Too many requests. Please try again in ${limit.retryAfterSeconds}s.` },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+    );
+  }
+  
   const formData = await request.formData();
 
   try {
