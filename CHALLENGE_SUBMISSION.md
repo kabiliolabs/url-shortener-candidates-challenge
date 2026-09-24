@@ -24,6 +24,7 @@
 - **Tooling:** pinned `better-sqlite3` to 12.11.1 with a pnpm override. Version 13.x had no prebuilt Windows binary and forced a native compile, which broke installs.
 - **Docker:** multi-stage image on node:22-slim that generates the Prisma client at build time, applies migrations on start, and keeps the SQLite file in a named volume so data survives container restarts. A `.dockerignore` stops host `node_modules` (Windows binaries) from overwriting the image's.
 - **UI:** replaced the intentionally chaotic page with a clean layout built from small reusable components (Button, Input, Card, Badge; shadcn-style, written by hand to avoid CLI config in the monorepo). Inline validation errors, a loading state on submit, a copyable result, a links table with click statistics, and a friendly 404 page. Dates render in a fixed locale and UTC to avoid hydration mismatches.
+- **Abuse prevention:** rate limit of 10 link creations per minute per IP (sliding window, 429 with `Retry-After`), on top of input validation (http(s) only, max length). The limiter is in-memory and bounded, so it needs no extra infrastructure.
 
 ## What I Would Do With More Time
 
@@ -31,6 +32,8 @@
 - Slim down the Docker image (prune dev dependencies with `pnpm deploy`) and run as a non-root user.
 - Paginate the links list (it currently loads every URL) and refresh click counts automatically instead of via the Refresh button.
 - Adopt Radix primitives (toast, dialog) for richer feedback such as delete confirmations.
+- Back the rate limiter with Redis (or enforce it at a reverse proxy) so it works across multiple instances, and configure trusted proxy headers explicitly; `X-Forwarded-For` is spoofable without one.
+- Also limit the redirect route, since repeated hits could inflate click counts.
 
 ## AI Usage
 
