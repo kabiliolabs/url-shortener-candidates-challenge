@@ -143,3 +143,8 @@ vite.config.ts.timestamp-*
 
 # Claude code
 .claude/settings.local.json
+
+# Prisma
+libs/engine/src/generated
+*.db
+*.db-journal

@@ -11,3 +11,6 @@ export { InMemoryUrlRepository } from "./infrastructure/in-memory-url-repository
 export { UrlShortenerService } from "./application/url-shortener-service";
 export { validateUrl } from "./application/validate-url";
 export { InvalidUrlError, CodeGenerationError } from "./domain/errors";
+
+export { PrismaUrlRepository } from "./infrastructure/prisma-url-repository";
+export { createPrismaClient } from "./infrastructure/create-prisma-client";

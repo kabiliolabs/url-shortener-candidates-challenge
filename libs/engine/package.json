@@ -15,11 +15,16 @@
     ".": "./src/index.ts"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^22.19.7",
+    "prisma": "^7.10.0",
     "typescript": "^5.9.3",
     "vitest": "^5.0.1"
   },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "better-sqlite3": "^13.0.3",
     "zod": "^4.6.5"
   }
 }
