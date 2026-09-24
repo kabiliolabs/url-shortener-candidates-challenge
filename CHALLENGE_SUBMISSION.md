@@ -25,10 +25,10 @@
 - **Docker:** multi-stage image on node:22-slim that generates the Prisma client at build time, applies migrations on start, and keeps the SQLite file in a named volume so data survives container restarts. A `.dockerignore` stops host `node_modules` (Windows binaries) from overwriting the image's.
 - **UI:** replaced the intentionally chaotic page with a clean layout built from small reusable components (Button, Input, Card, Badge; shadcn-style, written by hand to avoid CLI config in the monorepo). Inline validation errors, a loading state on submit, a copyable result, a links table with click statistics, and a friendly 404 page. Dates render in a fixed locale and UTC to avoid hydration mismatches.
 - **Abuse prevention:** rate limit of 10 link creations per minute per IP (sliding window, 429 with `Retry-After`), on top of input validation (http(s) only, max length). The limiter is in-memory and bounded, so it needs no extra infrastructure.
+- **Persistence tests:** integration tests run `PrismaUrlRepository` against a throwaway SQLite database built from the real migrations, covering what the in-memory double can't prove (unique-constraint mapping, atomic click increments under concurrency).
 
 ## What I Would Do With More Time
 
-- Add an integration test that runs the same cases against `PrismaUrlRepository`, to prove it behaves like the in-memory one.
 - Slim down the Docker image (prune dev dependencies with `pnpm deploy`) and run as a non-root user.
 - Paginate the links list (it currently loads every URL) and refresh click counts automatically instead of via the Refresh button.
 - Adopt Radix primitives (toast, dialog) for richer feedback such as delete confirmations.
