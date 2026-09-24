@@ -46,6 +46,8 @@ Example prompts:
 
 When the app returned a generic error after wiring, I pasted the terminal output into the chat. The first diagnosis (pin the web app's dependency) was only partly right; the real cause was a second copy of the native dependency pulled in by the Prisma adapter. Reading the install logs together led to a workspace-wide override.
 
+I've faced also an issue while I was building the UI whether a <a> tag was missing and took couple of iterations to figure it out where the problem was. All in all we sorted it out.
+
 ## Feedback
 
 It has been a pretty cool challenge. Working with an AI agent showed me how much it can speed things up, and it helped me build all of this in roughly 2 hours.
