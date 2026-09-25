@@ -8,10 +8,10 @@
 
 ## 2. Domain layer (`libs/engine/src/domain`)
 
-- [ ] 2.1 Create `domain/short-url.ts`: the `ShortUrl` entity/type and a pure `generateShortCode()` (base62 alphabet, length 7, no I/O); verify a unit test asserts output length and charset
-- [ ] 2.2 Create `domain/errors.ts`: `InvalidUrlError`, `ShortCodeExhaustedError`, `ShortUrlNotFoundError` (each a distinct `Error` subclass); verify a unit test asserts each is `instanceof Error` and has a distinguishable `name`
-- [ ] 2.3 Create `domain/repository.ts`: `IShortUrlRepository` interface (`create`, `findByCode`, `list`, `incrementClick` — using only domain types, e.g. `ShortUrl`, `string`, `number`); verify `grep -r "@prisma/client" libs/engine/src/domain` returns no matches
-- [ ] 2.4 Create the URL validator (pure function, e.g. `domain/url-validator.ts`) enforcing http/https-only scheme, a max length, and well-formedness, throwing `InvalidUrlError` otherwise; verify unit tests cover a valid https URL, a `javascript:` URL, an oversized URL, and an unparseable string — satisfying the url-shortening spec's "Accept only valid HTTP/HTTPS URLs" requirement
+- [x] 2.1 Create `domain/short-url.ts`: the `ShortUrl` entity/type and a pure `generateShortCode()` (base62 alphabet, length 7, no I/O); verify a unit test asserts output length and charset
+- [x] 2.2 Create `domain/errors.ts`: `InvalidUrlError`, `ShortCodeExhaustedError`, `ShortUrlNotFoundError` (each a distinct `Error` subclass); verify a unit test asserts each is `instanceof Error` and has a distinguishable `name`
+- [x] 2.3 Create `domain/repository.ts`: `IShortUrlRepository` interface (`create`, `findByCode`, `list`, `incrementClick` — using only domain types, e.g. `ShortUrl`, `string`, `number`); verify `grep -r "@prisma/client" libs/engine/src/domain` returns no matches
+- [x] 2.4 Create the URL validator (pure function, e.g. `domain/url-validator.ts`) enforcing http/https-only scheme, a max length, and well-formedness, throwing `InvalidUrlError` otherwise; verify unit tests cover a valid https URL, a `javascript:` URL, an oversized URL, and an unparseable string — satisfying the url-shortening spec's "Accept only valid HTTP/HTTPS URLs" requirement
 
 ## 3. Application layer (`libs/engine/src/application`)
 
