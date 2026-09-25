@@ -20,8 +20,8 @@
 
 ## 4. Infrastructure layer (Prisma repository)
 
-- [ ] 4.1 Implement `PrismaShortUrlRepository` in `infrastructure/prisma-short-url-repository.ts` implementing `IShortUrlRepository` via `@prisma/client` (the only file in `libs/engine` importing it), translating a `code` unique-constraint violation into a signal `ShortUrlService`'s retry loop can detect; verify an integration test against a real test SQLite db covers create → findByCode round-trip and confirms a duplicate `code` insert is rejected by the DB constraint
-- [ ] 4.2 Update `libs/engine/src/index.ts` to export `ShortUrlService`, the `ShortUrl` type, the three error types, and a factory (e.g. `createShortUrlService()`) that wires a real `PrismaClient` into `PrismaShortUrlRepository` into `ShortUrlService`; verify `pnpm --filter @url-shortener/engine typecheck` passes and no `Map`-based export remains in the barrel
+- [x] 4.1 Implement `PrismaShortUrlRepository` in `infrastructure/prisma-short-url-repository.ts` implementing `IShortUrlRepository` via `@prisma/client` (the only file in `libs/engine` importing it), translating a `code` unique-constraint violation into a signal `ShortUrlService`'s retry loop can detect; verify an integration test against a real test SQLite db covers create → findByCode round-trip and confirms a duplicate `code` insert is rejected by the DB constraint
+- [x] 4.2 Update `libs/engine/src/index.ts` to export `ShortUrlService`, the `ShortUrl` type, the three error types, and a factory (e.g. `createShortUrlService()`) that wires a real `PrismaClient` into `PrismaShortUrlRepository` into `ShortUrlService`; verify `pnpm --filter @url-shortener/engine typecheck` passes and no `Map`-based export remains in the barrel
 
 ## 5. Route layer integration (`applications/web`)
 
