@@ -57,7 +57,7 @@
 
 ## 10. Submission documentation
 
-- [ ] 10.1 Fill in `CHALLENGE_SUBMISSION.md` (What I Did, What I Would Do With More Time, AI Usage, Feedback), noting the documented limitations from `design.md` (single-instance in-memory rate limiting, counter-only click stats, no per-click event log); verify all four sections contain substantive content rather than the placeholder HTML comments
+- [x] 10.1 Fill in `CHALLENGE_SUBMISSION.md` (What I Did, What I Would Do With More Time, AI Usage, Feedback), noting the documented limitations from `design.md` (single-instance in-memory rate limiting, counter-only click stats, no per-click event log); verify all four sections contain substantive content rather than the placeholder HTML comments
 
 ## 11. Linting (added outside the original P0 scope, by direct request)
 
