@@ -3,13 +3,35 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas,
+    monospace;
+
+  --color-paper: #eff1f0;
+  --color-kraft: #e4d9be;
+  --color-kraft-line: #c9bfa8;
+  --color-ink: #1f2430;
+  --color-ink-soft: #5c6470;
+  --color-stamp: #8b3a2b;
+  --color-stamp-hover: #732f22;
+
+  /* shadcn/ui semantic tokens, mapped onto this project's own palette
+     rather than shadcn's default theme */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-paper);
+  --color-card-foreground: var(--color-ink);
+  --color-primary: var(--color-stamp);
+  --color-primary-foreground: var(--color-paper);
+  --color-muted-foreground: var(--color-ink-soft);
+  --color-border: var(--color-kraft-line);
+  --color-input: var(--color-kraft-line);
+  --color-ring: var(--color-stamp);
+  --color-destructive: var(--color-stamp);
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  color-scheme: light;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }

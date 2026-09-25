@@ -32,10 +32,10 @@
 
 ## 6. UI: reusable components, loading state, listing view
 
-- [ ] 6.1 Create `app/components/{Button,Input,Alert,Card,Spinner}.tsx` as small Tailwind-based reusable components; verify each renders correctly in the running dev app
-- [ ] 6.2 Rebuild the `_index.tsx` submission form and result display using these components, with the error message driven by the action's field-level error; verify manually that submitting an invalid URL shows the specific validation message
-- [ ] 6.3 Add `useNavigation()`-based pending state to the submission form (disabled submit button / `Spinner` while `state !== "idle"`); verify manually that the pending state is visible during submission
-- [ ] 6.4 Build the listing UI on the `_index` route (one row per `ShortUrl`: code, destination, click count, last-clicked, created date) using a `ShortUrlListItem` component; verify manually that a new entry shows zero clicks and updates after visiting its short link — satisfying the url-listing spec
+- [x] 6.1 Install shadcn/ui (`npx shadcn@latest init`, then `add button input alert card`) into `app/components/ui/`, restyled via the existing Tailwind theme tokens (paper/kraft/ink/stamp); add a small hand-written `Spinner` (lucide-react `Loader2` + `animate-spin`, shadcn's own idiom for a primitive not in its default registry); verify each renders correctly in the running dev app
+- [x] 6.2 Rebuild the `_index.tsx` submission form and result display using these components (composing shadcn's `Label` with `Input` for the field-level error slot, since shadcn's `Input` has no built-in error prop), with the error message driven by the action's field-level error; verify manually that submitting an invalid URL shows the specific validation message
+- [x] 6.3 Add `useNavigation()`-based pending state to the submission form (disabled submit button / `Spinner` while `state !== "idle"`); verify manually that the pending state is visible during submission
+- [x] 6.4 Build the listing UI on the `_index` route (one row per `ShortUrl`: code, destination, click count, last-clicked, created date) using a `ShortUrlListItem` component; verify manually that a new entry shows zero clicks and updates after visiting its short link — satisfying the url-listing spec
 
 ## 7. Abuse prevention
 

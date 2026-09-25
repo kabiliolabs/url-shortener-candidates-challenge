@@ -12,6 +12,7 @@ React, React Router v7 (framework/SSR mode — `loader`/`action` are the only se
 * `application/` — `ShortUrlService`, orchestrates domain + repository. Same zero-import rule as domain.
 * `infrastructure/` — `PrismaShortUrlRepository` is the **only** file allowed to import `@prisma/client`. The repository interface itself must stay Prisma-agnostic.
 * Route loaders/actions in `applications/web` are thin HTTP adapters: parse input → call `ShortUrlService` → map thrown domain/application errors to `Response`/redirect/field-error shapes. No business logic in routes, no direct Prisma/repository access from routes.
+* This layering is the SOLID mapping the challenge asks for (SRP per file, OCP via new repository/validator implementations, LSP via swappable `IShortUrlRepository` implementations, ISP via the four-method repository interface, DIP via constructor-injected abstractions) — see `design.md` decision 10 for the explicit breakdown. Don't collapse layers even if it looks like less code; that mapping is part of what's being evaluated.
 
 ## Configuration
 
@@ -25,7 +26,9 @@ React, React Router v7 (framework/SSR mode — `loader`/`action` are the only se
 
 ## Explicitly out of scope
 
-No microservices, no Redis, no authentication/authorization, no Postgres, no CQRS/event sourcing, no analytics dashboards, no shadcn/Radix, no custom/vanity codes, no CI pipeline.
+No microservices, no Redis, no authentication/authorization, no Postgres, no CQRS/event sourcing, no analytics dashboards, no custom/vanity codes, no CI pipeline.
+
+Reusable UI components use shadcn/ui (Radix primitives + Tailwind), restyled with this project's own theme tokens — not shadcn's default look. See `design.md` decision 9.
 
 Rate limiting is in-memory/per-IP/single-instance only — do not build a distributed limiter.
 

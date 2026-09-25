@@ -12,7 +12,7 @@ The current implementation is a 14-line stub: short codes are drawn from a 3-cha
 - Add HTTP/HTTPS-only URL validation with a length limit, returning field-level errors instead of the current single generic message.
 - Add click statistics at the row level (`clickCount`, `lastClickedAt`) recorded on every redirect.
 - Add a URL listing view showing each shortened URL with its statistics.
-- Rework the two existing React Router routes (`/` and `/s/:code`) to call the new `ShortUrlService` instead of touching storage directly; add loading state (`useNavigation()`) and reusable Tailwind components (`Button`, `Input`, `Alert`, `Card`, `Spinner`).
+- Rework the two existing React Router routes (`/` and `/s/:code`) to call the new `ShortUrlService` instead of touching storage directly; add loading state (`useNavigation()`) and reusable components (`Button`, `Input`, `Alert`, `Card` via shadcn/ui on Radix primitives, plus a small hand-written `Spinner`), restyled with our own Tailwind theme tokens.
 - Add basic per-IP in-memory rate limiting on URL creation.
 - Add Vitest coverage for the highest-value logic (code generation retry, validator, repository round-trip, and the two routes) plus a `test` task in `turbo.json`.
 - Update Docker (named volume + Prisma migration step), `.env.example`, and `README.md`'s Docker Setup section to match; fill in `CHALLENGE_SUBMISSION.md`.
@@ -30,7 +30,7 @@ None — this is a greenfield project with no existing `openspec/specs/` entries
 ## Impact
 
 - `libs/engine`: full restructure (domain/application/infrastructure layers), new dependencies (`prisma`, `@prisma/client`), new `prisma/schema.prisma`, removal of the current `shortened-url.ts`/`base-url.ts` stub API.
-- `applications/web`: `app/routes/_index.tsx` and `app/routes/s.$code.tsx` rewritten to call `ShortUrlService`; new `app/components/` (Button, Input, Alert, Card, Spinner, list item); new `app/lib/rate-limit.server.ts`.
+- `applications/web`: `app/routes/_index.tsx` and `app/routes/s.$code.tsx` rewritten to call `ShortUrlService`; new `app/components/ui/` (Button, Input, Alert, Card via shadcn/ui, new `@radix-ui/*` and `lucide-react` dependencies) and `app/components/` (Spinner, list item); new `app/lib/rate-limit.server.ts`.
 - Root `Dockerfile` / `docker-compose.yml`: named volume for the SQLite file, Prisma migration step in the production stage.
 - Root `turbo.json`: new `test` task.
 - `.env.example`, `README.md` (Docker Setup section), `CHALLENGE_SUBMISSION.md`: updated/filled in.
