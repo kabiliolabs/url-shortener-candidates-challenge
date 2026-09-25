@@ -25,10 +25,10 @@
 
 ## 5. Route layer integration (`applications/web`)
 
-- [ ] 5.1 Update `app/routes/_index.tsx` `action` to read `PUBLIC_URL` from `process.env` and call `shortUrlService.createShortUrl(url, baseUrl)` instead of `generateShortCode()`/`shortenedUrls.set`, mapping `InvalidUrlError` to a field-level `{ error }` response; verify manually (`pnpm dev`) that a valid URL returns a shortened link and an invalid one returns a specific error
-- [ ] 5.2 Update the same route's `loader` to call `shortUrlService.listShortUrls()` and pass the result to the component; verify a newly created entry appears after submission
-- [ ] 5.3 Update `app/routes/s.$code.tsx` `loader` to call `shortUrlService.recordClickAndResolve(code)`, redirecting on success and throwing a 404 `Response` when it catches `ShortUrlNotFoundError`; verify manually that visiting a known code redirects and increments its click count (visible in the list), and an unknown code shows the 404 page
-- [ ] 5.4 Delete the old `libs/engine/src/shortened-url.ts` and `base-url.ts` stub files once no code imports them; verify `grep -r "shortenedUrls\|generateShortCode" applications/web/app` (excluding the new domain module) returns no matches
+- [x] 5.1 Update `app/routes/_index.tsx` `action` to read `PUBLIC_URL` from `process.env` and call `shortUrlService.createShortUrl(url, baseUrl)` instead of `generateShortCode()`/`shortenedUrls.set`, mapping `InvalidUrlError` to a field-level `{ error }` response; verify manually (`pnpm dev`) that a valid URL returns a shortened link and an invalid one returns a specific error
+- [x] 5.2 Update the same route's `loader` to call `shortUrlService.listShortUrls()` and pass the result to the component; verify a newly created entry appears after submission
+- [x] 5.3 Update `app/routes/s.$code.tsx` `loader` to call `shortUrlService.recordClickAndResolve(code)`, redirecting on success and throwing a 404 `Response` when it catches `ShortUrlNotFoundError`; verify manually that visiting a known code redirects and increments its click count (visible in the list), and an unknown code shows the 404 page
+- [x] 5.4 Delete the old `libs/engine/src/shortened-url.ts` and `base-url.ts` stub files once no code imports them; verify `grep -r "shortenedUrls\|generateShortCode" applications/web/app` (excluding the new domain module) returns no matches
 
 ## 6. UI: reusable components, loading state, listing view
 

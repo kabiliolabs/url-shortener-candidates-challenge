@@ -1,32 +1,37 @@
 import { Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+import { InvalidUrlError } from "@url-shortener/engine";
+import { getBaseUrl } from "~/lib/base-url.server";
+import { shortUrlService } from "~/lib/short-url-service.server";
 
-export function loader() {
+export async function loader() {
+  const urls = await shortUrlService.listShortUrls();
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl: getBaseUrl(),
+    urls,
   };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const url = formData.get("url");
 
-  if (!url) {
+  if (typeof url !== "string" || url.length === 0) {
     return { error: "URL is required" };
   }
 
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+  try {
+    const { shortenedUrl } = await shortUrlService.createShortUrl(
+      url,
+      getBaseUrl(),
+    );
+    return { shortenedUrl };
+  } catch (error) {
+    if (error instanceof InvalidUrlError) {
+      return { error: error.message };
+    }
+    throw error;
+  }
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -64,7 +69,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
               ★ SHORTEN IT ★
             </button>
             <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
+              Your shortened URL will start with {baseUrl}/s/
             </p>
           </div>
         </Form>
