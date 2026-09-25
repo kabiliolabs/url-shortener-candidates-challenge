@@ -39,8 +39,8 @@
 
 ## 7. Abuse prevention
 
-- [ ] 7.1 Implement `app/lib/rate-limit.server.ts`: a per-IP sliding-window/token-bucket limiter backed by a module-level `Map`; verify a unit test covers requests within the limit succeeding and requests beyond it being rejected
-- [ ] 7.2 Call the limiter from `_index.tsx`'s `action` (keyed by the request's source IP) before invoking `ShortUrlService.createShortUrl`, returning a field-level rate-limit error when exceeded; verify manually that rapid repeated submissions eventually receive the rate-limit error — satisfying the url-shortening spec's rate-limiting requirement
+- [x] 7.1 Implement `app/lib/rate-limit.server.ts`: a per-IP sliding-window/token-bucket limiter backed by a module-level `Map`; verify a unit test covers requests within the limit succeeding and requests beyond it being rejected
+- [x] 7.2 Call the limiter from `_index.tsx`'s `action` (keyed by the request's source IP) before invoking `ShortUrlService.createShortUrl`, returning a field-level rate-limit error when exceeded; verify manually that rapid repeated submissions eventually receive the rate-limit error — satisfying the url-shortening spec's rate-limiting requirement
 
 ## 8. Test tooling and cross-layer integration tests
 

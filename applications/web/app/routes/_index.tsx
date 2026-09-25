@@ -3,6 +3,7 @@ import { Form, useActionData, useNavigation, useRevalidator } from "react-router
 import type { Route } from "./+types/_index";
 import { InvalidUrlError } from "@url-shortener/engine";
 import { getBaseUrl } from "~/lib/base-url.server";
+import { checkRateLimit, getClientKey } from "~/lib/rate-limit.server";
 import { shortUrlService } from "~/lib/short-url-service.server";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
@@ -20,6 +21,10 @@ export async function loader() {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  if (!checkRateLimit(getClientKey(request)).allowed) {
+    return { error: "Too many links submitted. Wait a minute and try again." };
+  }
+
   const formData = await request.formData();
   const url = formData.get("url");
 
