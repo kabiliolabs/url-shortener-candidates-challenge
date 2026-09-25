@@ -8,13 +8,26 @@
     "build": "tsc",
     "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "db:generate": "prisma generate",
+    "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "postinstall": "prisma generate"
   },
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@prisma/client": "^6.19.0"
+  },
   "devDependencies": {
     "@types/node": "^22.19.7",
-    "typescript": "^5.9.3"
+    "dotenv-cli": "^10.0.0",
+    "prisma": "^6.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }

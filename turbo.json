@@ -10,6 +10,13 @@
       "persistent": true
     },
     "typecheck": {},
+    "lint": {},
+    "lint:fix": {
+      "cache": false
+    },
+    "test": {
+      "cache": false
+    },
     "clean": {
       "cache": false
     }
