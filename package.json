@@ -11,7 +11,10 @@
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
     "clean": "turbo run clean && rm -rf .turbo",
-    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
+    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:down:clean": "docker compose down -v"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {

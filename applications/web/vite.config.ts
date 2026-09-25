@@ -8,6 +8,10 @@ export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   ssr: {
     noExternal: ["@url-shortener/engine"],
+    // @prisma/client relies on runtime-only module resolution (`.prisma/client/...`)
+    // that breaks if Vite tries to statically bundle it; must stay external even
+    // though the workspace package that imports it (@url-shortener/engine) is inlined.
+    external: ["@prisma/client"],
   },
   optimizeDeps: {
     include: ["@url-shortener/engine"],

@@ -51,9 +51,9 @@
 
 ## 9. Docker persistence and documentation sync
 
-- [ ] 9.1 Add a named volume to `docker-compose.yml` mounted where the SQLite file lives, and set `DATABASE_URL` in the `web` service's `environment` block to point at a path inside that volume; verify `docker-compose up --build` starts and the app is reachable at `http://localhost:3000`
-- [ ] 9.2 Add a `prisma migrate deploy` step to the `Dockerfile`'s `production` stage, running before `CMD ["pnpm", "start"]`; verify a fresh `docker-compose up --build` creates the db and that `docker-compose down` followed by `docker-compose up` (no `--build`, volume retained) still shows previously created short URLs — satisfying the url-shortening spec's "persist across restarts" requirement
-- [ ] 9.3 Update `README.md`'s Docker Setup section and `.env.example` to reflect the new `DATABASE_URL` variable and any changed steps; verify the documented commands match exactly what was run in 9.1/9.2
+- [x] 9.1 Add a named volume to `docker-compose.yml` mounted where the SQLite file lives, and set `DATABASE_URL` in the `web` service's `environment` block to point at a path inside that volume; verify `docker-compose up --build` starts and the app is reachable at `http://localhost:3000`
+- [x] 9.2 Add a `prisma migrate deploy` step to the `Dockerfile`'s `production` stage, running before `CMD ["pnpm", "start"]`; verify a fresh `docker-compose up --build` creates the db and that `docker-compose down` followed by `docker-compose up` (no `--build`, volume retained) still shows previously created short URLs — satisfying the url-shortening spec's "persist across restarts" requirement
+- [x] 9.3 Update `README.md`'s Docker Setup section and `.env.example` to reflect the new `DATABASE_URL` variable and any changed steps; verify the documented commands match exactly what was run in 9.1/9.2
 
 ## 10. Submission documentation
 
