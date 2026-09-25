@@ -44,10 +44,10 @@
 
 ## 8. Test tooling and cross-layer integration tests
 
-- [ ] 8.1 Add Vitest as a devDependency with a `test` script in `libs/engine/package.json` and `applications/web/package.json`; verify `pnpm --filter @url-shortener/engine test` and `pnpm --filter web test` both run (even trivially) without config errors
-- [ ] 8.2 Add a `test` task to root `turbo.json`; verify `turbo test` runs tests across the workspace
-- [ ] 8.3 Write an integration test for `_index.tsx`'s `action` against a real test SQLite db covering the happy path (valid URL → shortened URL returned) and the validation-error path (invalid URL → field error); verify it passes under `turbo test`
-- [ ] 8.4 Write an integration test for `s.$code.tsx`'s `loader` covering a known code (redirect issued, click count incremented, observable via `listShortUrls()`) and an unknown code (404); verify it passes under `turbo test`
+- [x] 8.1 Add Vitest as a devDependency with a `test` script in `libs/engine/package.json` and `applications/web/package.json`; verify `pnpm --filter @url-shortener/engine test` and `pnpm --filter web test` both run (even trivially) without config errors — done during task 7 (rate-limiter unit tests needed it)
+- [x] 8.2 Add a `test` task to root `turbo.json`; verify `turbo test` runs tests across the workspace
+- [x] 8.3 Write an integration test for `_index.tsx`'s `action` against a real test SQLite db covering the happy path (valid URL → shortened URL returned) and the validation-error path (invalid URL → field error); verify it passes under `turbo test`
+- [x] 8.4 Write an integration test for `s.$code.tsx`'s `loader` covering a known code (redirect issued, click count incremented, observable via `listShortUrls()`) and an unknown code (404); verify it passes under `turbo test`
 
 ## 9. Docker persistence and documentation sync
 
