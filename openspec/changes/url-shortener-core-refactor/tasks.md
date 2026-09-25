@@ -59,6 +59,12 @@
 
 - [ ] 10.1 Fill in `CHALLENGE_SUBMISSION.md` (What I Did, What I Would Do With More Time, AI Usage, Feedback), noting the documented limitations from `design.md` (single-instance in-memory rate limiting, counter-only click stats, no per-click event log); verify all four sections contain substantive content rather than the placeholder HTML comments
 
+## 11. Linting (added outside the original P0 scope, by direct request)
+
+- [x] 11.1 Add root-level ESLint 9 flat config (`eslint.config.js`): `@eslint/js` + `typescript-eslint` recommended (non type-checked, no tsconfig changes needed) for both packages, plus `eslint-plugin-react`/`react-hooks`/`jsx-a11y` scoped to `applications/web/**/*.{ts,tsx}` only (libs/engine has no React code); verify `pnpm exec eslint .` is clean from the repo root
+- [x] 11.2 Add a `lint` script (`eslint .`) to both `libs/engine/package.json` and `applications/web/package.json`, a `lint` task to `turbo.json`, and a root `lint: "turbo lint"` script; verify `turbo lint` from the repo root runs both packages via upward flat-config resolution (each package has no local config of its own) and is clean
+- [x] 11.3 Fix the one real finding surfaced: `_index.tsx`'s leftover scaffold `meta({}: Route.MetaArgs)` used an empty destructuring pattern, flagged by `no-empty-pattern`; changed to `meta()` since no args were used; verify `turbo typecheck test lint` all pass afterward
+
 ---
 
 **Explicitly deferred (not part of this task list):** P1 — route-level tests beyond 8.3/8.4, a `ClickEvent` per-visit log with referrer/user-agent, pagination on the listing view, further UI polish. P2 — authentication/link ownership, custom/vanity codes, analytics dashboards, Postgres migration, distributed rate limiting, CAPTCHA/bot detection, CI pipeline.

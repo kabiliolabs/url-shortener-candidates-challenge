@@ -46,7 +46,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "URL Shortener" },
     { name: "description", content: "Paste a link, get a short one back." },

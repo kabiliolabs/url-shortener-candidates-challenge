@@ -39,3 +39,4 @@ Rate limiting is in-memory/per-IP/single-instance only — do not build a distri
 * Verify Prisma/pnpm lifecycle-script behavior actually works in this monorepo rather than assuming it — pnpm restricts postinstall build scripts by default.
 * Use **Superpowers** for implementation, testing, and review where appropriate.
 * Use **frontend-design** for the frontend UI work.
+* `pnpm lint` (`turbo lint`) runs ESLint 9 flat config from the single root `eslint.config.js` — no per-package config files. React/hooks/jsx-a11y rules are scoped to `applications/web/**` only; `libs/engine` gets base JS/TS rules only, since it has no React code.
