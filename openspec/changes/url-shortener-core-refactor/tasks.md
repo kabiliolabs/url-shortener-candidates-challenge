@@ -15,8 +15,8 @@
 
 ## 3. Application layer (`libs/engine/src/application`)
 
-- [ ] 3.1 Implement `ShortUrlService` in `application/short-url-service.ts`, constructed with an injected `IShortUrlRepository`, exposing `createShortUrl(originalUrl, baseUrl)`: validates, generates a code, persists via the repository, retries up to 5 times on a uniqueness conflict, then throws `ShortCodeExhaustedError`; verify unit tests using an in-memory fake `IShortUrlRepository` cover successful creation, `InvalidUrlError` propagation, and retry-then-exhaustion — satisfying the url-shortening spec's uniqueness and code-generation requirements
-- [ ] 3.2 Add `recordClickAndResolve(code)` and `listShortUrls()` to `ShortUrlService`: the former looks up the code, throws `ShortUrlNotFoundError` if absent, otherwise increments `clickCount`/updates `lastClickedAt` via the repository and returns the destination URL; verify unit tests with the fake repository cover found (stats updated) and not-found (stats untouched) paths — satisfying the url-redirection spec
+- [x] 3.1 Implement `ShortUrlService` in `application/short-url-service.ts`, constructed with an injected `IShortUrlRepository`, exposing `createShortUrl(originalUrl, baseUrl)`: validates, generates a code, persists via the repository, retries up to 5 times on a uniqueness conflict, then throws `ShortCodeExhaustedError`; verify unit tests using an in-memory fake `IShortUrlRepository` cover successful creation, `InvalidUrlError` propagation, and retry-then-exhaustion — satisfying the url-shortening spec's uniqueness and code-generation requirements
+- [x] 3.2 Add `recordClickAndResolve(code)` and `listShortUrls()` to `ShortUrlService`: the former looks up the code, throws `ShortUrlNotFoundError` if absent, otherwise increments `clickCount`/updates `lastClickedAt` via the repository and returns the destination URL; verify unit tests with the fake repository cover found (stats updated) and not-found (stats untouched) paths — satisfying the url-redirection spec
 
 ## 4. Infrastructure layer (Prisma repository)
 
