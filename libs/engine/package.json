@@ -2,19 +2,20 @@
   "name": "@url-shortener/engine",
   "version": "0.0.1",
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
-    "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint ."
   },
   "exports": {
     ".": "./src/index.ts"
   },
   "devDependencies": {
     "@types/node": "^22.19.7",
-    "typescript": "^5.9.3"
-  }
+    "@typescript/native": "catalog:",
+    "@url-shortener/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "^5.0.3"
+  },
+  "private": true
 }
