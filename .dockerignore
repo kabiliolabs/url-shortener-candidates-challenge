@@ -11,3 +11,4 @@ node_modules
 **/.react-router
 .turbo
 **/.turbo
+libs/engine/src/infrastructure/persistence/prisma/generated

@@ -8,3 +8,28 @@ services:
     environment:
       - NODE_ENV=production
       - PUBLIC_URL=http://localhost:3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-url_shortener}:${POSTGRES_PASSWORD:-url_shortener}@db:5432/${POSTGRES_DB:-url_shortener}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-url_shortener}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-url_shortener}
+      POSTGRES_DB: ${POSTGRES_DB:-url_shortener}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  db-data:

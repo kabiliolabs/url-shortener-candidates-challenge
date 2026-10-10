@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/infrastructure/persistence/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ShortLink {
+  code        String   @id @db.VarChar(16)
+  destination String   @db.VarChar(2048)
+  createdAt   DateTime @map("created_at") @db.Timestamptz(3)
+  clicks      Click[]
+
+  @@index([createdAt])
+  @@map("short_links")
+}
+
+model Click {
+  id         BigInt    @id @default(autoincrement())
+  shortCode  String    @map("short_code") @db.VarChar(16)
+  occurredAt DateTime  @map("occurred_at") @db.Timestamptz(3)
+  shortLink  ShortLink @relation(fields: [shortCode], references: [code], onDelete: Cascade)
+
+  @@index([shortCode])
+  @@map("clicks")
+}

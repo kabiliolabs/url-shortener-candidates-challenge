@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { SiteHeader } from "~/components/site-header";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -42,31 +43,37 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
+        <Outlet />
+      </main>
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
+  const isNotFound = isRouteErrorResponse(error) && error.status === 404;
+  const title = isNotFound ? "Page not found" : "Something went wrong";
+  const details = isNotFound
+    ? "The page you are looking for does not exist."
+    : "An unexpected error occurred. Please try again in a moment.";
+  const stack =
+    import.meta.env.DEV && error instanceof Error ? error.stack : undefined;
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-3 px-4 py-16">
+      <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
+      <p className="text-slate-600">{details}</p>
+      <a
+        href="/"
+        className="text-indigo-700 underline underline-offset-2 hover:text-indigo-900"
+      >
+        Back to home
+      </a>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="overflow-x-auto rounded-md bg-slate-100 p-4 text-xs">
           <code>{stack}</code>
         </pre>
       )}
