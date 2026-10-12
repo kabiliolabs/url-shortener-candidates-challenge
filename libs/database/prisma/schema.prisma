@@ -1,0 +1,68 @@
+// Database schema. After editing, create a migration with:
+//   pnpm db:migrate --name <describe-the-change>
+// The schema avoids database-specific features, so switching to Postgres is
+// a change of `provider` plus a fresh baseline migration (see CONTRIBUTING.md).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// An anonymous link owner. Whoever holds the secret key owns the links; only
+// the key's SHA-256 is stored. `accountId` will link it to a D3BIT account.
+model Owner {
+  id         String     @id @default(cuid())
+  secretHash String     @unique
+  accountId  String?    @unique
+  createdAt  DateTime   @default(now())
+  shortUrls  ShortUrl[]
+}
+
+model ShortUrl {
+  id           String    @id @default(cuid())
+  /// As created and displayed, e.g. "ShOrTUr1".
+  code         String
+  /// lower(code): uniqueness and lookups ignore case, so "Promo" and "promo" can't both exist.
+  codeKey      String    @unique
+  targetUrl    String
+  createdAt    DateTime  @default(now())
+  ownerId      String?
+  owner        Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  isPublic     Boolean   @default(false)
+  isCustomSlug Boolean   @default(false)
+  /// Set by an admin: still redirects, but leaves the leaderboard and public stats.
+  hiddenAt     DateTime?
+  clicks       Click[]
+
+  @@index([ownerId, createdAt]) // "my links"
+  @@index([createdAt]) // admin listing, newest first
+  @@index([isPublic, hiddenAt]) // leaderboard candidates
+}
+
+// One row per redirect (an event log), so new breakdowns are new queries
+// rather than schema changes. Raw IPs are deliberately never stored.
+model Click {
+  id           String   @id @default(cuid())
+  shortUrlId   String
+  shortUrl     ShortUrl @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+  occurredAt   DateTime @default(now())
+  /// UTC "YYYY-MM-DD": makes per-day charts a plain GROUP BY on any database.
+  day          String
+  /// ISO 3166-1 alpha-2, null when unknown.
+  country      String?
+  browser      String?
+  os           String?
+  /// desktop | mobile | tablet | other (a string rather than an enum, for portability).
+  device       String
+  referrerHost String?
+  /// Daily-rotating salted hash of IP + User-Agent.
+  visitorId    String
+  isBot        Boolean  @default(false)
+
+  @@index([shortUrlId, isBot, day])
+  @@index([shortUrlId, occurredAt])
+}

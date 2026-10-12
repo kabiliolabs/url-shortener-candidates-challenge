@@ -1,98 +1,138 @@
-import { Form, useActionData } from "react-router";
+import { data, useActionData, useLoaderData } from "react-router";
+import { getContainer } from "~/.server/container";
+import { isExpected, toUserMessage } from "~/.server/errors";
+import { logger } from "~/.server/logger";
+import { ShortenForm, type ShortenFields } from "~/components/shorten-form";
+import { ShortenResult, type CreatedLink } from "~/components/shorten-result";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
-
-export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
-}
-
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
-
-  if (!url) {
-    return { error: "URL is required" };
-  }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
-}
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "URL Shortener" },
-    { name: "description", content: "Shorten your URLs quickly and easily" },
+    { title: "d3b.it/r ~ URL Shortener" },
+    {
+      name: "description",
+      content: "Short links with real, privacy-friendly stats.",
+    },
   ];
 }
 
-export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
-  const actionData = useActionData<typeof action>();
+export async function loader() {
+  const { turnstileSiteKey, shortLinkPrefix } = await getContainer();
+  return { turnstileSiteKey, shortLinkPrefix };
+}
+
+type ActionResult =
+  | { ok: true; link: CreatedLink; keyLink: string; newOwner: boolean }
+  | { ok: false; error: string; fields: ShortenFields };
+
+// Controller: parse → guard (honeypot, rate limit, human check) → identify
+// the owner → call the service → map to a view model.
+export async function action({ request, context }: Route.ActionArgs) {
+  const container = await getContainer();
+  const form = await request.formData();
+  const fields: ShortenFields = {
+    url: String(form.get("url") ?? ""),
+    slug: String(form.get("slug") ?? ""),
+    isPublic: form.get("isPublic") === "on",
+  };
+  const fail = (error: string, status: number, headers?: HeadersInit) =>
+    data<ActionResult>({ ok: false, error, fields }, { status, headers });
+
+  if (form.get("website")) {
+    logger.warn({ reason: "honeypot" }, "Link creation blocked");
+    return fail("Something went wrong. Please try again.", 400);
+  }
+
+  const limit = container.limiters.createLink.consume(
+    context.clientIp ?? "unknown",
+  );
+  if (!limit.allowed) {
+    logger.warn({ reason: "rate-limit" }, "Link creation blocked");
+    return fail(
+      `Whoa, slow down! Try again in ${limit.retryAfterSeconds} seconds.`,
+      429,
+      { "Retry-After": String(limit.retryAfterSeconds) },
+    );
+  }
+
+  const token = form.get("cf-turnstile-response");
+  if (
+    !(await container.humanVerifier.verify(
+      token ? String(token) : null,
+      context.clientIp,
+    ))
+  ) {
+    logger.warn({ reason: "turnstile" }, "Link creation blocked");
+    return fail("We couldn't confirm you're a human. Please try again.", 400);
+  }
+
+  // The owner is created on the first link and remembered in a cookie.
+  const cookieSecret = await container.cookies.owner.parse(
+    request.headers.get("Cookie"),
+  );
+  const session = await container.owners.authenticateOrCreate(
+    typeof cookieSecret === "string" ? cookieSecret : null,
+  );
+  const headers = session.created
+    ? { "Set-Cookie": await container.cookies.owner.serialize(session.secret) }
+    : undefined;
+
+  try {
+    const shortUrl = await container.shortUrls.shorten({
+      ...fields,
+      ownerId: session.owner.id,
+    });
+    logger.info(
+      {
+        code: shortUrl.code,
+        isPublic: shortUrl.isPublic,
+        custom: shortUrl.isCustomSlug,
+      },
+      "Link created",
+    );
+    return data<ActionResult>(
+      {
+        ok: true,
+        link: {
+          code: shortUrl.code,
+          shortLink: container.shortLinkFor(shortUrl.code),
+          targetUrl: shortUrl.targetUrl,
+          isPublic: shortUrl.isPublic,
+        },
+        keyLink: container.keyLinkFor(session.secret),
+        newOwner: session.created,
+      },
+      { headers },
+    );
+  } catch (error) {
+    return fail(
+      toUserMessage(error, "shorten"),
+      isExpected(error) ? 400 : 500,
+      headers,
+    );
+  }
+}
+
+export default function Index() {
+  const { turnstileSiteKey, shortLinkPrefix } = useLoaderData<typeof loader>();
+  const result = useActionData<typeof action>();
+
+  if (result?.ok) {
+    return (
+      <ShortenResult
+        link={result.link}
+        keyLink={result.keyLink}
+        newOwner={result.newOwner}
+      />
+    );
+  }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
-
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
-
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
-
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
-        )}
-
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
-      </div>
-    </main>
+    <ShortenForm
+      error={result?.error}
+      fields={result?.fields}
+      turnstileSiteKey={turnstileSiteKey}
+      shortLinkPrefix={shortLinkPrefix}
+    />
   );
 }

@@ -1,0 +1,37 @@
+# d3b.it: everything keeps redirecting to d3bit.com, except /r, which is the
+# URL shortener. Merge these locations into the existing d3b.it server block.
+# TLS via certbot: sudo certbot --nginx -d d3b.it
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name d3b.it;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name d3b.it;
+
+    # Managed by certbot
+    ssl_certificate     /etc/letsencrypt/live/d3b.it/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/d3b.it/privkey.pem;
+
+    # The URL shortener: d3b.it/r and d3b.it/r/...
+    location = /r {
+        include /etc/nginx/snippets/url-shortener-proxy.conf;
+    }
+    location /r/ {
+        include /etc/nginx/snippets/url-shortener-proxy.conf;
+    }
+
+    # Everything else: unchanged.
+    location / {
+        return 301 https://d3bit.com$request_uri;
+    }
+}
+
+# The shared proxy settings are in deploy/url-shortener-proxy.conf; copy it to
+# /etc/nginx/snippets/url-shortener-proxy.conf.

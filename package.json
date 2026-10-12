@@ -3,14 +3,25 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "pnpm db:deploy && turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "clean": "turbo run clean && rm -rf .turbo",
-    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
+    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @url-shortener/database exec prisma migrate dev",
+    "db:deploy": "pnpm --filter @url-shortener/database exec prisma migrate deploy",
+    "db:studio": "pnpm --filter @url-shortener/database exec prisma studio",
+    "db:generate": "turbo generate",
+    "geoip:download": "sh scripts/download-geoip.sh data/dbip-country-lite.mmdb",
+    "test:e2e": "pnpm --filter web test:e2e"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
-    "turbo": "^2.7.4"
+    "prettier": "^3.9.9",
+    "turbo": "^2.7.4",
+    "vitest": "^5.0.2"
   }
 }

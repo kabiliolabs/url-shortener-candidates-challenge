@@ -1,15 +1,102 @@
 @import "tailwindcss";
 
+/*
+ * d3b.it/r design tokens: old-school web, cleaned up.
+ * Loud colors, hard shadows, dashed borders, mono type. Every text/background
+ * pair used by the components passes WCAG AA (4.5:1). Components use these
+ * semantic names; change the look here, not in components.
+ */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-pixel: "VT323", "Space Mono", ui-monospace, monospace;
+
+  --color-ink: #1e1b4b; /* text, borders, shadows */
+  --color-paper: #fde047; /* yellow cards */
+  --color-grape: #7e22ce; /* dashed card borders */
+  --color-hot: #ef4444; /* hard shadows */
+  --color-cta: #dc2626; /* primary button */
+  --color-cta-ink: #fef08a; /* text on the primary button */
+  --color-teal: #2dd4bf;
+  --color-blue: #2563eb; /* input borders, focus */
+  --color-peach: #fed7aa; /* inputs, table heads */
+  --color-plum: #3b0764; /* input text */
+  --color-fuchsia: #a21caf; /* headings */
+  --color-leaf: #16a34a; /* wavy underlines */
+  --color-lime: #a3e635;
+  --color-lime-soft: #bef264; /* text on ink */
+  --color-pink: #ec4899;
+  --color-cyan: #67e8f9;
+  --color-violet: #6d28d9; /* result card */
+  --color-lilac: #f5d0fe; /* "private" text on ink */
+  --color-error: #84cc16; /* error box (lime) */
+  --color-error-ink: #1e40af;
+  --color-error-edge: #b91c1c;
+
+  --shadow-hard: 4px 4px 0 var(--color-ink);
+  --shadow-hard-lg: 10px 10px 0 var(--color-ink);
+  --shadow-hot: 10px 10px 0 var(--color-hot);
 }
 
-html,
-body {
-  @apply bg-white dark:bg-gray-950;
+@layer base {
+  html {
+    background: var(--color-ink);
+  }
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+  body {
+    @apply min-h-svh font-mono text-ink antialiased;
+    background: linear-gradient(
+      135deg,
+      var(--color-lime) 0%,
+      var(--color-pink) 52%,
+      var(--color-cyan) 100%
+    );
+  }
+
+  :focus-visible {
+    outline: 4px solid var(--color-blue);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Windows-95 bevels, used only by the admin console. */
+  .bevel-out {
+    border: 2px solid;
+    border-color: #ffffff #404040 #404040 #ffffff;
+    background: #c0c0c0;
+  }
+  .bevel-in {
+    border: 2px solid;
+    border-color: #404040 #ffffff #ffffff #404040;
+  }
+
+  .wavy {
+    text-decoration: underline wavy var(--color-leaf);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 0.3em;
+  }
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
   }
 }
