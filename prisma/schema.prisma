@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../applications/web/app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ShortUrl {
+  id          String   @id @default(cuid())
+  code        String   @unique @db.VarChar(8)
+  originalUrl String   @db.VarChar(2048)
+  createdAt   DateTime @default(now())
+  clicks      Int      @default(0)
+
+  clickEvents ClickEvent[]
+
+  @@index([createdAt])
+}
+
+model ClickEvent {
+  id        String   @id @default(cuid())
+  shortUrlId String
+  clickedAt DateTime @default(now())
+  shortUrl  ShortUrl @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+
+  @@index([shortUrlId, clickedAt])
+}

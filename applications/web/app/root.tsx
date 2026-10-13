@@ -1,6 +1,7 @@
 import {
   isRouteErrorResponse,
   Links,
+  Link,
   Meta,
   Outlet,
   Scripts,
@@ -46,30 +47,33 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
+  let message = "Something went wrong";
   let details = "An unexpected error occurred.";
-  let stack: string | undefined;
+  let status = "500";
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    status = String(error.status);
+    message = error.status === 404 ? "Page not found" : "Request failed";
     details =
       error.status === 404
-        ? "The requested page could not be found."
+        ? "The short URL or page you requested does not exist."
         : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="flex min-h-screen items-center bg-slate-50 px-4 py-12 text-slate-900">
+      <div className="mx-auto w-full max-w-2xl rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200 sm:p-12">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600">URL management</p>
+        <p className="mt-8 text-7xl font-bold tracking-tight text-slate-200">{status}</p>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{message}</h1>
+        <p className="mx-auto mt-3 max-w-lg text-slate-600">{details}</p>
+        <Link
+          to="/"
+          className="mt-8 inline-flex rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Back to home
+        </Link>
+      </div>
     </main>
   );
 }
