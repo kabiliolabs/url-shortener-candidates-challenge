@@ -13,10 +13,12 @@ pnpm 10.20.0 via Corepack (`corepack enable` once). Never use npm/yarn, never co
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:5173
+docker compose up -d db                                  # Postgres on localhost:5434
+pnpm --filter @url-shortener/infrastructure db:migrate   # create/apply migrations
+pnpm dev                                                 # http://localhost:5173
 pnpm typecheck
-pnpm test
-docker compose up --build   # http://localhost:3000
+pnpm test                                                # integration tests need the db running
+docker compose up --build                                # http://localhost:3000
 ```
 
 ## Architecture (hexagonal + DDD), see ADR-002
@@ -36,7 +38,8 @@ Dependency rule: `web → infrastructure → engine`. `engine` never imports fro
 2. Write or adjust tests, grouped by spec (`describe("SPEC-002: Validate the URL")`).
 3. Implement.
 4. Add or update the ADR in `DECISIONS.md` if a decision was made.
-5. Run `pnpm typecheck && pnpm test`.
+5. Run `pnpm typecheck && pnpm test`, then start the app (`pnpm dev` and `docker compose up --build`)
+   and check the block actually works. Every commit must leave the project runnable.
 6. One commit per plan block, Conventional Commits, the body explains *why*, footer `Refs: SPEC-00X`.
 
 ## Code style

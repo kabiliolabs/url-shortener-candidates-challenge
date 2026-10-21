@@ -35,3 +35,15 @@ runs before validation on purpose, so sending garbage also counts towards the li
 fakes of the ports (`test/fakes.ts`): fast, no database, and they show the hexagonal setup pays off.
 Tests are grouped by spec ID. Vitest because the project already uses Vite. Adapters get their own
 tests in their package.
+
+**ADR-007: Prisma adapter details.** The short code is the primary key: it's the natural key and the
+DB guarantees uniqueness without an extra index. The adapter translates Prisma's `P2002` (duplicate)
+into `ShortCodeAlreadyExistsError`, so the use case retries without knowing about Prisma. Prisma
+stays on v6 with the classic `prisma-client-js` generator, the setup I know best and the least
+risky with the time we have. Integration tests run against real Postgres in a separate
+`integration_test` schema, so they can wipe tables without touching dev data.
+
+**ADR-008: In-memory, fixed-window rate limiter.** 10 creations per minute per IP. A fixed window
+is the simplest algorithm that does the job; a sliding window is fairer at the edges but not worth
+it here. Keeping it in memory works for a single instance; with several replicas each one would
+count separately, and the fix is a Redis adapter behind the same `RateLimiter` port.

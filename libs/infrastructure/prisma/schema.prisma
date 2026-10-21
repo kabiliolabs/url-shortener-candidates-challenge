@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+  // "native" for local dev, musl for the node:alpine Docker image.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ShortUrl {
+  // The code is the natural key, so the primary key doubles as the uniqueness guarantee (SPEC-003).
+  code          String    @id @db.VarChar(7)
+  originalUrl   String    @map("original_url") @db.VarChar(2048)
+  clicks        Int       @default(0)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastClickedAt DateTime? @map("last_clicked_at")
+
+  // The stats page lists newest first.
+  @@index([createdAt(sort: Desc)])
+  @@map("short_urls")
+}
