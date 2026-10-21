@@ -5,6 +5,7 @@ import { config } from "~/infrastructure/config.server";
 import { toView } from "~/presenters/shortened-url-view";
 import { Card, CardBody, Stat } from "~/components/ui/card";
 import { CopyButton } from "~/components/copy-button";
+import { useRevalidateOnFocus } from "~/hooks/use-revalidate-on-focus";
 
 export function meta(_: Route.MetaArgs) {
   return [{ title: "Links & statistics · URL Shortener" }];
@@ -17,6 +18,8 @@ export async function loader() {
 
 export default function Urls({ loaderData }: Route.ComponentProps) {
   const { stats, urls } = loaderData;
+
+  useRevalidateOnFocus();
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-16 sm:py-20">

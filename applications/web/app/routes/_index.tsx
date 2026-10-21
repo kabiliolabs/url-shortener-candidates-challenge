@@ -9,6 +9,7 @@ import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Card, CardBody } from "~/components/ui/card";
 import { CopyButton } from "~/components/copy-button";
+import { useRevalidateOnFocus } from "~/hooks/use-revalidate-on-focus";
 import { Input } from "~/components/ui/input";
 
 export function meta(_: Route.MetaArgs) {
@@ -63,6 +64,10 @@ export async function action({ request }: Route.ActionArgs) {
 export default function Index({ loaderData, actionData }: Route.ComponentProps) {
   const { baseUrl, stats, recent } = loaderData;
   const navigation = useNavigation();
+
+  // Click counters change on the server (someone opening a short link), so
+  // refresh them when the user comes back to this tab.
+  useRevalidateOnFocus();
 
   // Loading state: true while the action is in flight (and during the
   // revalidation that follows), so the UI never looks idle after a submit.
@@ -157,13 +162,15 @@ export default function Index({ loaderData, actionData }: Route.ComponentProps) 
       <section className="mt-10">
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Recent links
+            {recent.length < stats.totalUrls
+              ? `Latest ${recent.length} of ${stats.totalUrls} links`
+              : "Recent links"}
           </h2>
           <Link
             to="/urls"
             className="text-sm text-zinc-500 underline decoration-zinc-300 underline-offset-4 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
-            All links &amp; stats ({stats.totalUrls})
+            View all &amp; stats →
           </Link>
         </div>
 
