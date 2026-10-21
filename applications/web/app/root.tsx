@@ -9,6 +9,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { Button } from "~/components/ui/button";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -60,12 +61,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       </p>
       <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{title}</h1>
       <p className="mt-2 text-zinc-600 dark:text-zinc-400">{detail}</p>
-      <Link
-        to="/"
-        className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-zinc-900 px-5 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-      >
-        Back to the shortener
-      </Link>
+      <Button asChild className="mt-6">
+        <Link to="/">Back to the shortener</Link>
+      </Button>
       {stack && (
         <pre className="mt-8 w-full overflow-x-auto rounded-lg bg-zinc-100 p-4 text-xs dark:bg-zinc-900">
           <code>{stack}</code>

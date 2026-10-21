@@ -107,9 +107,14 @@ personas.
 
 - Rediseño minimalista en neutros: la jerarquía la dan el contraste y el espaciado, no el
   color. Modo claro y oscuro.
-- Componentes reutilizables (`Button`, `Input`, `Card`, `Stat`, `Alert`, `CopyButton`) con
-  la API de shadcn/ui (`variant`/`size`/paso de `className`), escritos a mano en lugar de
-  generados con el CLI: a este tamaño mantiene las dependencias a cero.
+- Componentes reutilizables (`Button`, `Input`, `Card`, `Stat`, `Alert`, `CopyButton`)
+  siguiendo las convenciones de shadcn/ui: variantes con `class-variance-authority`,
+  `className` fusionado con `tailwind-merge` (para que al pasar una clase en conflicto gane
+  la del llamante y no el orden del CSS) y `asChild` con el `Slot` de Radix, que permite
+  renderizar un `<Link>` con estilo de botón sin duplicar la lista de clases.
+  Escritos a mano en vez de generados con el CLI: esta interfaz no necesita ninguna
+  primitiva de Radix más allá de `Slot`, así que los archivos generados habrían sido
+  justo estos.
 - **Estados de carga**: `useNavigation()` deshabilita el input y cambia el botón por un
   spinner mientras la action está en vuelo.
 - **Errores**: mensajes de validación del servidor con el código HTTP correcto

@@ -2,6 +2,7 @@ import { data, isRouteErrorResponse, Link, redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
 import { ShortenedUrlNotFoundError } from "@url-shortener/engine";
 import { resolveShortenedUrl } from "~/container.server";
+import { Button } from "~/components/ui/button";
 import { Card, CardBody } from "~/components/ui/card";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -51,12 +52,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
               ? "The short link you followed is expired, mistyped, or was never created."
               : "We could not resolve this link right now. Please try again."}
           </p>
-          <Link
-            to="/"
-            className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-lg bg-zinc-900 px-5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-          >
-            Shorten a new link
-          </Link>
+          <Button asChild className="mt-6 w-full">
+            <Link to="/">Shorten a new link</Link>
+          </Button>
         </CardBody>
       </Card>
     </div>
