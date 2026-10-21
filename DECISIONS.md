@@ -17,3 +17,21 @@ single bounded context (Shortening) with `ShortUrl` as the aggregate is enough h
 SQLite would be quicker to set up, but Postgres is closer to what you'd run in production and
 handles concurrent writes (like click counters) properly. It sits behind the `ShortUrlRepository`
 port, so changing the database means writing a new adapter and nothing else.
+
+**ADR-004: Clicks are counted atomically in the repository.** The DDD way would be loading the
+`ShortUrl`, calling `registerClick()` and saving it, but two clicks at the same time would read the
+same value and one would be lost. So the repository port has `registerClick(code, at)`, which the
+Prisma adapter turns into a single `UPDATE ... SET clicks = clicks + 1`. It's also one query instead
+of two on the hottest path (every redirect). Optimistic locking would keep the logic in the entity,
+but retrying redirects isn't worth it here.
+
+**ADR-005: Value objects, typed errors and DTOs.** `OriginalUrl` and `ShortCode` validate in their
+factory, so an invalid one can't exist and nobody has to re-check. Business failures are error
+classes with a `code` (`INVALID_URL`, `RATE_LIMIT_EXCEEDED`...) and the web maps them to messages and
+status codes. Use cases return plain DTOs, so the web never touches domain objects. The rate limit
+runs before validation on purpose, so sending garbage also counts towards the limit.
+
+**ADR-006: Testing with Vitest and in-memory fakes.** Use cases are tested against hand-written
+fakes of the ports (`test/fakes.ts`): fast, no database, and they show the hexagonal setup pays off.
+Tests are grouped by spec ID. Vitest because the project already uses Vite. Adapters get their own
+tests in their package.
