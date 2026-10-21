@@ -1,5 +1,3 @@
-import path from "node:path";
-
 /**
  * Validated configuration, read once at startup.
  *
@@ -25,9 +23,11 @@ export const config = {
     "http://localhost:5173",
   ).replace(/\/+$/, ""),
 
-  // An absolute path removes any ambiguity about what a relative SQLite path is
-  // relative to (CWD vs. schema directory).
-  databaseUrl:
-    process.env.DATABASE_URL ??
-    `file:${path.join(process.cwd(), "prisma", "data", "dev.db")}`,
+  // Defaults to the Postgres instance published by `docker compose up -d db`,
+  // so local development needs no .env file. Required in production.
+  databaseUrl: requiredInProduction(
+    "DATABASE_URL",
+    process.env.DATABASE_URL,
+    "postgresql://urlshortener:urlshortener@localhost:5433/urlshortener?schema=public",
+  ),
 } as const;

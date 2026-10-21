@@ -1,11 +1,13 @@
 -- CreateTable
 CREATE TABLE "ShortenedUrl" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "destination" TEXT NOT NULL,
     "clicks" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "lastVisitedAt" DATETIME
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastVisitedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ShortenedUrl_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex

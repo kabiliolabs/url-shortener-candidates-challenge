@@ -1,8 +1,8 @@
-// SQLite was chosen over Postgres deliberately: it satisfies the "data survives
-// a restart" requirement with a single Docker volume and no second container to
-// orchestrate (no healthcheck, no wait-for-db). Swapping to Postgres means
-// changing `provider` + `DATABASE_URL`; the repository adapter and the domain
-// stay untouched, which is the point of the port/adapter split.
+// Postgres: several application instances can share one database, so the service
+// scales horizontally. Moving here from the initial SQLite implementation only
+// required changing `provider`, the connection string and the compose file —
+// `PrismaShortenedUrlRepository`, the use cases and the domain were not touched.
+// That is the port/adapter split paying for itself.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,7 +11,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

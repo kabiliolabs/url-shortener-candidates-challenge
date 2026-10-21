@@ -9,8 +9,8 @@
     "start": "prisma migrate deploy && react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "db:generate": "prisma generate",
-    "db:migrate": "DATABASE_URL=\"file:./data/dev.db\" prisma migrate dev",
-    "db:studio": "DATABASE_URL=\"file:./data/dev.db\" prisma studio"
+    "db:migrate": "DATABASE_URL=\"postgresql://urlshortener:urlshortener@localhost:5433/urlshortener?schema=public\" prisma migrate dev",
+    "db:studio": "DATABASE_URL=\"postgresql://urlshortener:urlshortener@localhost:5433/urlshortener?schema=public\" prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

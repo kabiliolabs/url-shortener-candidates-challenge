@@ -35,10 +35,6 @@ COPY applications/web/package.json ./applications/web/
 COPY libs/engine/package.json ./libs/engine/
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
-# The SQLite file lives here; docker-compose mounts a named volume on it so the
-# data survives `docker compose down` and image rebuilds.
-RUN mkdir -p /app/data && chown -R node:node /app/data
-
 # Drop privileges: the server never needs root.
 USER node
 
