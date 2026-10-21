@@ -1,5 +1,6 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -8,15 +9,12 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { Button } from "~/components/ui/button";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
+  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
   {
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
@@ -32,7 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="min-h-dvh">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -45,28 +43,29 @@ export default function App() {
   return <Outlet />;
 }
 
+/** Application-wide fallback. Stack traces are shown in development only. */
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
+  const isNotFound = isRouteErrorResponse(error) && error.status === 404;
+  const title = isNotFound ? "Page not found" : "Unexpected error";
+  const detail = isNotFound
+    ? "The page you are looking for does not exist."
+    : "Something went wrong. Please try again.";
 
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
+  const stack =
+    import.meta.env.DEV && error instanceof Error ? error.stack : undefined;
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="mx-auto w-full max-w-xl px-4 py-24">
+      <p className="font-mono text-sm text-muted-foreground">
+        {isRouteErrorResponse(error) ? error.status : 500}
+      </p>
+      <h1 className="mt-2 text-2xl font-semibold text-foreground">{title}</h1>
+      <p className="mt-2 text-muted-foreground">{detail}</p>
+      <Button asChild className="mt-6">
+        <Link to="/">Back to the shortener</Link>
+      </Button>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="mt-8 w-full overflow-x-auto rounded-lg bg-muted p-4 text-xs">
           <code>{stack}</code>
         </pre>
       )}

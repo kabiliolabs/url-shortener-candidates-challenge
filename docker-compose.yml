@@ -1,10 +1,46 @@
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: urlshortener
+      POSTGRES_PASSWORD: urlshortener
+      POSTGRES_DB: urlshortener
+    ports:
+      # 5433 on the host to avoid clashing with a local Postgres on 5432.
+      # `pnpm dev` connects here; the web container talks to db:5432 internally.
+      - "5433:5432"
+    volumes:
+      - url-shortener-db:/var/lib/postgresql/data
+    healthcheck:
+      # `web` waits for this to pass before starting, which is what makes
+      # `prisma migrate deploy` on boot safe.
+      test: ["CMD-SHELL", "pg_isready -U urlshortener -d urlshortener"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
   web:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - PUBLIC_URL=http://localhost:3000
+      NODE_ENV: production
+      PUBLIC_URL: http://localhost:3000
+      DATABASE_URL: postgresql://urlshortener:urlshortener@db:5432/urlshortener?schema=public
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  url-shortener-db:

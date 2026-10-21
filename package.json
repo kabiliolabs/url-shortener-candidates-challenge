@@ -7,7 +7,8 @@
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "clean": "turbo run clean && rm -rf .turbo",
-    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
+    "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules",
+    "test": "turbo test"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {

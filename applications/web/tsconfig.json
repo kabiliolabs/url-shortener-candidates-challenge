@@ -11,7 +11,8 @@
     "types": ["node", "vite/client"],
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"],
-    "baseUrl": ".",
+    // No "baseUrl": deprecated in TS 5.x and removed in 7.0. Since TS 5.0 a
+    // relative "paths" mapping resolves against the tsconfig's own directory.
     "paths": {
       "~/*": ["./app/*"]
     },

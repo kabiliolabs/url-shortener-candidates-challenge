@@ -1,0 +1,30 @@
+// Postgres: several application instances can share one database, so the service
+// scales horizontally. Moving here from the initial SQLite implementation only
+// required changing `provider`, the connection string and the compose file —
+// `PrismaShortenedUrlRepository`, the use cases and the domain were not touched.
+// That is the port/adapter split paying for itself.
+
+generator client {
+  provider = "prisma-client-js"
+  // "native" for local dev (macOS), musl for the node:20-alpine container.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ShortenedUrl {
+  id            String    @id @default(cuid())
+  /// The uniqueness guarantee that makes collisions impossible lives here,
+  /// in the storage engine, not in application code.
+  code          String    @unique
+  destination   String
+  clicks        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  lastVisitedAt DateTime?
+
+  @@index([destination])
+  @@index([createdAt])
+}
