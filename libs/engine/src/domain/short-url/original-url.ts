@@ -45,6 +45,12 @@ export class OriginalUrl {
       throw InvalidUrlError.malformed();
     }
 
+    // Check again after parsing: percent-encoding can make it longer ("ñ" → "%C3%B1"),
+    // and what we store is the normalised href. The first check just avoids parsing huge input.
+    if (url.href.length > MAX_LENGTH) {
+      throw InvalidUrlError.tooLong(MAX_LENGTH);
+    }
+
     return new OriginalUrl(url);
   }
 

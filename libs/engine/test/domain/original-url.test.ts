@@ -50,6 +50,13 @@ describe("SPEC-002: Validate the URL", () => {
     expect(reasonFor(long)).toBe("too_long");
   });
 
+  it("checks the length after normalising, since encoding can make the URL longer", () => {
+    // 700 chars typed, but each "ñ" becomes "%C3%B1" (6 chars) once the URL is parsed.
+    const raw = `https://example.com/${"ñ".repeat(700)}`;
+    expect(raw.length).toBeLessThan(2048);
+    expect(reasonFor(raw)).toBe("too_long");
+  });
+
   it("knows its host, including the port", () => {
     const url = OriginalUrl.create("http://localhost:3000/s/abc");
     expect(url.hasHost("localhost:3000")).toBe(true);
