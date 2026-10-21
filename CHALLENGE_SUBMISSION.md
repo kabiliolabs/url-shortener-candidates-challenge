@@ -1,209 +1,262 @@
 # Submission
 
+> El código, los comentarios y los mensajes de commit están en inglés por coherencia
+> con el repositorio original. Este documento va en castellano.
+
 ## What I Did
 
-I treated the exercise as a refactor, not a rewrite: same stack, same monorepo, but the
-code reorganised around a domain that does not know the framework exists.
+Lo he tratado como una refactorización, no como un reescritura: mismo stack y mismo
+monorepo, pero el código reorganizado alrededor de un dominio que no sabe que el
+framework existe.
 
-### Architecture — hexagonal (ports & adapters)
+### Arquitectura — hexagonal (puertos y adaptadores)
 
-`libs/engine` now holds the domain and the application layer with **zero runtime
-dependencies**:
+`libs/engine` contiene el dominio y la capa de aplicación con **cero dependencias de
+runtime**:
 
 ```
 libs/engine/src
-├── domain/        ShortenedUrl (aggregate) · DestinationUrl + ShortCode (value objects)
-│                  ShortenedUrlRepository (port) · typed domain errors
-├── application/   ShortenUrl · ResolveShortenedUrl · ListShortenedUrls (use cases)
-└── test-support/  InMemoryShortenedUrlRepository (fake adapter for tests)
+├── domain/        ShortenedUrl (agregado) · DestinationUrl + ShortCode (value objects)
+│                  ShortenedUrlRepository (puerto) · errores de dominio tipados
+│                  internal-host (guard anti-SSRF)
+├── application/   ShortenUrl · ResolveShortenedUrl · ListShortenedUrls (casos de uso)
+└── test-support/  InMemoryShortenedUrlRepository (adaptador falso para los tests)
 ```
 
-`applications/web` holds the adapters: routes (driving), `PrismaShortenedUrlRepository`
-(driven), the rate limiter and the configuration. `app/container.server.ts` is the single
-composition root. Prisma types never leave `app/infrastructure/prisma/`.
+`applications/web` contiene los adaptadores: las rutas (driving), el
+`PrismaShortenedUrlRepository` (driven), el rate limiter y la configuración.
+`app/container.server.ts` es el único composition root. Los tipos de Prisma no salen
+nunca de `app/infrastructure/prisma/`.
 
-Why it matters here: the use cases are tested with an in-memory repository in
-milliseconds, and swapping SQLite for Postgres is a `provider` change plus one adapter —
-the domain does not move. That is the Dependency Inversion Principle doing actual work,
-not an architecture diagram for its own sake.
+Por qué importa aquí, y no es un diagrama decorativo: los casos de uso se testean contra
+un repositorio en memoria en milisegundos, sin base de datos ni contenedor. Y la prueba
+de fuego la tuve a mitad del ejercicio: **empecé con SQLite y migré a Postgres**. El
+cambio tocó el `provider` del schema, la cadena de conexión y el `docker-compose`. El
+adaptador, los casos de uso y el dominio no se movieron ni una línea. Eso es el principio
+de inversión de dependencias haciendo trabajo real.
 
-### The short-code generator
+### El generador de códigos
 
-The original produced 2 characters out of `"abc"` → **9 possible codes** (≈50% chance of
-a collision after 4 URLs), and a collision **silently overwrote someone else's link**
-because `shortenedUrls.set()` never checked for existence.
+El original usaba 2 caracteres del alfabeto `"abc"` → **9 códigos posibles** (≈50 % de
+probabilidad de colisión a partir de la 4ª URL), y una colisión **sobrescribía
+silenciosamente el enlace de otro usuario**, porque `shortenedUrls.set()` nunca
+comprobaba si el código ya existía.
 
-Now: 7 characters out of a 56-symbol unambiguous alphabet (no `0/O/1/l/I`) → **56⁷ ≈
-1.7 × 10¹²** combinations, drawn from a CSPRNG (`node:crypto`) instead of `Math.random()`,
-which is predictable and would let anyone enumerate links.
+Ahora: 7 caracteres de un alfabeto de 56 símbolos sin ambigüedades (sin `0/O/1/l/I`) →
+**56⁷ ≈ 1,7 × 10¹²** combinaciones, generadas con un CSPRNG (`node:crypto`) en lugar de
+`Math.random()`, que es predecible y permitiría enumerar los enlaces ajenos.
 
-Collisions are handled by **the database, not by a prior read**: `code` has a unique
-index, `save()` translates Prisma's `P2002` into a domain `ShortCodeCollisionError`, and
-the use case retries with a fresh code. A "check, then write" would still be racy. It is
-also idempotent: shortening the same URL twice returns the same short link.
+Las colisiones las resuelve **la base de datos, no una lectura previa**: `code` tiene un
+índice único, `save()` traduce el error `P2002` de Prisma a un `ShortCodeCollisionError`
+del dominio, y el caso de uso reintenta con un código nuevo. Un "comprueba y luego
+escribe" seguiría siendo propenso a race conditions. Además es idempotente: acortar dos
+veces la misma URL devuelve el mismo enlace corto en vez de duplicar filas.
 
-### Persistence
+### Persistencia
 
-Prisma + SQLite, with a `ShortenedUrl` model (`code @unique`, `destination`, `clicks`,
-`createdAt`, `lastVisitedAt`). SQLite over Postgres was a **deliberate time trade-off**:
-it satisfies "data survives a restart" with one named Docker volume and no second
-container to orchestrate (no healthcheck, no wait-for-db, no connection juggling). The
-port/adapter split means that decision is reversible in minutes.
+Prisma + **PostgreSQL**, con un modelo `ShortenedUrl` (`code @unique`, `destination`,
+`clicks`, `createdAt`, `lastVisitedAt`).
 
-Click counting is a single atomic `UPDATE ... SET clicks = clicks + 1`; a
-read-modify-write would drop clicks whenever two visits overlap.
+Empecé con SQLite por presupuesto de tiempo (un volumen y ningún contenedor extra que
+orquestar) y lo migré a Postgres al ver que tenía margen, porque SQLite no permite
+escalado horizontal: con dos réplicas tendrías dos bases de datos distintas y un enlace
+creado en una daría 404 en la otra. El `docker-compose` levanta ahora el servicio `db`
+con `healthcheck`, y `web` espera a `condition: service_healthy` — que es lo que hace
+seguro ejecutar `prisma migrate deploy` en cada arranque.
 
-### Security / abuse prevention
+El contador de clicks es un único `UPDATE ... SET clicks = clicks + 1` atómico; un
+read-modify-write perdería clicks siempre que dos visitas se solapasen.
 
-This is where the original code was genuinely dangerous, not just untidy:
+### Seguridad / prevención de abuso
 
-- **Stored XSS + open redirect.** Any string was stored and then rendered into an
-  `<a href>` and passed to `redirect()`, so `javascript:alert(1)` or `data:text/html,…`
-  worked. `DestinationUrl` now enforces an `http`/`https` **allowlist** in the domain, so
-  no future entry point can bypass it, and the same validation runs again when a row is
-  read back (defence in depth).
-- **Rate limiting**: fixed window, 10 creations per minute per client, with a real `429`
-  and `Retry-After`.
-- Length cap (2048), host sanity check, non-root container, `Referrer-Policy: no-referrer`
-  on the redirect so the destination site does not learn the originating link.
+Aquí es donde el código original era peligroso de verdad, no solo desordenado:
 
-### Click statistics
+- **XSS almacenado + open redirect.** Se guardaba cualquier cadena y después se pintaba
+  dentro de un `<a href>` y se pasaba a `redirect()`, así que `javascript:alert(1)` o
+  `data:text/html,…` funcionaban. `DestinationUrl` aplica ahora una **allowlist** de
+  `http`/`https` en el dominio, de modo que ningún punto de entrada futuro pueda
+  saltársela, y la misma validación se repite al leer la fila de vuelta (defensa en
+  profundidad).
+- **SSRF.** Se bloquean los destinos internos: loopback, rangos privados (10/8, 172.16/12,
+  192.168/16), CGNAT, multicast, IPv6 ULA y link-local, los TLD `.internal`/`.local`, y
+  muy especialmente **169.254.169.254**, el endpoint de metadatos de AWS/GCP que entrega
+  credenciales de instancia. Sin esto el servicio es un *confused deputy*: cualquiera
+  podría acuñar en nuestro dominio un enlace hacia la red interna. Las ofuscaciones
+  decimal y hexadecimal (`http://2130706433`) no cuelan porque el parser WHATWG las
+  normaliza antes de llegar al guard.
+- **Rate limiting**: ventana fija, 10 creaciones por minuto y cliente, con un `429` real y
+  cabecera `Retry-After`.
+- Límite de longitud (2048), comprobación de host, contenedor como usuario no root, y
+  `Referrer-Policy: no-referrer` en la redirección para que el destino no sepa de qué
+  enlace vienes.
 
-`/s/:code` resolves and counts in one use case, so it is impossible to redirect without
-recording the visit. The redirect is **302 with `Cache-Control: no-store`** — a 301 gets
-cached by browsers and proxies, and every cached hit would be a click we never see.
-`/urls` shows totals (links, clicks, average) plus a per-link table with clicks, creation
-date, last visit and copy-to-clipboard.
+### Estadísticas de clicks
+
+`/s/:code` resuelve y cuenta en un mismo caso de uso, así que es imposible redirigir sin
+registrar la visita. La redirección es **302 con `Cache-Control: no-store`** — un 301 se
+cachea en navegadores y proxies, y cada visita cacheada sería un click que nunca veríamos.
+`/urls` muestra totales (enlaces, clicks, media) más una tabla por enlace con clicks,
+fecha de creación, última visita y copiado al portapapeles.
+
+Los contadores se revalidan al volver a la pestaña (`useRevalidateOnFocus`): el número
+sube al regresar de seguir un enlace, sin recargar. Es estado del servidor, así que un
+incremento optimista en el cliente mentiría y, sobre todo, no vería las visitas de otras
+personas.
 
 ### Frontend
 
-- Rebuilt as a minimalist neutral design: hierarchy from contrast and spacing, not colour.
-  Light and dark mode.
-- Reusable components (`Button`, `Input`, `Card`, `Stat`, `Alert`, `CopyButton`) with a
-  shadcn-style API (`variant`/`size`/`className` passthrough), written by hand instead of
-  scaffolded by the CLI — at this size it kept the dependency count at zero.
-- **Loading states**: `useNavigation()` disables the input and swaps the button for a
-  spinner while the action is in flight.
-- **Errors**: server-side validation messages with the right status code (`400`/`429`/`500`),
-  rendered in a `role="alert"` region, with `aria-invalid`/`aria-describedby` wired up and
-  the user's input preserved so they can fix it. A real **404 page** for unknown codes via
-  a route-level `ErrorBoundary` (a snackbar is not possible there — a redirect is a full
-  server navigation).
-- Labels, focus rings, `prefers-reduced-motion`, and tables that scroll instead of the page.
+- Rediseño minimalista en neutros: la jerarquía la dan el contraste y el espaciado, no el
+  color. Modo claro y oscuro.
+- Componentes reutilizables (`Button`, `Input`, `Card`, `Stat`, `Alert`, `CopyButton`) con
+  la API de shadcn/ui (`variant`/`size`/paso de `className`), escritos a mano en lugar de
+  generados con el CLI: a este tamaño mantiene las dependencias a cero.
+- **Estados de carga**: `useNavigation()` deshabilita el input y cambia el botón por un
+  spinner mientras la action está en vuelo.
+- **Errores**: mensajes de validación del servidor con el código HTTP correcto
+  (`400`/`429`/`500`), dentro de una región `role="alert"`, con `aria-invalid` y
+  `aria-describedby` conectados, y conservando lo que el usuario escribió para que pueda
+  corregirlo. Página **404 real** para códigos inexistentes mediante un `ErrorBoundary` de
+  ruta (un snackbar no es posible ahí: una redirección es una navegación completa de
+  servidor, no queda estado de cliente donde pintarlo).
+- Labels, focus rings, `prefers-reduced-motion`, y tablas que hacen scroll ellas mismas en
+  móvil en lugar de desplazar la página.
 
-### Testing
+### Tests
 
-18 unit tests (Vitest) on the parts where a bug is expensive and the cost of a test is
-low: scheme/format validation, code generation (deterministic via an injected randomness
-source), collision retry, idempotency, click counting, and the "unknown == malformed"
-behaviour. No database needed — that is the payoff of the port.
+42 tests unitarios (Vitest) sobre las partes donde un fallo sale caro y el test sale
+barato: validación de esquemas y formato, el guard anti-SSRF (incluidas las ofuscaciones),
+generación de códigos (determinista gracias a inyectar la fuente de aleatoriedad),
+reintento ante colisión, idempotencia, conteo de clicks y que un código desconocido y uno
+malformado sean indistinguibles desde fuera.
+
+No necesitan base de datos: ese es el retorno del puerto, y la razón por la que los tests
+no están enganchados al build de Docker.
 
 ### Docker
 
-- `openssl` added to the base image: Prisma's query engine needs it on Alpine, and
-  `binaryTargets` includes `linux-musl-openssl-3.0.x`. Without this the container boots
-  and then dies on the first query.
-- Named volume `url-shortener-data`, `DATABASE_URL=file:/app/data/app.db`, and
-  `prisma migrate deploy` on every boot, so a fresh container converges to the right
-  schema and the data survives `down`/rebuild.
-- `--ignore-scripts` in the dependency layer (no schema there yet) with an explicit
-  `prisma generate` in the build layer; runs as the non-root `node` user; healthcheck in
-  compose.
+- Servicio `db` (postgres:16-alpine) con volumen y `healthcheck`; `web` arranca solo
+  cuando la base está sana.
+- `openssl` en la imagen base: el query engine de Prisma enlaza contra OpenSSL y
+  `node:20-alpine` no lo trae. Sin esto el contenedor arranca y muere en la primera query.
+- `prisma migrate deploy` en cada arranque, de modo que un contenedor o un volumen nuevos
+  convergen al esquema correcto sin pasos manuales.
+- `--ignore-scripts` al instalar dependencias (el schema aún no está en esa capa) con un
+  `prisma generate` explícito en la capa de build, para no romper la caché de
+  dependencias.
+- Se ejecuta como usuario no root (`node`).
+- El entrypoint invoca los binarios directamente en lugar de `pnpm start`: corepack cachea
+  en el home de root, así que como `node` volvía a descargar pnpm en cada arranque, es
+  decir, el contenedor necesitaba red solo para iniciarse.
+- Verificado también construyendo para **linux/amd64** y ejecutándolo: crear enlace,
+  redirigir, contar click y rechazar `javascript:` funcionan igual en x86 que en ARM.
 
-### Housekeeping
+### Limpieza
 
-Removed a stray `package-lock.json` (a `npm install` run by mistake in a pnpm repo) and
-regenerated `pnpm-lock.yaml`, which the Docker build needs with `--frozen-lockfile`.
+Eliminado un `package-lock.json` suelto (un `npm install` ejecutado por error en un repo
+pnpm) y regenerado `pnpm-lock.yaml`, que el build de Docker necesita con
+`--frozen-lockfile`.
 
 ## What I Would Do With More Time
 
-Ordered by what I would actually pick up next:
+Por orden de lo que cogería a continuación:
 
-1. **SSRF guard.** `http`/`https` is allowed, but internal targets are not blocked yet:
-   `localhost`, RFC1918 ranges, and cloud metadata (`169.254.169.254`). Needs DNS
-   resolution at creation time plus a re-check on redirect.
-2. **Distributed rate limiting.** The current limiter is in-process: correct shape, wrong
-   scale. With more than one instance it must move to Redis or to the edge/CDN, and be
-   keyed on something better than `x-forwarded-for` (which is spoofable unless a trusted
-   proxy sets it).
-3. **Integration + E2E tests.** The Prisma adapter is only covered through its interface
-   today; I would test it against a real SQLite file (including the `P2002` path) and add
-   a Playwright run for shorten → redirect → counter.
-4. **Postgres**, now that the adapter boundary makes it cheap, plus connection pooling.
-5. **Richer statistics**: referrer, user agent, country and a time series, which means a
-   separate `Click` events table instead of a counter column.
-6. **Product features**: custom aliases, expiry dates, QR codes, per-link deletion,
-   pagination on `/urls` (currently capped at 50).
-7. **Tooling**: ESLint/Biome + Prettier, a GitHub Actions pipeline (typecheck, test,
-   docker build) and a `/health` endpoint for the healthcheck instead of `/`.
-8. **Observability**: structured logging and error reporting; `console.error` is a
-   placeholder.
+1. **DNS rebinding.** El guard anti-SSRF bloquea direcciones internas literales, pero no
+   un dominio público cuyo registro DNS apunte a una IP privada. Cerrarlo requiere
+   resolver el DNS al crear el enlace y volver a comprobarlo en la redirección.
+2. **Rate limiting distribuido.** El actual vive en memoria del proceso: forma correcta,
+   escala equivocada. Es, de hecho, lo único que queda impidiendo el escalado horizontal
+   ahora que la base de datos es compartida. Debería moverse a Redis o al CDN/edge, y
+   apoyarse en algo mejor que `x-forwarded-for`, que es falsificable salvo que lo
+   sobrescriba un proxy de confianza.
+3. **Tests de integración y E2E.** Hoy el adaptador de Prisma solo está cubierto a través
+   de su interfaz; lo probaría contra un Postgres real (incluida la ruta `P2002`) y
+   añadiría un Playwright para acortar → redirigir → contador.
+4. **Pool de conexiones** (PgBouncer o el pool de Prisma afinado) antes de poner varias
+   réplicas detrás de un balanceador.
+5. **Estadísticas más ricas**: referrer, user agent, país y serie temporal, lo que implica
+   una tabla de eventos `Click` en lugar de una columna contador.
+6. **Producto**: alias personalizados, caducidad, códigos QR, borrado por enlace y
+   paginación en `/urls` (ahora limitada a 50).
+7. **Tooling**: ESLint/Biome + Prettier y un pipeline de GitHub Actions (typecheck, test,
+   build de Docker), más un endpoint `/health` dedicado en vez de que el healthcheck pegue
+   a `/`.
+8. **Observabilidad**: logging estructurado y reporte de errores; `console.error` es un
+   marcador de posición.
+
+Y para producción de verdad, además: terminación TLS por delante y copias de seguridad del
+volumen de Postgres.
 
 ## AI Usage
 
-I used **Claude Code (Opus)** as a pair programmer for the whole session, and I drove it
-with an analysis-first workflow rather than asking for code straight away.
+He usado **Claude Code (Opus)** como pair programmer durante toda la sesión, y lo he
+dirigido con un flujo de análisis primero, no pidiendo código de entrada.
 
-**1. Read-only analysis before touching anything.** My first prompt was deliberately
-restrictive:
+**1. Análisis en solo lectura antes de tocar nada.** Mi primer prompt fue deliberadamente
+restrictivo:
 
-> *"I'm doing a technical test, this project is the exercise. Analyse it in depth, don't
-> modify anything, just analyse it and explain it to me."*
+> *"estoy haciendo una prueba para un posible trabajo, este proyecto es la prueba tecnica,
+> analizalo en profundidad, no modifiques nada solo analiza el proyecto y explicamelo"*
 
-That produced a defect inventory (the 9-code generator, the stored XSS via
-`javascript:`, the module-level `Map`, `process.env.PUBLIC_URL` with no validation) and a
-mapping of each challenge requirement against the current state.
+De ahí salió un inventario de defectos (el generador de 9 códigos, el XSS almacenado vía
+`javascript:`, el `Map` a nivel de módulo, `process.env.PUBLIC_URL` sin validar) y un mapa
+de cada requisito del enunciado contra el estado real del código.
 
-**2. I wrote my own priority list, then had it challenged.** I listed what I wanted to do
-and asked for a comparison against the model's plan, including an explicit time budget.
-Four of my assumptions changed as a result:
+**2. Escribí mi propia lista de prioridades y pedí que la rebatiera.** Le pasé mi orden de
+ataque y pedí comparación con su plan, con presupuesto de tiempo explícito. Cambié de
+criterio en cuatro puntos:
 
-- I had "fix Docker" as step 1. It was pointed out that Docker already worked and that
-  adding Prisma would break it anyway — so it moved to the end, with a smoke test early.
-- I was going to add a Postgres container. SQLite + volume was the better call for the
-  time available.
-- I asked whether the test suite was worth the time at all; the answer (domain-only unit
-  tests, never wired into the Docker build) is what shipped.
-- The model flagged two gaps in my list: abuse prevention, and this document.
+- Yo tenía "arreglar Docker" como paso 1. Me hizo ver que Docker ya funcionaba y que
+  añadir Prisma lo rompería igualmente, así que pasó al final con un smoke test temprano.
+- Iba a levantar Postgres desde el principio; con el tiempo inicial, SQLite + volumen era
+  la decisión correcta. Cuando vi que me sobraba margen, hicimos la migración a Postgres —
+  y sirvió para demostrar la arquitectura.
+- Pregunté si merecía la pena montar los tests; la respuesta (solo unitarios de dominio,
+  nunca enganchados al build de Docker) es lo que acabó entregándose.
+- Me señaló dos huecos en mi lista: la prevención de abuso y este propio documento.
 
-**3. Implementation under review.** I had the model implement in blocks (domain → adapter
-→ routes → UI → tests → Docker) so I could review each one, and it caught things I would
-have debugged the hard way — notably that Prisma on Alpine needs `openssl`, and that
-importing `node:path` from a non-`.server` file risks leaking into the client bundle
-(hence `config.server.ts`).
+**3. Implementación revisada por bloques.** Le hice implementar por fases (dominio →
+adaptador → rutas → UI → tests → Docker) para revisar cada una. Detectó cosas que yo
+habría depurado a ciegas: que Prisma en Alpine necesita `openssl`, que importar
+`node:path` desde un fichero sin sufijo `.server` arriesga filtrarlo al bundle de cliente
+(de ahí `config.server.ts`), y que el contenedor descargaba pnpm en cada arranque.
 
-Example prompts I used:
+También le corregí cuando hizo falta: propuse resolver el contador en tiempo real con un
+setter funcional de React y me explicó por qué no servía —ese contador es estado del
+servidor, cambia por visitas de otras pestañas o de otras personas— y acabamos revalidando
+el loader al recuperar el foco.
 
-> *"Priorities: 1. get Docker working. 2. organise the code following hexagonal.
-> 3. improve the shortener: better algorithm, persist the data, avoid collisions …
-> Is it worth setting up the whole test system? Will it eat a lot of time? Does it
-> complicate the Docker deployment?"*
+Ejemplos de prompts:
 
-> *"Go for it, but also fill in CHALLENGE_SUBMISSION.md and write explanatory commits
-> when you finish the implementation."*
+> *"priorities: 1. Primero conseguir reparar el docker … 2. Organizar el codigo siguiendo
+> hexagonal … ¿Vale la pena montar todo el sistema de test? ¿Consumirá mucho tiempo la
+> implementación? ¿Complica el despliegue con docker?"*
 
-What I kept for myself: the priority calls, the SQLite-vs-Postgres trade-off, the scope
-cuts, and reviewing every diff. What I delegated: boilerplate, the exhaustive defect
-sweep, and remembering the infrastructure gotchas.
+> *"ahora q tenemos tiempo podemos implementar postgres? para q soporte escalado
+> horizontal?"*
+
+Lo que me reservé: las decisiones de prioridad, el trade-off SQLite/Postgres, los recortes
+de alcance y la revisión de cada diff. Lo que delegué: el boilerplate, el barrido
+exhaustivo de defectos y acordarse de las trampas de infraestructura.
 
 ## Feedback
 
-The brief is clear and the "deliberately flawed intern code" framing works really well —
-the bugs are planted at different depths (the ugly UI is obvious, the 9-code generator
-takes a minute, the `javascript:` scheme reaching `redirect()` only shows up if you think
-about security), which makes it a good signal of how deep a candidate actually looks.
+El enunciado es claro y el marco del "código de becario deliberadamente malo" funciona muy
+bien: los bugs están plantados a distintas profundidades (la UI fea se ve sola, el
+generador de 9 códigos cuesta un minuto, y que el esquema `javascript:` llegue a
+`redirect()` solo aparece si piensas en seguridad), lo que lo convierte en una buena señal
+de hasta dónde mira cada candidato.
 
-Two notes:
+Dos apuntes:
 
-- **~2 hours is tight for the stated requirements.** Database + repository pattern +
-  SOLID + tests + a redesigned UI + security + Docker is comfortably a half-day if done
-  properly. The instruction to prioritise mitigates this, but it is worth being explicit
-  that nobody is expected to tick every box, otherwise candidates spread themselves thin
-  and do everything shallowly.
-- **`pnpm` is assumed but not checked.** `corepack` is available on a default Node install
-  but `pnpm` is not on the PATH, which is an easy way to lose five minutes (and to end up
-  with an accidental `package-lock.json`). A line in the README — `corepack enable` — would
-  remove that friction.
+- **Dos horas se quedan cortas para los requisitos enunciados.** Base de datos + patrón
+  repositorio + SOLID + tests + rediseño de UI + seguridad + Docker es media jornada
+  haciéndolo bien. La instrucción de priorizar lo compensa, pero convendría decir
+  explícitamente que no se espera marcar todas las casillas; si no, es fácil repartirse y
+  hacerlo todo superficial.
+- **Se da por supuesto `pnpm` pero no se comprueba.** `corepack` viene con Node, pero
+  `pnpm` no está en el PATH, y eso cuesta cinco minutos y provoca justo el error que yo
+  cometí: un `npm install` accidental que deja un `package-lock.json` en un repo pnpm. Una
+  línea en el README (`corepack enable`) quitaría esa fricción.
 
-Nice touch: the fact that `CHALLENGE_SUBMISSION.md` asks about AI usage. It is a more
-honest read on how someone actually works than pretending the tools do not exist.
+Un acierto: que `CHALLENGE_SUBMISSION.md` pregunte por el uso de IA. Dice bastante más de
+cómo trabaja alguien que fingir que estas herramientas no existen.
