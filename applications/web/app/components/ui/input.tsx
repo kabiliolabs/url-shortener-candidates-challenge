@@ -6,11 +6,9 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "h-11 w-full rounded-lg border bg-white px-3.5 text-sm text-zinc-900 shadow-sm transition-colors",
-        "placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-0",
-        "dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-zinc-100",
-        "border-zinc-200 dark:border-zinc-800",
-        "aria-[invalid=true]:border-red-500 aria-[invalid=true]:focus:ring-red-500",
+        "h-11 w-full rounded-lg border border-border bg-card px-3.5 text-sm text-foreground shadow-sm transition-colors",
+        "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
+        "aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger",
         className,
       )}
       {...props}

@@ -41,13 +41,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4">
       <Card className="w-full">
         <CardBody className="text-center">
-          <p className="font-mono text-sm text-zinc-400 dark:text-zinc-500">
+          <p className="font-mono text-sm text-muted-foreground">
             {isRouteErrorResponse(error) ? error.status : 500}
           </p>
-          <h1 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+          <h1 className="mt-2 text-xl font-semibold text-foreground">
             {isNotFound ? "This link does not exist" : "Something went wrong"}
           </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 text-sm text-muted-foreground">
             {isNotFound
               ? "The short link you followed is expired, mistyped, or was never created."
               : "We could not resolve this link right now. Please try again."}

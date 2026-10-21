@@ -86,10 +86,10 @@ export default function Index({ loaderData, actionData }: Route.ComponentProps) 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-16 sm:py-24">
       <header className="mb-10">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           Shorten a link
         </h1>
-        <p className="mt-2.5 text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2.5 text-muted-foreground">
           Paste a long URL and get a short one you can share. Every visit is counted.
         </p>
       </header>
@@ -100,7 +100,7 @@ export default function Index({ loaderData, actionData }: Route.ComponentProps) 
             <div className="space-y-2">
               <label
                 htmlFor="url"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                className="block text-sm font-medium text-foreground"
               >
                 Destination URL
               </label>
@@ -122,9 +122,9 @@ export default function Index({ loaderData, actionData }: Route.ComponentProps) 
                   {isSubmitting ? <Spinner label="Shortening" /> : "Shorten"}
                 </Button>
               </div>
-              <p id="url-hint" className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p id="url-hint" className="text-xs text-muted-foreground">
                 Your link will look like{" "}
-                <span className="font-mono text-zinc-600 dark:text-zinc-300">{baseUrl}/s/xxxxxxx</span>
+                <span className="font-mono text-muted-foreground">{baseUrl}/s/xxxxxxx</span>
               </p>
             </div>
 
@@ -136,8 +136,8 @@ export default function Index({ loaderData, actionData }: Route.ComponentProps) 
           </Form>
 
           {result && (
-            <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <div className="mt-6 rounded-lg border border-border bg-muted p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Your short link
               </p>
               <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -145,13 +145,13 @@ export default function Index({ loaderData, actionData }: Route.ComponentProps) 
                   href={result.shortUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="break-all font-mono text-sm text-zinc-900 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-900 dark:text-zinc-100 dark:decoration-zinc-700 dark:hover:decoration-zinc-100"
+                  className="break-all font-mono text-sm text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
                 >
                   {result.shortUrl}
                 </a>
                 <CopyButton value={result.shortUrl} />
               </div>
-              <p className="mt-2 truncate text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="mt-2 truncate text-xs text-muted-foreground">
                 → {result.destination}
               </p>
             </div>
@@ -161,35 +161,35 @@ export default function Index({ loaderData, actionData }: Route.ComponentProps) 
 
       <section className="mt-10">
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <h2 className="text-sm font-medium text-foreground">
             {recent.length < stats.totalUrls
               ? `Latest ${recent.length} of ${stats.totalUrls} links`
               : "Recent links"}
           </h2>
           <Link
             to="/urls"
-            className="text-sm text-zinc-500 underline decoration-zinc-300 underline-offset-4 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            className="text-sm text-muted-foreground underline decoration-border underline-offset-4 hover:text-foreground"
           >
             View all &amp; stats →
           </Link>
         </div>
 
         {recent.length === 0 ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-muted-foreground">
             No links yet. Shorten one above.
           </p>
         ) : (
-          <ul className="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
             {recent.map((url) => (
               <li
                 key={url.code}
-                className="flex items-center justify-between gap-4 bg-white px-4 py-3 dark:bg-zinc-900/60"
+                className="flex items-center justify-between gap-4 bg-card px-4 py-3"
               >
                 <div className="min-w-0">
-                  <p className="font-mono text-sm text-zinc-900 dark:text-zinc-100">/s/{url.code}</p>
-                  <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{url.destination}</p>
+                  <p className="font-mono text-sm text-foreground">/s/{url.code}</p>
+                  <p className="truncate text-xs text-muted-foreground">{url.destination}</p>
                 </div>
-                <span className="shrink-0 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                   {url.clicks} {url.clicks === 1 ? "click" : "clicks"}
                 </span>
               </li>

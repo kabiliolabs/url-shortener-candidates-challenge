@@ -107,6 +107,10 @@ personas.
 
 - Rediseño minimalista en neutros: la jerarquía la dan el contraste y el espaciado, no el
   color. Modo claro y oscuro.
+- **Design tokens**: ningún componente nombra un color de paleta (`zinc-900`), nombran un
+  rol (`bg-primary`, `text-muted-foreground`), respaldado por variables CSS. El modo
+  oscuro se resuelve una sola vez redefiniendo esas variables, en lugar de que cada
+  componente repita un `dark:` por cada color. Es también lo que hace shadcn.
 - Componentes reutilizables (`Button`, `Input`, `Card`, `Stat`, `Alert`, `CopyButton`)
   siguiendo las convenciones de shadcn/ui: variantes con `class-variance-authority`,
   `className` fusionado con `tailwind-merge` (para que al pasar una clase en conflicto gane

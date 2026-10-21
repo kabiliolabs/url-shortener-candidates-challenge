@@ -26,11 +26,11 @@ export default function Urls({ loaderData }: Route.ComponentProps) {
       <header className="mb-8">
         <Link
           to="/"
-          className="text-sm text-zinc-500 underline decoration-zinc-300 underline-offset-4 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="text-sm text-muted-foreground underline decoration-border underline-offset-4 hover:text-foreground"
         >
           ← Shorten a link
         </Link>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
           Links &amp; statistics
         </h1>
       </header>
@@ -47,7 +47,7 @@ export default function Urls({ loaderData }: Route.ComponentProps) {
       {urls.length === 0 ? (
         <Card>
           <CardBody className="py-12 text-center">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               No links yet.{" "}
               <Link to="/" className="underline underline-offset-4">
                 Create the first one
@@ -61,7 +61,7 @@ export default function Urls({ loaderData }: Route.ComponentProps) {
           {/* Only the table scrolls horizontally on small screens, never the page. */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-400">
+              <thead className="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">Short link</th>
                   <th scope="col" className="px-4 py-3 font-medium">Destination</th>
@@ -71,29 +71,29 @@ export default function Urls({ loaderData }: Route.ComponentProps) {
                   <th scope="col" className="px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              <tbody className="divide-y divide-border">
                 {urls.map((url) => (
-                  <tr key={url.code} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+                  <tr key={url.code} className="hover:bg-muted">
                     <td className="px-4 py-3">
                       <a
                         href={url.shortUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-zinc-900 underline decoration-zinc-300 underline-offset-4 dark:text-zinc-100 dark:decoration-zinc-700"
+                        className="font-mono text-foreground underline decoration-border underline-offset-4"
                       >
                         /s/{url.code}
                       </a>
                     </td>
-                    <td className="max-w-[18rem] truncate px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                    <td className="max-w-[18rem] truncate px-4 py-3 text-muted-foreground">
                       <span title={url.destination}>{url.destination}</span>
                     </td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
+                    <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
                       {url.clicks}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-zinc-500 dark:text-zinc-400">
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                       <FormattedDate value={url.createdAt} />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-zinc-500 dark:text-zinc-400">
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                       {url.lastVisitedAt ? <FormattedDate value={url.lastVisitedAt} /> : "—"}
                     </td>
                     <td className="px-4 py-3 text-right">

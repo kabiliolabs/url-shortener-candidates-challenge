@@ -56,16 +56,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-24">
-      <p className="font-mono text-sm text-zinc-400 dark:text-zinc-500">
+      <p className="font-mono text-sm text-muted-foreground">
         {isRouteErrorResponse(error) ? error.status : 500}
       </p>
-      <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{title}</h1>
-      <p className="mt-2 text-zinc-600 dark:text-zinc-400">{detail}</p>
+      <h1 className="mt-2 text-2xl font-semibold text-foreground">{title}</h1>
+      <p className="mt-2 text-muted-foreground">{detail}</p>
       <Button asChild className="mt-6">
         <Link to="/">Back to the shortener</Link>
       </Button>
       {stack && (
-        <pre className="mt-8 w-full overflow-x-auto rounded-lg bg-zinc-100 p-4 text-xs dark:bg-zinc-900">
+        <pre className="mt-8 w-full overflow-x-auto rounded-lg bg-muted p-4 text-xs">
           <code>{stack}</code>
         </pre>
       )}
