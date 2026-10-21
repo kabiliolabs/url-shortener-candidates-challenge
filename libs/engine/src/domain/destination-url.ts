@@ -1,4 +1,5 @@
 import { InvalidUrlError } from "./errors";
+import { isInternalHost } from "./internal-host";
 
 /**
  * Value object for the URL a short code points to.
@@ -51,6 +52,13 @@ export class DestinationUrl {
       throw new InvalidUrlError("That URL is missing a valid domain.");
     }
 
+    // SSRF guard: never let the service be used as a hop into private networks.
+    if (isInternalHost(parsed.hostname)) {
+      throw new InvalidUrlError(
+        "Links to private or internal addresses cannot be shortened.",
+      );
+    }
+
     return new DestinationUrl(parsed.toString());
   }
 
@@ -64,8 +72,8 @@ export class DestinationUrl {
 }
 
 function isPlausibleHost(hostname: string): boolean {
-  if (hostname === "localhost") return true;
   // Require a dot so typos like "htps://foo" (which parses as host "foo") are
-  // rejected instead of silently stored.
+  // rejected instead of silently stored. IPv6 literals carry brackets instead.
+  if (hostname.startsWith("[")) return hostname.endsWith("]");
   return hostname.includes(".") && !hostname.startsWith(".") && !hostname.endsWith(".");
 }

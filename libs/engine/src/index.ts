@@ -2,6 +2,7 @@
 // from here, never from an internal path.
 
 export { DestinationUrl } from "./domain/destination-url";
+export { isInternalHost } from "./domain/internal-host";
 export {
   ShortCode,
   secureRandomInt,
