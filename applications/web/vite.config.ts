@@ -7,7 +7,10 @@ export default defineConfig({
   envDir: "../..",
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   ssr: {
-    noExternal: ["@url-shortener/engine"],
+    // Workspace libs ship TypeScript source, so Vite has to bundle them.
+    noExternal: ["@url-shortener/engine", "@url-shortener/infrastructure"],
+    // Prisma loads its generated client from node_modules at runtime, so it can't be bundled.
+    external: ["@prisma/client"],
   },
   optimizeDeps: {
     include: ["@url-shortener/engine"],

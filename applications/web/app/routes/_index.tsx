@@ -1,98 +1,116 @@
-import { Form, useActionData } from "react-router";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { data, Form, Link, useNavigation } from "react-router";
+import { shortenUrl } from "~/.server/container";
+import { shortUrlFor } from "~/.server/env";
+import { getClientId, toHttpError } from "~/.server/http";
+import { CopyButton } from "~/components/copy-button";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
-
-export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
-}
-
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
-
-  if (!url) {
-    return { error: "URL is required" };
-  }
-
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
-
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
-}
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "URL Shortener" },
+    { title: "Shorten a link · URL Shortener" },
     { name: "description", content: "Shorten your URLs quickly and easily" },
   ];
 }
 
-export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
-  const actionData = useActionData<typeof action>();
+// React Router only forwards action headers (like Retry-After on a 429) if the route opts in.
+export function headers({ actionHeaders }: Route.HeadersArgs) {
+  return actionHeaders;
+}
+
+/** Thin adapter: read the form, call the use case, map the result (SPEC-001). */
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const url = String(formData.get("url") ?? "");
+
+  try {
+    const created = await shortenUrl.execute({ url, clientId: getClientId(request) });
+    return { ok: true as const, shortUrl: shortUrlFor(created.code), originalUrl: created.originalUrl };
+  } catch (error) {
+    const { status, message, headers } = toHttpError(error);
+    return data({ ok: false as const, error: message }, { status, headers });
+  }
+}
+
+export default function Index({ actionData }: Route.ComponentProps) {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  const formRef = useRef<HTMLFormElement>(null);
+  const error = actionData && !actionData.ok ? actionData.error : undefined;
+
+  // Clear the input after a success, but keep it on errors so the user can fix it (SPEC-008).
+  useEffect(() => {
+    if (actionData?.ok) formRef.current?.reset();
+  }, [actionData]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <div className="flex flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Shorten a long link</CardTitle>
+          <CardDescription>Paste a URL and get a short link you can share.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form method="post" ref={formRef} noValidate className="flex flex-col gap-2">
+            <Label htmlFor="url">URL</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="url"
+                name="url"
+                inputMode="url"
+                autoComplete="off"
+                placeholder="https://example.com/a/very/long/link"
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? "url-error" : undefined}
+                className="h-10"
+              />
+              <Button type="submit" disabled={isSubmitting} className="h-10 px-4">
+                {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+                {isSubmitting ? "Shortening..." : "Shorten"}
+              </Button>
+            </div>
+            {error ? (
+              <p id="url-error" role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
+          </Form>
+        </CardContent>
+      </Card>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
-
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
-            </p>
-          </div>
-        </Form>
-
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
+      {actionData?.ok ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your short link is ready</CardTitle>
+            <CardDescription className="truncate" title={actionData.originalUrl}>
+              {actionData.originalUrl}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <a
-              href={actionData.shortenedUrl}
+              href={actionData.shortUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
+              className="break-all font-mono text-base font-medium text-primary underline-offset-4 hover:underline"
             >
-              {actionData.shortenedUrl}
+              {actionData.shortUrl}
             </a>
-          </div>
-        )}
+            <CopyButton value={actionData.shortUrl} />
+          </CardContent>
+        </Card>
+      ) : null}
 
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
-      </div>
-    </main>
+      <Link
+        to="/stats"
+        className="inline-flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground"
+      >
+        See all links and their clicks <ArrowRight className="size-4" aria-hidden />
+      </Link>
+    </div>
   );
 }

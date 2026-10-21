@@ -19,6 +19,3 @@ export { ShortenUrl, type ShortenUrlInput } from "./application/use-cases/shorte
 export { ResolveShortUrl } from "./application/use-cases/resolve-short-url";
 export { ListShortUrls, type ShortUrlPage } from "./application/use-cases/list-short-urls";
 
-// Legacy in-memory implementation, still used by the web app until it's migrated.
-export { baseUrl } from "./base-url";
-export { shortenedUrls, generateShortCode } from "./shortened-url";

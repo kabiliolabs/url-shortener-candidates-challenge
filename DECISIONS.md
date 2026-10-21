@@ -47,3 +47,29 @@ risky with the time we have. Integration tests run against real Postgres in a se
 is the simplest algorithm that does the job; a sliding window is fairer at the edges but not worth
 it here. Keeping it in memory works for a single instance; with several replicas each one would
 count separately, and the fix is a Redis adapter behind the same `RateLimiter` port.
+
+**ADR-009: shadcn/ui for the components.** The challenge suggests Radix or shadcn, and shadcn gives
+accessible, good-looking components whose code lives in the repo (`app/components/ui`), so we can
+change them freely. The current shadcn uses Base UI underneath instead of Radix; same idea, kept
+the default. Its init added a brand new `cn` package, which I swapped for the classic `clsx` +
+`tailwind-merge` combo: battle-tested and what anyone reading shadcn code expects. Dark mode is out
+of scope (SPECS), so the UI only targets the light theme.
+
+**ADR-010: Rate limit key without a trusted proxy.** `react-router-serve` doesn't expose the client
+IP, and `X-Forwarded-For` can be faked by anyone to get a fresh limit on every request. So the IP
+from that header is only used when `TRUST_PROXY=true` (i.e. behind a proxy that overwrites it).
+Otherwise every request shares one bucket. That's stricter than needed, but it can't be bypassed.
+A custom Express server would give us the real socket IP; not worth it within the time limit.
+
+**ADR-011: Prisma in the web build.** The web bundles the workspace libs because they ship
+TypeScript source, but Prisma can't be bundled: it loads its generated client from `node_modules`
+at runtime. So `@prisma/client` is marked as external in Vite and hoisted to the root
+`node_modules` with `.npmrc`, which is what Prisma recommends for pnpm monorepos. The container
+runs `prisma migrate deploy` before starting, so a fresh database gets its tables.
+
+**ADR-012: No schema library (Zod) at the edge.** The business rules for a URL (http/https only,
+max length, real hostname, not our own domain) live in the `OriginalUrl` value object, so they hold
+no matter where the request comes from. The form has a single field, so the route just reads it as a
+string and lets the domain decide; anything odd (missing field, a file) ends up as a 400 from the
+domain. Zod would start paying off with a JSON API or forms with several fields, as a shape check
+before the domain, not instead of it.

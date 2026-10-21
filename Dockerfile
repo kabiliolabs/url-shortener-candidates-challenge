@@ -5,7 +5,7 @@ RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 WORKDIR /app
 
 FROM base AS dependencies
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
 COPY libs/engine/package.json ./libs/engine/
 COPY libs/infrastructure/package.json ./libs/infrastructure/
 # The infrastructure postinstall runs `prisma generate`, so the schema has to be here already.
@@ -37,4 +37,5 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
 WORKDIR /app/applications/web
 EXPOSE 3000
-CMD ["pnpm", "start"]
+# Apply pending migrations before serving, so a fresh database gets its tables (SPEC-006).
+CMD ["sh", "-c", "pnpm --filter @url-shortener/infrastructure db:deploy && pnpm start"]
