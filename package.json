@@ -6,11 +6,20 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "test": "turbo test",
     "clean": "turbo run clean && rm -rf .turbo",
     "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
     "turbo": "^2.7.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
   }
 }
