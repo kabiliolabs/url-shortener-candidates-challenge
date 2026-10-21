@@ -1,0 +1,30 @@
+// SQLite was chosen over Postgres deliberately: it satisfies the "data survives
+// a restart" requirement with a single Docker volume and no second container to
+// orchestrate (no healthcheck, no wait-for-db). Swapping to Postgres means
+// changing `provider` + `DATABASE_URL`; the repository adapter and the domain
+// stay untouched, which is the point of the port/adapter split.
+
+generator client {
+  provider = "prisma-client-js"
+  // "native" for local dev (macOS), musl for the node:20-alpine container.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ShortenedUrl {
+  id            String    @id @default(cuid())
+  /// The uniqueness guarantee that makes collisions impossible lives here,
+  /// in the storage engine, not in application code.
+  code          String    @unique
+  destination   String
+  clicks        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  lastVisitedAt DateTime?
+
+  @@index([destination])
+  @@index([createdAt])
+}
