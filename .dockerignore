@@ -11,3 +11,6 @@ node_modules
 **/.react-router
 .turbo
 **/.turbo
+
+# Never ship the local SQLite database into the image
+**/prisma/data

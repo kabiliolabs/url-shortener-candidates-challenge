@@ -6,5 +6,20 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - PUBLIC_URL=http://localhost:3000
+      NODE_ENV: production
+      PUBLIC_URL: http://localhost:3000
+      # Absolute path inside the container, pointing at the mounted volume.
+      DATABASE_URL: file:/app/data/app.db
+    volumes:
+      # Named volume => the database survives restarts and rebuilds.
+      - url-shortener-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  url-shortener-data:
