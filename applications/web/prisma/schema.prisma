@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Enlace corto persistido junto con su destino y estadísticas.
+model ShortenedUrl {
+  /// Código público único utilizado en la ruta de redirección.
+  code        String   @id @db.VarChar(8)
+  /// URL HTTP(S) normalizada; no se permiten destinos duplicados.
+  originalUrl String   @unique(map: "shortened_urls_original_url_key") @map("original_url") @db.Text
+  /// Fecha y hora de creación del enlace.
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Cantidad total de solicitudes de redirección registradas.
+  clickCount  Int      @default(0) @map("click_count")
+
+  @@map("shortened_urls")
+}
