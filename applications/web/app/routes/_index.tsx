@@ -1,32 +1,86 @@
-import { Form, useActionData } from "react-router";
+import { data, Form, useActionData, useNavigation } from "react-router";
 import type { Route } from "./+types/_index";
 import {
   baseUrl,
-  shortenedUrls,
-  generateShortCode,
+  InvalidDestinationUrlError,
+  ShortCodeGenerationError,
 } from "@url-shortener/engine";
+import { Button, ButtonLink } from "../components/button";
+import { FeedbackMessage } from "../components/feedback-message";
+import { PageLayout } from "../components/page-layout";
+import { creationRateLimiter } from "../services/creation-rate-limiter.server";
+import { shortenedUrlService } from "../services/shortened-url.server";
 
+/** Entrega a la interfaz el prefijo público para mostrar los enlaces generados. */
 export function loader() {
   return {
     baseUrl: baseUrl ? baseUrl + "/s/" : "-",
   };
 }
 
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
+export function headers({ actionHeaders }: Route.HeadersArgs) {
+  return actionHeaders;
+}
 
-  if (!url) {
-    return { error: "URL is required" };
+/** Procesa la creación de un enlace y traduce errores de dominio a respuestas de formulario. */
+export async function action({ context, request }: Route.ActionArgs) {
+  // El límite cuenta todos los intentos, incluidos formularios inválidos o repetidos.
+  const { allowed, retryAfterSeconds } = creationRateLimiter.consume(
+    context.clientIp ?? "development",
+  );
+
+  if (!allowed) {
+    return data(
+      {
+        shortenedUrl: null,
+        error: `Too many link creation attempts. Please try again in ${retryAfterSeconds} seconds.`,
+        isUrlInvalid: false,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSeconds) },
+      },
+    );
   }
 
-  const shortCode = generateShortCode();
+  const formData = await request.formData();
+  const url = formData.get("url");
 
-  shortenedUrls.set(shortCode, url);
+  if (typeof url !== "string" || !url.trim()) {
+    return {
+      shortenedUrl: null,
+      error: "URL is required",
+      isUrlInvalid: true,
+    };
+  }
 
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+  try {
+    const shortenedUrl = await shortenedUrlService.shorten(url);
+
+    return {
+      shortenedUrl: `${baseUrl}/s/${shortenedUrl.code}`,
+      error: null,
+      isUrlInvalid: false,
+    };
+  } catch (error) {
+    if (error instanceof InvalidDestinationUrlError) {
+      return {
+        shortenedUrl: null,
+        error: error.message,
+        isUrlInvalid: true,
+      };
+    }
+
+    if (error instanceof ShortCodeGenerationError) {
+      return {
+        shortenedUrl: null,
+        error: "Could not generate a unique short link. Please try again.",
+        isUrlInvalid: false,
+      };
+    }
+
+    throw error;
+  }
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -36,63 +90,88 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+/** Formulario de creación y presentación del resultado o error correspondiente. */
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { baseUrl } = loaderData;
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting =
+    navigation.state !== "idle" && navigation.formMethod === "POST";
+  const errorMessage = isSubmitting ? undefined : actionData?.error;
+  const shortenedUrl = isSubmitting ? undefined : actionData?.shortenedUrl;
+  const isUrlInvalid =
+    !isSubmitting && actionData?.isUrlInvalid === true;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
-
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
-
+    <PageLayout
+      title="Shorten a URL"
+      description="Create a simple, shareable link in seconds."
+      action={
+        <ButtonLink to="/urls" variant="secondary">
+          View links and statistics
+        </ButtonLink>
+      }
+    >
+      <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl shadow-black/20 sm:p-8">
+        <Form method="post" className="space-y-5">
           <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
+            <label
+              htmlFor="destination-url"
+              className="mb-2 block text-sm font-semibold text-slate-200"
             >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
+              Destination URL
+            </label>
+            <input
+              id="destination-url"
+              type="url"
+              name="url"
+              placeholder="https://example.com"
+              autoComplete="url"
+              aria-invalid={isUrlInvalid}
+              aria-describedby={`url-hint${isUrlInvalid ? " url-error" : ""}`}
+              required
+              disabled={isSubmitting}
+              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/40 disabled:opacity-60"
+            />
+            <p id="url-hint" className="mt-2 text-sm text-slate-400">
+              Include the full address, starting with http:// or https://.
             </p>
           </div>
+
+          <p className="text-sm text-slate-400">
+            Your short links will use <span className="font-mono text-cyan-200">{baseUrl}</span>
+          </p>
+
+          <Button
+            type="submit"
+            loading={isSubmitting}
+            loadingLabel="Creating link..."
+            className="w-full"
+          >
+            Create short link
+          </Button>
         </Form>
 
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
+        {errorMessage && (
+          <FeedbackMessage id="url-error" tone="error" className="mt-6">
+            {errorMessage}
+          </FeedbackMessage>
         )}
 
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
+        {shortenedUrl && (
+          <FeedbackMessage tone="success" className="mt-6">
+            <p className="mb-2 font-semibold">Your short link is ready</p>
+            <a
+              href={shortenedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="break-all font-mono underline decoration-emerald-500/60 underline-offset-4 hover:text-white"
+            >
+              {shortenedUrl}
+            </a>
+          </FeedbackMessage>
         )}
-      </div>
-    </main>
+      </section>
+    </PageLayout>
   );
 }

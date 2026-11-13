@@ -1,11 +1,11 @@
-export const shortenedUrls: Map<string, string> = new Map();
-
-export function generateShortCode(): string {
-  const chars = "abc";
-  const length = 2;
-  let code = "";
-  for (let i = 0; i < length; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
+/** Representa un enlace corto persistido y sus estadísticas básicas. */
+export interface ShortenedUrl {
+  /** Código único que identifica el enlace corto. */
+  code: string;
+  /** Dirección HTTP(S) de destino normalizada. */
+  originalUrl: string;
+  /** Fecha y hora de creación del enlace. */
+  createdAt: Date;
+  /** Cantidad de solicitudes de redirección registradas; no equivale a visitantes únicos. */
+  clickCount: number;
 }
