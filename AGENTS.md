@@ -19,7 +19,7 @@ Run commands from the repository root using pnpm 10.20.0:
 - `pnpm build`: build engine and web through Turbo.
 - `pnpm typecheck`: check both packages, including React Router type generation.
 - `pnpm --filter web start`: serve an existing production build.
-- `docker-compose up --build`: build and run Docker at `http://localhost:3000`.
+- `docker compose up --build`: build and run Docker at `http://localhost:3000`.
 
 The Docker image uses Node 20. Prefer root README instructions over the generic web template README.
 

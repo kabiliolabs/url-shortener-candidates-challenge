@@ -29,6 +29,11 @@ Decisions for the [shortener use cases](specs/shortener-use-cases.md):
 - **Keep domain rules authoritative:** Zod checks string/nonblank input; the shared URL validates structure and the aggregate validates destination policy before code generation. Expected failures use the shared `Result` contract, preserving existing HTTP feedback.
 - **Organize by module:** shortener code lives under `modules/url-shortener`, with application `usecases` and `validations` and the aggregate directly in `domain`. Generic URL and results live under `shared/value-objects` and `shared/types`. The existing map and generator remain until repository abstraction is introduced.
 
+Decisions for the [database foundation](specs/database-foundation.md):
+
+- **Keep infrastructure separate:** a private PostgreSQL/Drizzle package owns its pool and explicit lifecycle; consumers provide configuration and schemas. The engine and web retain their in-memory behavior.
+- **Use Drizzle Kit directly:** the package integration test generates temporary schema/configuration/SQL fixtures and runs explicit migration commands. There is no demo consumer workspace, committed fixture migration, or custom migration executor.
+
 ## What I Would Do With More Time
 
 <!-- What would you tackle next if you had more time? -->
@@ -90,6 +95,17 @@ I used [start-feature](.agents/skills/start-feature/SKILL.md) and the installed 
 ### Shortener Use Cases
 
 I used the same specification workflow to extract `ShortenURLUseCase` and `ResolveShortenedURLUseCase`, then included the module/shared folder organization during implementation. The implementation first reproduced the missing invalid-code response with a failing route test, then added Zod validation and use-case tests while preserving the existing storage and HTTP contracts.
+
+### Database Foundation
+
+I approved the database foundation specification, then used the same separate planning,
+implementation and independent validation workflow. The agent used the hexagonal
+architecture skill to preserve the domain/infrastructure boundary and added failing
+public-API tests before implementing the database lifecycle. The concrete `PostgresDatabase` class owns
+the pool and exposes a typed client, health checks, and cleanup. Integration checks use real PostgreSQL
+and explicit Drizzle Kit commands with temporary fixtures. After reviewing the first
+implementation, I removed the extra test-consumer workspace to reduce scaffolding. Database durability does not yet make shortened URLs
+persistent; repository integration is deferred.
 
 ## Feedback
 

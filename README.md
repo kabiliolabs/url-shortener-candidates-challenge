@@ -5,7 +5,8 @@
 ```
 url-shortener/
 ├── applications/web/    # React + React Router v7
-└── libs/engine/         # Domain and application logic
+├── libs/engine/         # Domain and application logic
+└── libs/database/       # Generic PostgreSQL/Drizzle infrastructure and focused tests
 ```
 
 | Technology                                    | Description                                                                                       |
@@ -50,7 +51,117 @@ Run `pnpm --filter @url-shortener/engine test` for domain/use-case tests or `pnp
 ## Docker Setup
 
 ```bash
-docker-compose up --build
+docker compose up --build web
 ```
 
 Open `http://localhost:3000`
+
+
+## Database foundation
+
+PostgreSQL is optional infrastructure. Shortened URLs still use the in-memory Map;
+there are no production shortener tables or repository adapters. Web startup,
+shortening and redirects do not require PostgreSQL or database environment variables.
+
+Start only PostgreSQL using the root `docker-compose.yaml`:
+
+```bash
+docker compose up -d postgres
+```
+
+The service uses PostgreSQL 17, a health check and the project-scoped
+`postgres_data` named volume. Restarting or running `docker compose down` preserves
+its data; `docker compose down --volumes` deletes it. The published database port
+binds only to loopback. `.env.example` documents the local development defaults:
+`POSTGRES_HOST=127.0.0.1`, `POSTGRES_PORT=5432`, `POSTGRES_DB=url_shortener_dev`,
+`POSTGRES_USER=url_shortener`, and `POSTGRES_PASSWORD=local_password`.
+These credentials are for local development. Preserve an existing `.env` when setting up.
+Changing initialization credentials does not rewrite an already initialized volume.
+Host-run commands use the published host/port. A future consumer inside the Compose
+network would use host `postgres` and port `5432`; web is not such a consumer yet.
+
+The private `@url-shortener/database` workspace package exposes a concrete `PostgresDatabase` class:
+
+```ts
+import { PostgresDatabase } from "@url-shortener/database";
+import * as schema from "./schema"; // Owned by the consuming application.
+
+const database = new PostgresDatabase({
+  host: "127.0.0.1",
+  port: 5432,
+  database: "url_shortener_dev",
+  user: "url_shortener",
+  password: "local_password",
+  connectionTimeoutMillis: 5000,
+}, schema);
+
+try {
+  await database.healthCheck();
+  // database.db is a Drizzle client typed from the supplied schema.
+} finally {
+  await database.close();
+}
+```
+
+Importing and constructing the client are lazy: neither connects nor migrates.
+The constructor validates required settings and reads no environment variables.
+The optional connection timeout defaults to 5000 ms and must be finite and positive
+(at most 2147483647 ms). Errors reach the caller without automatic retries or process
+termination. An idle pool connection error is retained for the next explicit health
+check; the failed connection is removed by pg. Call `close()` when finished; it is
+asynchronous and safe to call repeatedly.
+
+### Consumer-owned migrations
+
+No application schema exists yet, so the repository intentionally provides no root
+`db:generate` or `db:migrate` commands and no committed demo migrations. When a real
+consumer adds persistence, its TypeScript schema, Drizzle Kit configuration and SQL
+migrations belong to that consumer, outside the generic database package.
+
+For example, a future application can install Drizzle Kit as a development dependency,
+create its own `drizzle.config.ts`, and run these commands from its directory:
+
+```ts
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  dialect: "postgresql",
+  schema: "./src/schema.ts", // The consumer's real tables.
+  out: "./migrations",
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});
+```
+
+```bash
+pnpm exec drizzle-kit generate --config drizzle.config.ts
+# Review the generated SQL before explicitly applying it.
+pnpm exec drizzle-kit migrate --config drizzle.config.ts
+```
+
+These are examples for a future consumer, not commands runnable against a current
+production schema. Set its connection URL explicitly: host-run commands use
+`127.0.0.1` and the published port; containers use `postgres:5432`. Migration failures
+must exit nonzero, and repeat application must preserve existing data. No migration
+runs on package import, client creation, web startup, or ordinary tests.
+
+### Database integration tests
+
+`pnpm test` includes deterministic database unit tests and needs no Docker.
+Run the separate integration suite with a running Docker daemon and Docker Compose v2:
+
+```bash
+pnpm test:database
+```
+
+The suite starts only PostgreSQL under a unique Compose project, with generated test
+credentials, an isolated database/volume and a dynamically allocated host port. It
+ignores developer `.env` settings and keeps its test-only schema, Kit configuration
+and generated SQL/snapshots in a temporary directory. The package-owned integration
+test exercises explicit Drizzle Kit generation/application and checks successful queries, rejected configuration, a stalled-connection
+timeout, process exit after cleanup, migration rollback and repeat application, and
+record durability across a container restart. It closes connections and removes only
+its own containers, network and volume, including on handled interruption. Commands
+have bounded timeouts. Missing Docker or failed cleanup exits nonzero, never a passing
+skip. The reported scratch directory is outside the repository and may be removed
+after inspecting failures. A forced kill cannot run cleanup: use the printed unique
+project name with `docker compose -p <project> down --volumes` if recovery is needed.

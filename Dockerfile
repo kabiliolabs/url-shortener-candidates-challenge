@@ -5,12 +5,14 @@ WORKDIR /app
 FROM base AS dependencies
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY libs/engine/package.json ./libs/engine/
+COPY libs/database/package.json ./libs/database/
 COPY applications/web/package.json ./applications/web/
 RUN pnpm install --frozen-lockfile
 
 FROM base AS build
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/libs/engine/node_modules ./libs/engine/node_modules
+COPY --from=dependencies /app/libs/database/node_modules ./libs/database/node_modules
 COPY --from=dependencies /app/applications/web/node_modules ./applications/web/node_modules
 COPY . .
 RUN pnpm build
