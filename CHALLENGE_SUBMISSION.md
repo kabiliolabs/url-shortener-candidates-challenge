@@ -40,7 +40,20 @@ I established a light-mode color palette using off-white, dark green, and lime, 
 
 I then asked the agent to compare the spec against the existing code and identify inconsistencies and gaps. We discussed the findings one by one and updated the spec with the agreed changes: coverage of both inline errors and full error pages, long-content handling, keyboard focus, and centralized CSS classes that replace conflicting styling utilities. Functional issues found during the review stayed outside the restyling scope.
 
-This process produced a concise specification with explicit boundaries and acceptance criteria to guide implementation. At this stage, the spec is ready; application implementation and its visual and functional checks are the next step.
+This process produced a concise specification with explicit boundaries and acceptance criteria to guide implementation.
+
+#### Implementation Process
+
+I asked the main agent to coordinate the work through separate planning, implementation, and validation subagents:
+
+1. **Read the spec.** The main agent read the agreed specification and checked the repository state to establish the scope and preserve existing work.
+2. **Create the plan.** The main agent passed the spec to a planning subagent. It retrieved relevant context from CortexDB, verified it against the current code, and identified the required changes, affected files, behavior to preserve, and verification steps.
+3. **Implement the changes.** The planning subagent returned its findings to the main agent, which passed the spec and plan to a new implementation subagent. That agent updated the CSS and existing component classes, removed the decorative characters, and ran typecheck and build checks.
+4. **Validate independently.** Once implementation was complete, the main agent assigned a new validation subagent to compare the spec, planned tasks, and actual changes. It checked source-level behavior preservation and exercised the application in a browser across light and dark themes at mobile and desktop widths.
+
+The independent validation found no blocking mismatches, so no correction round was needed. Typecheck, build, and browser checks passed. The main agent reviewed the results and representative screenshots before reporting completion.
+
+I then packaged this workflow as the reusable [implement-spec skill](.agents/skills/implement-spec/SKILL.md). It defines the agent handoffs, CortexDB context retrieval, implementation boundaries, independent validation, and correction process for future specifications. It can be invoked with `Use $implement-spec for specs/my-feature.md`.
 
 ## Feedback
 

@@ -1,6 +1,12 @@
 {
   "version": 2,
   "skills": {
+    "to-spec": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/to-spec/SKILL.md",
+      "computedHash": "eb934b5eda9523c7853a2741544bd4721ee1bea471f5a04f8397827f67bdbdda"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",

@@ -5,11 +5,182 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+:root {
+  color-scheme: light dark;
+  --page-background: #f7f8f3;
+  --page-text: #182118;
+  --button-background: #182118;
+  --button-text: #c6f432;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-background: #182118;
+    --page-text: #f7f8f3;
+    --button-background: #c6f432;
+    --button-text: #182118;
+  }
+}
+
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+  background: var(--page-background);
+  color: var(--page-text);
+  font-family: var(--font-sans);
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+* {
+  box-sizing: border-box;
+}
+
+.page-shell {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 5vw, 3rem);
+}
+
+.shortener-card {
+  width: 100%;
+  max-width: 34rem;
+  padding: clamp(1.5rem, 6vw, 3rem);
+  border: 1px solid var(--page-text);
+  border-radius: 1rem;
+  background: var(--page-background);
+  box-shadow: 0 1rem 2.5rem color-mix(in srgb, var(--page-text) 12%, transparent);
+}
+
+.page-title {
+  margin: 0 0 2rem;
+  font-size: clamp(1.75rem, 6vw, 2.25rem);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.shortener-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.url-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--page-text);
+  border-radius: 0.5rem;
+  background: var(--page-background);
+  color: var(--page-text);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.url-input::placeholder {
+  color: var(--page-text);
+  opacity: 0.7;
+}
+
+.url-input:focus-visible,
+.submit-button:focus-visible,
+.result-link:focus-visible {
+  outline: 3px solid #c6f432;
+  outline-offset: 3px;
+}
+
+.form-details {
+  min-width: 0;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--button-background);
+  border-radius: 0.5rem;
+  background: var(--button-background);
+  color: var(--button-text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  filter: brightness(0.92);
+}
+
+.url-hint {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--page-text) 8%, var(--page-background));
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.result-card,
+.form-error {
+  min-width: 0;
+  margin-top: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--page-text);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--page-text) 8%, var(--page-background));
+}
+
+.result-label {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.result-link {
+  display: block;
+  max-width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--page-text);
+  color: var(--page-background);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.form-error p {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.error-page {
+  width: min(100%, 60rem);
+  margin-inline: auto;
+  padding: clamp(2rem, 8vw, 4rem) clamp(1rem, 5vw, 2rem);
+}
+
+.error-page h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 7vw, 3rem);
+}
+
+.error-page p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.error-stack {
+  max-width: 100%;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--page-text);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--page-text) 8%, var(--page-background));
+  overflow: auto;
+  white-space: pre;
 }
