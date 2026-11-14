@@ -4,6 +4,7 @@ import { createRoutesStub } from "react-router";
 import type { ActionFunction, ActionFunctionArgs } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { ShortenerController } from "./shortener.controller";
+import { action as shortenAction } from "./route";
 
 function renderController(action?: ActionFunction) {
   const Stub = createRoutesStub([
@@ -20,6 +21,20 @@ function renderController(action?: ActionFunction) {
 }
 
 describe("ShortenerController", () => {
+  it("renders returned HTTP 400 action data as inline feedback", async () => {
+    const user = userEvent.setup();
+    renderController(shortenAction);
+
+    await user.type(await screen.findByRole("textbox"), "ftp://example.com");
+    await user.click(screen.getByRole("button", { name: "SHORTEN IT" }));
+
+    expect(
+      await screen.findByText("Only http:// and https:// URLs are supported."),
+    ).toBeVisible();
+    expect(screen.getByRole("textbox")).toBeVisible();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
   it("displays the loader prefix before any submission", async () => {
     renderController();
 

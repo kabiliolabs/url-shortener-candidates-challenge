@@ -16,6 +16,7 @@ This workflow composes three installed skills. Resolve these sibling paths relat
 - [grilling](../grilling/SKILL.md) for clarifying the idea. Call it directly; the `grill-me` entry-point wrapper is not required.
 - [to-spec](../to-spec/SKILL.md) for synthesizing the agreed decisions.
 - [implement-spec](../implement-spec/SKILL.md) for planning, implementation, corrections, and independent validation.
+- [hexagonal-architecture](../hexagonal-architecture/SKILL.md) for architectural guidance for the backend implementation.
 
 Check that the files exist before starting. If a dependency is missing, look for the same skill in the configured skill locations; if it remains unavailable, report the missing dependency and stop the affected workflow rather than silently replacing or installing it.
 

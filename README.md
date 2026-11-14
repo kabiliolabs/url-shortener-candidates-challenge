@@ -30,7 +30,7 @@ Open `http://localhost:5173`
 
 ## Tests
 
-Run the controller, view, and reusable-component unit tests from the repository root:
+Run the engine domain tests, server route integration tests, and UI unit tests from the repository root:
 
 ```bash
 pnpm test
@@ -38,7 +38,11 @@ pnpm typecheck
 pnpm build
 ```
 
-Tests use Vitest, React Testing Library, and jsdom, and live beside the components as `*.test.tsx`. Controller and view tests use isolated React Router loaders/actions, without accessing the real URL store. Run `pnpm --filter web test:watch` for watch mode. Browser checks remain necessary for visual layout and real HTTP redirects.
+Tests use Vitest and are colocated as `*.test.ts` or `*.test.tsx`. Engine tests run in Node and cover `Result`, URL validation/value equality, and the `ShortenedURL` entity. Engine test types are checked separately without emitting tests into the library build.
+
+Web component/controller/view tests use React Testing Library and jsdom. Route integration tests run in Node through React Router's static handler, exercise the real shortening action and redirect loader, and restore the in-memory store after each test. They verify HTTP 400 validation feedback, unchanged storage on rejection, trimming, successful links, and redirects. A controller test checks that returned validation errors render inline.
+
+Run `pnpm --filter @url-shortener/engine test` for domain tests or `pnpm --filter web test:watch` for web watch mode. Browser checks remain necessary for visual layout and real HTTP redirects.
 
 ## Docker Setup
 

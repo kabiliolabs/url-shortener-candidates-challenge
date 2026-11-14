@@ -5,6 +5,7 @@
 - [10 min] Set up CortexDB project memory and knowledge graph, and added agent instructions in `AGENTS.md` to preserve context and guide implementation. See "AI Usage" for details.
 - [15 min] Get familiar with the codebase and run the application locally.
 - Extracted custom React components and separated the shortener's controller from its view, preserving the existing behavior and design.
+- Added URL domain objects and server validation with shared result types, keeping the current in-memory storage.
 
 ## Decisions and Rationale
 
@@ -15,6 +16,12 @@ Decisions for the [component refactor](specs/reusable-components.md):
 - **Colocate by responsibility:** keep shared controls in individual `components/ui` folders, and page controllers/views beside their route module so page-specific code stays together.
 - **Preserve behavior and design:** isolate the refactor from new features, bug fixes, and visual changes.
 - **Focused verification:** add colocated Vitest/React Testing Library unit tests for the controller, view, and controls, alongside typecheck, build, and browser checks. Isolated route stubs keep unit tests independent of server storage.
+
+Decisions for the [URL domain model](specs/url-domain-model.md):
+
+- **Start with the domain:** `URL` validates destinations; `ShortenedURL` holds a code and validated destination. Repository abstraction and database persistence remain deferred.
+- **Explicit validation results:** `safeParse` accepts a string and returns the shared `Result` contract instead of throwing for invalid URL strings. The HTTP boundary rejects missing/non-string input and maps validation errors to HTTP 400 and the existing inline feedback.
+- **Test the boundaries:** pure domain tests cover validation and value equality; route tests verify rejection without storage changes and preserve successful shortening/redirect behavior.
 
 ## What I Would Do With More Time
 
@@ -69,6 +76,10 @@ I then packaged this workflow as the reusable [implement-spec skill](.agents/ski
 ### Reusable Components
 
 I used [start-feature](.agents/skills/start-feature/SKILL.md) to clarify the component refactor and write its spec, then used the planning, implementation, and independent validation workflow above.
+
+### URL Domain Model
+
+I used [start-feature](.agents/skills/start-feature/SKILL.md) and the installed [hexagonal-architecture skill](.agents/skills/hexagonal-architecture/SKILL.md) to define a small domain-first step. The spec adopts a generic `Result` type inspired by my existing utility code and keeps HTTP and storage concerns outside the domain objects. After approving the spec, I used [implement-spec](.agents/skills/implement-spec/SKILL.md) for planning, implementation, and independent validation. The implementation first demonstrated failing validation/trim tests against the original action, then added domain objects and server integration.
 
 ## Feedback
 
