@@ -5,6 +5,15 @@
 - [10 min] Set up CortexDB project memory and knowledge graph, and added agent instructions in `AGENTS.md` to preserve context and guide implementation. See "AI Usage" for details.
 - [15 min] Get familiar with the codebase and run the application locally.
 
+## Decisions and Rationale
+
+Decisions for the [component refactor](specs/reusable-components.md), pending implementation:
+
+- **Custom components over shadcn/ui or Radix:** the current controls are simple, so reusing their markup and CSS avoids unnecessary dependencies.
+- **Controller–view separation:** keep application logic separate from rendering and reusable components.
+- **Preserve behavior and design:** isolate the refactor from new features, bug fixes, and visual changes.
+- **Focused verification:** use typecheck, build, and browser checks without adding a test framework for this refactor.
+
 ## What I Would Do With More Time
 
 <!-- What would you tackle next if you had more time? -->
