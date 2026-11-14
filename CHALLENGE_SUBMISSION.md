@@ -2,7 +2,8 @@
 
 ## What I Did
 
-<!-- Briefly describe what you implemented or improved. What did you prioritize and why? -->
+- [10 min] Set up CortexDB project memory and knowledge graph, and added agent instructions in `AGENTS.md` to preserve context and guide implementation. See "AI Usage" for details.
+- [15 min] Get familiar with the codebase and run the application locally.
 
 ## What I Would Do With More Time
 
@@ -29,7 +30,7 @@ For relationship queries, the agent first calls `graph_schema` to inspect the st
 
 ![Project knowledge graph in CortexDB](screenshots/Screenshot%202026-11-14%20at%2009.52.46.png)
 
-*Project knowledge graph in CortexDB.*
+_Project knowledge graph in CortexDB._
 
 ## Feedback
 
