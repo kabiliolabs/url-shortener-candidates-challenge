@@ -2,8 +2,13 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", "build/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        "build/**"
+      ]
     },
     "dev": {
       "cache": false,
@@ -13,5 +18,13 @@
     "clean": {
       "cache": false
     }
-  }
+  },
+  "globalPassThroughEnv": [
+    "PUBLIC_URL",
+    "POSTGRES_HOST",
+    "POSTGRES_PORT",
+    "POSTGRES_DB",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD"
+  ]
 }

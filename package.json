@@ -9,7 +9,9 @@
     "test": "pnpm -r test",
     "clean": "turbo run clean && rm -rf .turbo",
     "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules",
-    "test:database": "pnpm --filter @url-shortener/database test:database"
+    "test:database": "pnpm --filter @url-shortener/database test:database",
+    "db:generate": "pnpm --filter web db:generate",
+    "db:migrate": "pnpm --filter web db:migrate"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {

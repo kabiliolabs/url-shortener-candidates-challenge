@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRoutesStub } from "react-router";
+import { createRoutesStub, data } from "react-router";
 import type { ActionFunction, ActionFunctionArgs } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { ShortenerController } from "./shortener.controller";
@@ -86,5 +86,24 @@ describe("ShortenerController", () => {
     expect(await screen.findByText("URL is required")).toBeVisible();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(action).toHaveBeenCalledTimes(2);
+  });
+  it.each([
+    "Could not create a short link. Please try again.",
+    "Service temporarily unavailable. Please try again.",
+  ])("preserves input and clears prior success on 503: %s", async (error) => {
+    const user = userEvent.setup();
+    const action = vi
+      .fn()
+      .mockResolvedValueOnce({ shortenedUrl: "https://sho.rt/s/old" })
+      .mockResolvedValueOnce(data({ error }, { status: 503 }));
+    renderController(action);
+    const input = await screen.findByRole("textbox");
+    await user.type(input, "https://example.com/keep-me");
+    await user.click(screen.getByRole("button", { name: "SHORTEN IT" }));
+    await screen.findByRole("link");
+    await user.click(screen.getByRole("button", { name: "SHORTEN IT" }));
+    expect(await screen.findByText(error)).toBeVisible();
+    expect(input).toHaveValue("https://example.com/keep-me");
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

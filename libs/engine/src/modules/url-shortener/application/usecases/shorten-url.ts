@@ -1,12 +1,27 @@
 import { shortenURLInputSchema } from "../validations/shorten-url.validation";
 import { ShortenedURL } from "../../domain/shortened-url";
 import type { ShortenedURLValidationError } from "../../domain/shortened-url";
-import { generateShortCode, shortenedUrls } from "../../shortened-url";
+import type { ShortCodeGenerator } from "../ports/short-code-generator";
+import type { ShortenerRepository } from "../ports/shortener-repository";
 import { Err } from "../../../../shared/types/result";
 import type { Result } from "../../../../shared/types/result";
 
+export type ShortenURLError =
+  | ShortenedURLValidationError
+  | {
+      code: "code_exhausted" | "storage_unavailable";
+      message: string;
+    };
+
 export class ShortenURLUseCase {
-  execute(input: unknown): Result<ShortenedURL, ShortenedURLValidationError> {
+  constructor(
+    private readonly generator: ShortCodeGenerator,
+    private readonly repository: ShortenerRepository,
+  ) {}
+
+  async execute(
+    input: unknown,
+  ): Promise<Result<ShortenedURL, ShortenURLError>> {
     const parsed = shortenURLInputSchema.safeParse(input);
     if (!parsed.success) {
       const missing =
@@ -27,12 +42,24 @@ export class ShortenURLUseCase {
     const destination = ShortenedURL.parseDestination(parsed.data);
     if (!destination.ok) return destination;
 
-    const shortened = ShortenedURL.create(
-      generateShortCode(),
-      destination.value,
-    );
-    if (!shortened.ok) return shortened;
-    shortenedUrls.set(shortened.value.code, shortened.value.destination.value);
-    return shortened;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const shortened = ShortenedURL.create(
+        this.generator.generate(),
+        destination.value,
+      );
+      if (!shortened.ok) return shortened;
+      const stored = await this.repository.insert(shortened.value);
+      if (stored.ok) return shortened;
+      if (stored.error.code !== "code_conflict") {
+        return Err({
+          code: "storage_unavailable",
+          message: "Service temporarily unavailable. Please try again.",
+        });
+      }
+    }
+    return Err({
+      code: "code_exhausted",
+      message: "Could not create a short link. Please try again.",
+    });
   }
 }

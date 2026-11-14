@@ -1,24 +1,26 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ShortenedURL } from "../../domain/shortened-url";
-import { shortenedUrls } from "../../shortened-url";
+import { Err, Ok } from "../../../../shared/types/result";
 import { ShortenURLUseCase } from "./shorten-url";
 
-const shortenURL = new ShortenURLUseCase();
-let originalEntries: [string, string][];
-
-beforeEach(() => {
-  originalEntries = [...shortenedUrls];
-  shortenedUrls.clear();
-  shortenedUrls.set("aa", "https://existing.example/path");
-});
-
-afterEach(() => {
-  shortenedUrls.clear();
-  for (const [code, destination] of originalEntries) {
-    shortenedUrls.set(code, destination);
-  }
-  vi.restoreAllMocks();
-});
+function fixture(codes = ["NewCode001"], failureAt = -1) {
+  const records = new Map([["aa", "https://existing.example/path"]]);
+  const generate = vi.fn(() => codes[generate.mock.calls.length - 1]);
+  const insert = vi.fn(async (link: ShortenedURL) => {
+    if (insert.mock.calls.length === failureAt)
+      return Err({ code: "storage_unavailable" as const });
+    if (records.has(link.code)) return Err({ code: "code_conflict" as const });
+    records.set(link.code, link.destination.value);
+    return Ok(undefined);
+  });
+  const findByCode = vi.fn();
+  return {
+    useCase: new ShortenURLUseCase({ generate }, { insert, findByCode }),
+    generate,
+    insert,
+    records,
+  };
+}
 
 describe("ShortenURLUseCase", () => {
   it.each([
@@ -98,16 +100,17 @@ describe("ShortenURLUseCase", () => {
     ],
   ] as const)(
     "rejects %j without generating or storing a code",
-    (input, code, message) => {
-      const entries = [...shortenedUrls];
-      const random = vi.spyOn(Math, "random");
+    async (input, code, message) => {
+      const { useCase, generate, insert, records } = fixture();
+      const entries = [...records];
 
-      expect(shortenURL.execute(input)).toEqual({
+      expect(await useCase.execute(input)).toEqual({
         ok: false,
         error: { code, message },
       });
-      expect([...shortenedUrls]).toEqual(entries);
-      expect(random).not.toHaveBeenCalled();
+      expect([...records]).toEqual(entries);
+      expect(generate).not.toHaveBeenCalled();
+      expect(insert).not.toHaveBeenCalled();
     },
   );
 
@@ -120,29 +123,87 @@ describe("ShortenURLUseCase", () => {
     "https://EXAMPLE.com:443/a/../path?ref=%61#section",
   ])(
     "creates and stores the trimmed destination %s without canonicalization",
-    (destination) => {
-      vi.spyOn(Math, "random").mockReturnValue(0.4);
-      const result = shortenURL.execute(`  ${destination}  `);
+    async (destination) => {
+      const { useCase, records } = fixture();
+      const result = await useCase.execute(`  ${destination}  `);
 
       expect(result.ok).toBe(true);
       if (!result.ok) throw new Error("Expected a successful shortening");
       expect(result.value).toBeInstanceOf(ShortenedURL);
-      expect(result.value.code).toBe("bb");
+      expect(result.value.code).toBe("NewCode001");
       expect(result.value.destination.value).toBe(destination);
-      expect([...shortenedUrls]).toEqual([
+      expect([...records]).toEqual([
         ["aa", "https://existing.example/path"],
-        ["bb", destination],
+        ["NewCode001", destination],
       ]);
     },
   );
 
-  it("preserves existing overwrite behavior when a generated code already exists", () => {
-    vi.spyOn(Math, "random").mockReturnValue(0);
-    const result = shortenURL.execute("https://replacement.example");
+  it.each([0, 1, 2, 3])(
+    "allows exactly three attempts with %i conflicts",
+    async (collisions) => {
+      const candidates = [
+        "Conflict01",
+        "Conflict02",
+        "Conflict03",
+        "Forbidden4",
+      ];
+      const { useCase, records, generate, insert } = fixture(candidates);
+      for (let i = 0; i < collisions; i++)
+        records.set(candidates[i], `https://existing.example/${i}`);
+      const before = [...records];
+      const result = await useCase.execute("https://new.example/path");
+      const attempts = Math.min(collisions + 1, 3);
+      expect(generate).toHaveBeenCalledTimes(attempts);
+      expect(insert).toHaveBeenCalledTimes(attempts);
+      for (const [code, destination] of before)
+        expect(records.get(code)).toBe(destination);
+      if (collisions === 3) {
+        expect(result).toEqual(
+          Err({
+            code: "code_exhausted",
+            message: "Could not create a short link. Please try again.",
+          }),
+        );
+        expect([...records]).toEqual(before);
+      } else {
+        expect(result.ok).toBe(true);
+        if (!result.ok) throw new Error("Expected success");
+        expect(result.value.code).toBe(candidates[collisions]);
+        expect(records.get(result.value.code)).toBe("https://new.example/path");
+        expect(records.size).toBe(before.length + 1);
+      }
+    },
+  );
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected a successful shortening");
-    expect(result.value.code).toBe("aa");
-    expect([...shortenedUrls]).toEqual([["aa", "https://replacement.example"]]);
+  it.each([1, 2])(
+    "stops on storage failure at attempt %i",
+    async (failureAt) => {
+      const { useCase, records, generate, insert } = fixture(
+        ["aa", "NewCode001"],
+        failureAt,
+      );
+      const before = [...records];
+      expect(await useCase.execute("https://example.com")).toEqual(
+        Err({
+          code: "storage_unavailable",
+          message: "Service temporarily unavailable. Please try again.",
+        }),
+      );
+      expect(insert).toHaveBeenCalledTimes(failureAt);
+      expect(generate).toHaveBeenCalledTimes(failureAt);
+      expect([...records]).toEqual(before);
+    },
+  );
+
+  it("stores repeated destinations independently", async () => {
+    const { useCase, records } = fixture(["NewCode001", "NewCode002"]);
+    const first = await useCase.execute("https://example.com");
+    const second = await useCase.execute("https://example.com");
+    expect(
+      first.ok && second.ok && first.value.code !== second.value.code,
+    ).toBe(true);
+    expect(records.get("NewCode001")).toBe("https://example.com");
+    expect(records.get("NewCode002")).toBe("https://example.com");
   });
 });

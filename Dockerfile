@@ -21,8 +21,13 @@ FROM base AS production
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/applications/web/node_modules ./applications/web/node_modules
 COPY --from=build /app/libs/engine/node_modules ./libs/engine/node_modules
+COPY --from=build /app/libs/database/node_modules ./libs/database/node_modules
 COPY --from=build /app/applications/web/build ./applications/web/build
 COPY libs/engine/src ./libs/engine/src
+COPY libs/database/src ./libs/database/src
+COPY libs/database/package.json ./libs/database/
+COPY applications/web/database ./applications/web/database
+COPY applications/web/drizzle.config.ts ./applications/web/
 COPY applications/web/package.json ./applications/web/
 COPY libs/engine/package.json ./libs/engine/
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./

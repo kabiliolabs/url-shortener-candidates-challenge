@@ -13,10 +13,10 @@ const invalidURL = (): Result<never, URLValidationError> =>
   });
 
 export class URL {
-  private constructor(
-    public readonly value: string,
-    private readonly parsedProtocol: string,
-  ) {
+  private readonly parsedProtocol: string;
+
+  private constructor(public readonly value: string) {
+    this.parsedProtocol = new globalThis.URL(value).protocol;
     Object.freeze(this);
   }
 
@@ -29,8 +29,7 @@ export class URL {
     if (!value) return Err({ code: "required", message: "URL is required" });
 
     try {
-      const parsed = new globalThis.URL(value);
-      return Ok(new URL(value, parsed.protocol));
+      return Ok(new URL(value));
     } catch {
       return invalidURL();
     }

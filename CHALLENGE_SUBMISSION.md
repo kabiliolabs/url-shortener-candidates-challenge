@@ -19,7 +19,7 @@ Decisions for the [component refactor](specs/reusable-components.md):
 
 Decisions for the [URL domain model](specs/url-domain-model.md):
 
-- **Separate syntax from policy:** shared `URL` parses absolute URLs across protocols and exposes the protocol; `ShortenedURL` enforces HTTP/HTTPS destinations through guarded creation. Repository abstraction and database persistence remain deferred.
+- **Separate syntax from policy:** shared `URL` parses absolute URLs across protocols and exposes the protocol; `ShortenedURL` enforces HTTP/HTTPS destinations through guarded creation. Repository abstraction and PostgreSQL persistence were subsequently implemented in the short-code feature below.
 - **Explicit validation results:** `safeParse` accepts a string and returns the shared `Result` contract instead of throwing for invalid URL strings. Application use cases now reject missing/non-string input; the HTTP boundary maps validation errors to HTTP 400 and the existing inline feedback.
 - **Test the boundaries:** pure domain tests cover validation and value equality; route tests verify rejection without storage changes and preserve successful shortening/redirect behavior.
 
@@ -31,7 +31,7 @@ Decisions for the [shortener use cases](specs/shortener-use-cases.md):
 
 Decisions for the [database foundation](specs/database-foundation.md):
 
-- **Keep infrastructure separate:** a private PostgreSQL/Drizzle package owns its pool and explicit lifecycle; consumers provide configuration and schemas. The engine and web retain their in-memory behavior.
+- **Keep infrastructure separate:** a private PostgreSQL/Drizzle package owns its pool and explicit lifecycle; consumers provide configuration and schemas. The generic package stays independent; the short-code feature below connects the web consumer to it.
 - **Use Drizzle Kit directly:** the package integration test generates temporary schema/configuration/SQL fixtures and runs explicit migration commands. There is no demo consumer workspace, committed fixture migration, or custom migration executor.
 
 ## What I Would Do With More Time
@@ -104,8 +104,34 @@ architecture skill to preserve the domain/infrastructure boundary and added fail
 public-API tests before implementing the database lifecycle. The concrete `PostgresDatabase` class owns
 the pool and exposes a typed client, health checks, and cleanup. Integration checks use real PostgreSQL
 and explicit Drizzle Kit commands with temporary fixtures. After reviewing the first
-implementation, I removed the extra test-consumer workspace to reduce scaffolding. Database durability does not yet make shortened URLs
-persistent; repository integration is deferred.
+implementation, I removed the extra test-consumer workspace to reduce scaffolding. The later short-code feature below completes repository integration and persistent shortened links.
+
+### Short-code generation and persistence
+
+I approved the [short-code specification](specs/short-code-generation.md) and asked
+for DDD and hexagonal architecture. Separate planning, implementation and independent
+validation phases use the implement-spec workflow. The implementation introduces
+injected application ports and module-owned infrastructure in the engine: a secure
+Nano ID adapter, an atomic PostgreSQL repository, and its schema. A separate
+`@url-shortener/engine/infrastructure` entrypoint keeps vendor imports out of the core.
+Web’s `app/bootstrap.server.ts` explicitly constructs the database, repository,
+generator, and use cases one by one. The bootstrap preserves lazy database
+configuration, safe failure handling, shared route instances, and terminal database
+cleanup; web also retains explicit migration files/execution.
+The generic database package is unchanged.
+The former shared Map and two-character generator are removed.
+
+The implementation first observed deterministic failures for the new collision,
+storage and async route contracts, then preserved the existing validation/redirect
+cases while adding retry, outage and form feedback tests. During implementation, isolated PostgreSQL checks verified competing inserts, migrations,
+restarts, outages, and host/container cross-resolution. The separate web integration
+runner was subsequently removed at my request; application tests stay colocated.
+The retained database command covers the generic database package only.
+
+Three total attempts bound collision handling. Only a code uniqueness conflict retries;
+other storage/configuration failures return safe HTTP 503 messages. PostgreSQL remains
+the sole runtime store, while lazy server composition keeps home rendering independent
+of database availability. Every successful submission gets its own persisted link.
 
 ## Feedback
 

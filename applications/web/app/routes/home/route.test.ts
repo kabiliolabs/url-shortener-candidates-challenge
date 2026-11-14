@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createStaticHandler } from "react-router";
-import { baseUrl, shortenedUrls } from "@url-shortener/engine";
+import { baseUrl } from "@url-shortener/engine";
 import { action, loader } from "./route";
 import { loader as redirectLoader } from "../redirect/route";
 
@@ -18,9 +18,58 @@ const handler = createStaticHandler([
     },
   },
 ]);
+const state = vi.hoisted(() => ({
+  mode: "normal",
+  records: new Map<string, string>(),
+  generate: vi.fn(() => "NewCode001"),
+}));
+const shortenedUrls = state.records;
+vi.mock("../../bootstrap.server", async () => {
+  const {
+    Err,
+    Ok,
+    ShortenedURL,
+    ShortenURLUseCase,
+    ResolveShortenedURLUseCase,
+  } = await import("@url-shortener/engine");
+  const repository = {
+    async insert(link: import("@url-shortener/engine").ShortenedURL) {
+      if (state.mode === "outage")
+        return Err({ code: "storage_unavailable" as const });
+      if (state.mode === "collisions" || state.records.has(link.code))
+        return Err({ code: "code_conflict" as const });
+      state.records.set(link.code, link.destination.value);
+      return Ok(undefined);
+    },
+    async findByCode(
+      code: string,
+    ): Promise<
+      import("@url-shortener/engine").Result<
+        import("@url-shortener/engine").ShortenedURL | null,
+        { code: "storage_unavailable" }
+      >
+    > {
+      if (state.mode === "outage")
+        return Err({ code: "storage_unavailable" as const });
+      const raw = state.records.get(code);
+      if (raw === undefined) return Ok(null);
+      const parsed = ShortenedURL.parseDestination(raw);
+      if (!parsed.ok) throw new Error("Invalid fixture");
+      const link = ShortenedURL.create(code, parsed.value);
+      if (!link.ok) throw new Error("Invalid fixture");
+      return link;
+    },
+  };
+  return {
+    shortenURL: new ShortenURLUseCase({ generate: state.generate }, repository),
+    resolveShortenedURL: new ResolveShortenedURLUseCase(repository),
+  };
+});
 let originalEntries: [string, string][];
 
 beforeEach(() => {
+  state.mode = "normal";
+  state.generate.mockReset().mockReturnValue("NewCode001");
   originalEntries = [...shortenedUrls];
   shortenedUrls.clear();
   shortenedUrls.set("aa", "https://existing.example/path");
@@ -45,14 +94,14 @@ async function submit(value?: string | File) {
 
 describe("shortening route", () => {
   it("preserves successful response, loader prefix, and redirect behavior", async () => {
-    vi.spyOn(Math, "random").mockReturnValue(0.4);
+    state.generate.mockReturnValue("NewCode001");
     const destination = "https://example.com/article?ref=test#section";
     const result = await submit(destination);
     if (result instanceof Response) throw new Error("Expected action data");
 
     expect(result.statusCode).toBe(200);
     expect(result.actionData).toEqual({
-      home: { shortenedUrl: `${baseUrl}/s/bb` },
+      home: { shortenedUrl: `${baseUrl}/s/NewCode001` },
     });
     expect(result.loaderData).toEqual({
       home: { baseUrl: baseUrl ? `${baseUrl}/s/` : "-" },
@@ -60,10 +109,12 @@ describe("shortening route", () => {
     expect([...shortenedUrls]).toEqual([
       ["aa", "https://existing.example/path"],
       ["bc", "https://another.example/path"],
-      ["bb", destination],
+      ["NewCode001", destination],
     ]);
 
-    const redirect = await handler.query(new Request("http://localhost/s/bb"));
+    const redirect = await handler.query(
+      new Request("http://localhost/s/NewCode001"),
+    );
     expect(redirect).toBeInstanceOf(Response);
     if (redirect instanceof Response) {
       expect(redirect.status).toBe(302);
@@ -89,7 +140,7 @@ describe("shortening route", () => {
 
   it("rejects a whitespace-only code with HTTP 400 without changing storage", async () => {
     const entries = [...shortenedUrls];
-    const random = vi.spyOn(Math, "random");
+    const random = state.generate;
     const result = await handler.query(
       new Request("http://localhost/s/%20%20"),
     );
@@ -110,7 +161,7 @@ describe("shortening route", () => {
     const destination = "https://example.com/custom";
     shortenedUrls.set(code, destination);
     const entries = [...shortenedUrls];
-    const random = vi.spyOn(Math, "random");
+    const random = state.generate;
     const result = await handler.query(
       new Request(`http://localhost/s/${code}`),
     );
@@ -162,7 +213,7 @@ describe("shortening route", () => {
     "rejects direct submission %j with %s before generation/storage",
     async (input, code) => {
       const entries = [...shortenedUrls];
-      const random = vi.spyOn(Math, "random").mockReturnValue(0);
+      const random = state.generate;
       const result = await submit(input);
       if (result instanceof Response)
         throw new Error("Expected validation action data");
@@ -190,17 +241,53 @@ describe("shortening route", () => {
   );
 
   it("stores and resolves the trimmed destination without canonicalizing it", async () => {
-    vi.spyOn(Math, "random").mockReturnValue(0.4);
+    state.generate.mockReturnValue("NewCode001");
     const destination = "https://EXAMPLE.com:443/a/../path?ref=%61#section";
     const result = await submit(`  ${destination}  `);
     if (result instanceof Response) throw new Error("Expected action data");
 
     expect(result.statusCode).toBe(200);
-    expect(shortenedUrls.get("bb")).toBe(destination);
-    const redirect = await handler.query(new Request("http://localhost/s/bb"));
+    expect(shortenedUrls.get("NewCode001")).toBe(destination);
+    const redirect = await handler.query(
+      new Request("http://localhost/s/NewCode001"),
+    );
     expect(redirect).toBeInstanceOf(Response);
     if (redirect instanceof Response) {
       expect(redirect.headers.get("Location")).toBe(destination);
     }
+  });
+  it.each([
+    [
+      "collisions",
+      "code_exhausted",
+      "Could not create a short link. Please try again.",
+    ],
+    [
+      "outage",
+      "storage_unavailable",
+      "Service temporarily unavailable. Please try again.",
+    ],
+  ])("maps %s to safe HTTP 503 action data", async (mode, code, error) => {
+    state.mode = mode;
+    const before = [...shortenedUrls];
+    const result = await submit("https://example.com");
+    if (result instanceof Response) throw new Error("Expected action context");
+    expect(result.statusCode).toBe(503);
+    expect(result.actionData?.home).toEqual({ code, error });
+    expect([...shortenedUrls]).toEqual(before);
+  });
+
+  it("serves home during an outage and returns 503 for unavailable resolution", async () => {
+    state.mode = "outage";
+    const home = await handler.query(new Request("http://localhost/"));
+    if (home instanceof Response) throw new Error("Expected loader context");
+    expect(home.statusCode).toBe(200);
+    const redirect = await handler.query(new Request("http://localhost/s/aa"));
+    if (redirect instanceof Response) throw new Error("Expected error context");
+    expect(redirect.statusCode).toBe(503);
+    expect(redirect.errors?.redirect).toMatchObject({
+      status: 503,
+      data: "Service temporarily unavailable. Please try again.",
+    });
   });
 });

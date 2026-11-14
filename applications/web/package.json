@@ -9,7 +9,9 @@
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@react-router/node": "7.12.0",
@@ -18,7 +20,9 @@
     "isbot": "^5.1.31",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-router": "7.12.0"
+    "react-router": "7.12.0",
+    "@url-shortener/database": "workspace:*",
+    "drizzle-orm": "0.45.4"
   },
   "devDependencies": {
     "@react-router/dev": "7.12.0",
@@ -35,6 +39,8 @@
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.1.12"
+    "vitest": "^4.1.12",
+    "drizzle-kit": "0.31.11",
+    "tsx": "4.23.15"
   }
 }

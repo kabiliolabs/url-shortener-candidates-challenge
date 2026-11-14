@@ -1,10 +1,5 @@
 export { baseUrl } from "./base-url";
 
-export {
-  shortenedUrls,
-  generateShortCode,
-} from "./modules/url-shortener/shortened-url";
-
 export { URL } from "./shared/value-objects/url";
 export type { URLValidationError } from "./shared/value-objects/url";
 export { ShortenedURL } from "./modules/url-shortener/domain/shortened-url";
@@ -15,3 +10,11 @@ export type { Result } from "./shared/types/result";
 export { ShortenURLUseCase } from "./modules/url-shortener/application/usecases/shorten-url";
 export { ResolveShortenedURLUseCase } from "./modules/url-shortener/application/usecases/resolve-shortened-url";
 export type { ResolveShortenedURLError } from "./modules/url-shortener/application/usecases/resolve-shortened-url";
+
+export type { ShortCodeGenerator } from "./modules/url-shortener/application/ports/short-code-generator";
+export type {
+  ShortenerRepository,
+  InsertShortenedURLError,
+  StorageUnavailable,
+} from "./modules/url-shortener/application/ports/shortener-repository";
+export type { ShortenURLError } from "./modules/url-shortener/application/usecases/shorten-url";
