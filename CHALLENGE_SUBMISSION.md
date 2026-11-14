@@ -4,15 +4,17 @@
 
 - [10 min] Set up CortexDB project memory and knowledge graph, and added agent instructions in `AGENTS.md` to preserve context and guide implementation. See "AI Usage" for details.
 - [15 min] Get familiar with the codebase and run the application locally.
+- Extracted custom React components and separated the shortener's controller from its view, preserving the existing behavior and design.
 
 ## Decisions and Rationale
 
-Decisions for the [component refactor](specs/reusable-components.md), pending implementation:
+Decisions for the [component refactor](specs/reusable-components.md):
 
 - **Custom components over shadcn/ui or Radix:** the current controls are simple, so reusing their markup and CSS avoids unnecessary dependencies.
 - **Controller–view separation:** keep application logic separate from rendering and reusable components.
+- **Colocate by responsibility:** keep shared controls in individual `components/ui` folders, and page controllers/views beside their route module so page-specific code stays together.
 - **Preserve behavior and design:** isolate the refactor from new features, bug fixes, and visual changes.
-- **Focused verification:** use typecheck, build, and browser checks without adding a test framework for this refactor.
+- **Focused verification:** add colocated Vitest/React Testing Library unit tests for the controller, view, and controls, alongside typecheck, build, and browser checks. Isolated route stubs keep unit tests independent of server storage.
 
 ## What I Would Do With More Time
 
@@ -63,6 +65,10 @@ I asked the main agent to coordinate the work through separate planning, impleme
 The independent validation found no blocking mismatches, so no correction round was needed. Typecheck, build, and browser checks passed. The main agent reviewed the results and representative screenshots before reporting completion.
 
 I then packaged this workflow as the reusable [implement-spec skill](.agents/skills/implement-spec/SKILL.md). It defines the agent handoffs, CortexDB context retrieval, implementation boundaries, independent validation, and correction process for future specifications. It can be invoked with `Use $implement-spec for specs/my-feature.md`.
+
+### Reusable Components
+
+I used [start-feature](.agents/skills/start-feature/SKILL.md) to clarify the component refactor and write its spec, then used the planning, implementation, and independent validation workflow above.
 
 ## Feedback
 

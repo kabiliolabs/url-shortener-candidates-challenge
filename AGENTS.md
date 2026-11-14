@@ -29,7 +29,7 @@ Follow existing TypeScript/TSX style: two-space indentation, double quotes, semi
 
 ## Testing Guidelines
 
-No test framework, test suite, test script, or coverage threshold is currently configured. For new automated tests, use colocated `*.test.ts` or `*.test.tsx` files and document the chosen runner and command. Prioritize URL validation, collisions, redirects, and unknown-code handling. Before submitting, run typecheck/build, manually check shortening and redirects, and verify Docker startup. Typechecking does not replace behavioral tests.
+Web unit tests use Vitest, React Testing Library, and jsdom. Run `pnpm test` from the repository root, or `pnpm --filter web test:watch` for watch mode. Colocate tests as `*.test.ts` or `*.test.tsx`. Controller/view tests use isolated React Router stubs; component tests cover rendered behavior and native props. No coverage threshold is configured. Browser checks remain necessary for layout and real HTTP redirects. Before submitting, run tests and typecheck/build, manually check shortening and redirects, and verify Docker startup. Typechecking does not replace behavioral tests.
 
 ## Commit & Pull Request Guidelines
 

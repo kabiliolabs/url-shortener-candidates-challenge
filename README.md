@@ -28,6 +28,18 @@ pnpm dev
 
 Open `http://localhost:5173`
 
+## Tests
+
+Run the controller, view, and reusable-component unit tests from the repository root:
+
+```bash
+pnpm test
+pnpm typecheck
+pnpm build
+```
+
+Tests use Vitest, React Testing Library, and jsdom, and live beside the components as `*.test.tsx`. Controller and view tests use isolated React Router loaders/actions, without accessing the real URL store. Run `pnpm --filter web test:watch` for watch mode. Browser checks remain necessary for visual layout and real HTTP redirects.
+
 ## Docker Setup
 
 ```bash

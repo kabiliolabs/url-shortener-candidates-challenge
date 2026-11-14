@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import type { Route } from "./+types/s.$code";
+import type { Route } from "./+types/route";
 import { shortenedUrls } from "@url-shortener/engine";
 
 export function loader({ params }: Route.LoaderArgs) {

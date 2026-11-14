@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source not "./**/*.test.tsx";
+@source not "./**/*.test.ts";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
