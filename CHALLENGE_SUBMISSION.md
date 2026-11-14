@@ -32,6 +32,16 @@ For relationship queries, the agent first calls `graph_schema` to inspect the st
 
 _Project knowledge graph in CortexDB._
 
+### UI Restyling Specification
+
+I used the AI coding agent to draft and refine a short, high-level [UI restyling specification](specs/ui-restyling.md) before starting implementation. I defined the goal and scope: improve the appearance, remove decorative characters and rotated boxes, and preserve existing functionality without adding components.
+
+I established a light-mode color palette using off-white, dark green, and lime, then adapted the same colors for dark mode. Both themes follow the system preference through CSS. The agent calculated contrast ratios for the proposed text and button color pairs to check their readability.
+
+I then asked the agent to compare the spec against the existing code and identify inconsistencies and gaps. We discussed the findings one by one and updated the spec with the agreed changes: coverage of both inline errors and full error pages, long-content handling, keyboard focus, and centralized CSS classes that replace conflicting styling utilities. Functional issues found during the review stayed outside the restyling scope.
+
+This process produced a concise specification with explicit boundaries and acceptance criteria to guide implementation. At this stage, the spec is ready; application implementation and its visual and functional checks are the next step.
+
 ## Feedback
 
 <!-- Any feedback on the challenge? Was it clear? Too easy/hard? Suggestions? -->
