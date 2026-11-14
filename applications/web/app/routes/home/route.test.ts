@@ -12,7 +12,8 @@ const handler = createStaticHandler([
     path: "/s/:code",
     loader: (args) => {
       const code = args.params.code;
-      if (code === undefined) throw new Error("Expected a code route parameter");
+      if (code === undefined)
+        throw new Error("Expected a code route parameter");
       return redirectLoader({ ...args, params: { code } });
     },
   },
@@ -37,7 +38,9 @@ afterEach(() => {
 async function submit(value?: string | File) {
   const body = new FormData();
   if (value !== undefined) body.set("url", value);
-  return handler.query(new Request("http://localhost/", { method: "POST", body }));
+  return handler.query(
+    new Request("http://localhost/", { method: "POST", body }),
+  );
 }
 
 describe("shortening route", () => {
@@ -70,11 +73,73 @@ describe("shortening route", () => {
 
   it("preserves the unknown-code response without changing storage", async () => {
     const entries = [...shortenedUrls];
-    const result = await handler.query(new Request("http://localhost/s/missing"));
-    if (result instanceof Response) throw new Error("Expected route error context");
+    const result = await handler.query(
+      new Request("http://localhost/s/missing"),
+    );
+    if (result instanceof Response)
+      throw new Error("Expected route error context");
 
     expect(result.statusCode).toBe(404);
-    expect(result.errors?.redirect).toMatchObject({ status: 404, data: "Not Found" });
+    expect(result.errors?.redirect).toMatchObject({
+      status: 404,
+      data: "Not Found",
+    });
+    expect([...shortenedUrls]).toEqual(entries);
+  });
+
+  it("rejects a whitespace-only code with HTTP 400 without changing storage", async () => {
+    const entries = [...shortenedUrls];
+    const random = vi.spyOn(Math, "random");
+    const result = await handler.query(
+      new Request("http://localhost/s/%20%20"),
+    );
+    if (result instanceof Response)
+      throw new Error("Expected route error context");
+
+    expect(result.statusCode).toBe(400);
+    expect(result.errors?.redirect).toMatchObject({
+      status: 400,
+      data: "Invalid short code",
+    });
+    expect([...shortenedUrls]).toEqual(entries);
+    expect(random).not.toHaveBeenCalled();
+  });
+
+  it("looks up exact codes without enforcing the generator's alphabet or length", async () => {
+    const code = "Custom-42";
+    const destination = "https://example.com/custom";
+    shortenedUrls.set(code, destination);
+    const entries = [...shortenedUrls];
+    const random = vi.spyOn(Math, "random");
+    const result = await handler.query(
+      new Request(`http://localhost/s/${code}`),
+    );
+    if (!(result instanceof Response))
+      throw new Error("Expected redirect response");
+
+    expect(result.status).toBe(302);
+    expect(result.headers.get("Location")).toBe(destination);
+    expect([...shortenedUrls]).toEqual(entries);
+    expect(random).not.toHaveBeenCalled();
+  });
+
+  it("does not trim codes or add a route for a missing code segment", async () => {
+    const entries = [...shortenedUrls];
+    const spaced = await handler.query(
+      new Request("http://localhost/s/%20aa%20"),
+    );
+    if (spaced instanceof Response)
+      throw new Error("Expected route error context");
+    expect(spaced.statusCode).toBe(404);
+    expect(spaced.errors?.redirect).toMatchObject({
+      status: 404,
+      data: "Not Found",
+    });
+
+    const missing = await handler.query(new Request("http://localhost/s/"));
+    if (missing instanceof Response)
+      throw new Error("Expected route error context");
+    expect(missing.statusCode).toBe(404);
     expect([...shortenedUrls]).toEqual(entries);
   });
 
@@ -88,29 +153,41 @@ describe("shortening route", () => {
     [new File(["https://example.com"], "url.txt"), "invalid_url"],
     ["ftp://example.com", "unsupported_protocol"],
     ["javascript:alert(1)", "unsupported_protocol"],
-  ] as const)("rejects direct submission %j with %s before generation/storage", async (input, code) => {
-    const entries = [...shortenedUrls];
-    const random = vi.spyOn(Math, "random").mockReturnValue(0);
-    const result = await submit(input);
-    if (result instanceof Response) throw new Error("Expected validation action data");
+    ["sftp://example.com/file", "unsupported_protocol"],
+    ["mailto:person@example.com", "unsupported_protocol"],
+    ["ftp://", "unsupported_protocol"],
+    ["https:example.com", "invalid_url"],
+    ["https:/example.com", "invalid_url"],
+  ] as const)(
+    "rejects direct submission %j with %s before generation/storage",
+    async (input, code) => {
+      const entries = [...shortenedUrls];
+      const random = vi.spyOn(Math, "random").mockReturnValue(0);
+      const result = await submit(input);
+      if (result instanceof Response)
+        throw new Error("Expected validation action data");
 
-    expect(result.statusCode).toBe(400);
-    expect(result.actionData?.home).toEqual({ code, error: expect.any(String) });
-    expect(result.errors).toBeNull();
-    expect(random).not.toHaveBeenCalled();
-    expect([...shortenedUrls]).toEqual(entries);
-    if (code === "required") {
-      expect(result.actionData?.home.error).toBe("URL is required");
-    } else if (code === "invalid_url") {
-      expect(result.actionData?.home.error).toBe(
-        "Enter a complete, valid URL starting with http:// or https://.",
-      );
-    } else {
-      expect(result.actionData?.home.error).toBe(
-        "Only http:// and https:// URLs are supported.",
-      );
-    }
-  });
+      expect(result.statusCode).toBe(400);
+      expect(result.actionData?.home).toEqual({
+        code,
+        error: expect.any(String),
+      });
+      expect(result.errors).toBeNull();
+      expect(random).not.toHaveBeenCalled();
+      expect([...shortenedUrls]).toEqual(entries);
+      if (code === "required") {
+        expect(result.actionData?.home.error).toBe("URL is required");
+      } else if (code === "invalid_url") {
+        expect(result.actionData?.home.error).toBe(
+          "Enter a complete, valid URL starting with http:// or https://.",
+        );
+      } else {
+        expect(result.actionData?.home.error).toBe(
+          "Only http:// and https:// URLs are supported.",
+        );
+      }
+    },
+  );
 
   it("stores and resolves the trimmed destination without canonicalizing it", async () => {
     vi.spyOn(Math, "random").mockReturnValue(0.4);

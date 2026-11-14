@@ -19,9 +19,15 @@ Decisions for the [component refactor](specs/reusable-components.md):
 
 Decisions for the [URL domain model](specs/url-domain-model.md):
 
-- **Start with the domain:** `URL` validates destinations; `ShortenedURL` holds a code and validated destination. Repository abstraction and database persistence remain deferred.
-- **Explicit validation results:** `safeParse` accepts a string and returns the shared `Result` contract instead of throwing for invalid URL strings. The HTTP boundary rejects missing/non-string input and maps validation errors to HTTP 400 and the existing inline feedback.
+- **Separate syntax from policy:** shared `URL` parses absolute URLs across protocols and exposes the protocol; `ShortenedURL` enforces HTTP/HTTPS destinations through guarded creation. Repository abstraction and database persistence remain deferred.
+- **Explicit validation results:** `safeParse` accepts a string and returns the shared `Result` contract instead of throwing for invalid URL strings. Application use cases now reject missing/non-string input; the HTTP boundary maps validation errors to HTTP 400 and the existing inline feedback.
 - **Test the boundaries:** pure domain tests cover validation and value equality; route tests verify rejection without storage changes and preserve successful shortening/redirect behavior.
+
+Decisions for the [shortener use cases](specs/shortener-use-cases.md):
+
+- **Separate orchestration from HTTP:** use cases validate application input and coordinate shortening/lookup; routes construct public links, responses, and redirects.
+- **Keep domain rules authoritative:** Zod checks string/nonblank input; the shared URL validates structure and the aggregate validates destination policy before code generation. Expected failures use the shared `Result` contract, preserving existing HTTP feedback.
+- **Organize by module:** shortener code lives under `modules/url-shortener`, with application `usecases` and `validations` and the aggregate directly in `domain`. Generic URL and results live under `shared/value-objects` and `shared/types`. The existing map and generator remain until repository abstraction is introduced.
 
 ## What I Would Do With More Time
 
@@ -80,6 +86,10 @@ I used [start-feature](.agents/skills/start-feature/SKILL.md) to clarify the com
 ### URL Domain Model
 
 I used [start-feature](.agents/skills/start-feature/SKILL.md) and the installed [hexagonal-architecture skill](.agents/skills/hexagonal-architecture/SKILL.md) to define a small domain-first step. The spec adopts a generic `Result` type inspired by my existing utility code and keeps HTTP and storage concerns outside the domain objects. After approving the spec, I used [implement-spec](.agents/skills/implement-spec/SKILL.md) for planning, implementation, and independent validation. The implementation first demonstrated failing validation/trim tests against the original action, then added domain objects and server integration.
+
+### Shortener Use Cases
+
+I used the same specification workflow to extract `ShortenURLUseCase` and `ResolveShortenedURLUseCase`, then included the module/shared folder organization during implementation. The implementation first reproduced the missing invalid-code response with a failing route test, then added Zod validation and use-case tests while preserving the existing storage and HTTP contracts.
 
 ## Feedback
 

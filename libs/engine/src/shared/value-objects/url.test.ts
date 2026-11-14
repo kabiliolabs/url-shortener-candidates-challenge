@@ -9,10 +9,27 @@ describe("URL.safeParse", () => {
     "http://192.168.1.10/page",
     "http://[::1]:3000/page",
     "https://EXAMPLE.com:443/a/../path?ref=%61#section",
+    "sftp://example.com/file",
+    "ftp://example.com/file",
+    "mailto:person@example.com",
+    "urn:isbn:9780141036144",
+    "javascript:alert(1)",
+    "custom:resource",
+    "https:example.com",
+    "https:/example.com",
   ])("accepts %s without canonicalizing its text", (value) => {
     const result = URL.safeParse(value);
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value.value).toBe(value);
+  });
+
+  it("exposes a normalized read-only protocol without rewriting the value", () => {
+    const parsed = URL.safeParse(" HTTPS://EXAMPLE.com/path ");
+    if (!parsed.ok) throw new Error("Expected valid URL");
+    expect(parsed.value.protocol).toBe("https:");
+    expect(parsed.value.value).toBe("HTTPS://EXAMPLE.com/path");
+    expect(Reflect.set(parsed.value, "protocol", "ftp:")).toBe(false);
+    expect(parsed.value.protocol).toBe("https:");
   });
 
   it("trims surrounding whitespace and compares values by their remaining text", () => {
@@ -39,10 +56,8 @@ describe("URL.safeParse", () => {
     ["example.com", "invalid_url"],
     ["https://", "invalid_url"],
     ["https://exa mple.com", "invalid_url"],
-    ["https:example.com", "invalid_url"],
-    ["https:/example.com", "invalid_url"],
-    ["ftp://example.com", "unsupported_protocol"],
-    ["javascript:alert(1)", "unsupported_protocol"],
+    ["/relative/path", "invalid_url"],
+    ["ftp://", "invalid_url"],
   ])("rejects %j with %s without throwing", (input, code) => {
     const result = URL.safeParse(input);
     expect(result.ok).toBe(false);
@@ -50,6 +65,7 @@ describe("URL.safeParse", () => {
       expect(result.error.code).toBe(code);
       expect(result.error.message).toEqual(expect.any(String));
       expect(result.error.message.length).toBeGreaterThan(0);
+      expect(result.error.message).not.toMatch(/https?/i);
       expect(result.error).not.toHaveProperty("status");
       expect(result.error).not.toHaveProperty("field");
       if (code === "required") {
