@@ -46,7 +46,7 @@ docker compose up --build    # production on http://localhost:3000 (`up -d db` f
 - Domain imports nothing from Prisma, React Router or infrastructure.
 - Use cases depend on interfaces (ports), never on concrete implementations.
 - Importing the engine has no side effects: no `process.env` reads, no client instances.
-- The web app reads the configuration and wires everything in a single composition root file.
+- The web app reads the configuration and wires everything in a single composition root file, `applications/web/app/services.server.ts`. Routes import only from it.
 
 ## Correctness rules
 

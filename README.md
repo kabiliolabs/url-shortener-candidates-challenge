@@ -4,9 +4,17 @@
 
 ```
 url-shortener/
-├── applications/web/    # React + React Router v7
-└── libs/engine/         # Domain logic
+├── applications/web/            # React + React Router v7
+│   └── app/services.server.ts   # Composition root: reads config, wires the use cases
+└── libs/engine/
+    ├── prisma/                  # Schema and migrations
+    └── src/
+        ├── domain/              # ShortUrl, repository and generator ports, errors
+        ├── application/         # Use cases: ShortenUrl, ResolveShortUrl, ListShortUrls
+        └── infrastructure/      # Prisma repository, random code generator, in-memory repository
 ```
+
+Dependencies point inwards: `application` depends only on the interfaces in `domain`, and `infrastructure` implements them. The engine reads no environment variables and creates no database client when imported; the web app does both in `services.server.ts` and passes them in.
 
 | Technology                                    | Description                                                                                       |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -29,6 +37,7 @@ pnpm install
 cp .env.example .env
 cp libs/engine/.env.example libs/engine/.env
 docker compose up -d db
+pnpm --filter @url-shortener/engine db:generate
 pnpm --filter @url-shortener/engine db:deploy
 pnpm dev
 ```
