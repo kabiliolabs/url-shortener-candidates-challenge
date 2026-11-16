@@ -14,6 +14,8 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import {
+  clientKeyFor,
+  creationRateLimiter,
   listShortUrls,
   shortenUrl,
   shortUrlBase,
@@ -40,6 +42,23 @@ async function loadShortUrls(): Promise<ShortUrlRow[] | null> {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  // Checked first, so every attempt counts, valid or not: otherwise the limit
+  // could be dodged by sending input that fails validation.
+  const limit = creationRateLimiter.tryConsume(clientKeyFor(request));
+  if (!limit.allowed) {
+    return data<ShortenResult>(
+      {
+        shortenedUrl: null,
+        error: `Too many links created. Try again in ${limit.retryAfterSeconds} seconds.`,
+        invalidUrl: false,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limit.retryAfterSeconds) },
+      },
+    );
+  }
+
   const formData = await request.formData();
   const field = formData.get("url");
   // A missing field or a file upload is treated as empty input, which the
@@ -72,6 +91,13 @@ export async function action({ request }: Route.ActionArgs) {
       { status: 500 },
     );
   }
+}
+
+// React Router drops headers set by an action from the page response unless
+// the route forwards them. Without this, Retry-After would only reach requests
+// made by the fetcher, not a plain form submission.
+export function headers({ actionHeaders }: Route.HeadersArgs) {
+  return actionHeaders;
 }
 
 export function meta({}: Route.MetaArgs) {

@@ -15,4 +15,6 @@ export { ListShortUrls } from "./application/list-short-urls";
 
 export { PrismaShortUrlRepository } from "./infrastructure/prisma-short-url-repository";
 export { RandomCodeGenerator } from "./infrastructure/random-code-generator";
+export { InMemoryRateLimiter } from "./infrastructure/in-memory-rate-limiter";
+export type { RateLimitDecision } from "./infrastructure/in-memory-rate-limiter";
 export { InMemoryShortUrlRepository } from "./infrastructure/in-memory-short-url-repository";

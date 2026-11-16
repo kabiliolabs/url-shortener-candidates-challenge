@@ -1,6 +1,7 @@
 // Composition root: the only place that reads configuration and decides which
 // implementations the use cases get. Routes import from here and nowhere else.
 import {
+  InMemoryRateLimiter,
   ListShortUrls,
   PrismaShortUrlRepository,
   RandomCodeGenerator,
@@ -35,6 +36,34 @@ export const shortenUrl = new ShortenUrl(
 );
 export const resolveShortUrl = new ResolveShortUrl(repository);
 export const listShortUrls = new ListShortUrls(repository);
+
+// Rate limiting is wired here and called by the route, not by a use case:
+// deciding who the client is and when to refuse them is an HTTP concern.
+export const creationRateLimiter = new InMemoryRateLimiter({
+  limit: 10,
+  windowMs: 60_000,
+});
+
+const trustProxy = process.env.TRUST_PROXY === "true";
+
+// The server adapter does not expose the socket address to loaders and actions,
+// so the only source for the client's IP is the header a proxy adds.
+const UNIDENTIFIED_CLIENT = "global";
+
+/**
+ * The key that rate limits are counted against.
+ *
+ * `x-forwarded-for` is only read when TRUST_PROXY=true, and then only its LAST
+ * value: that is the one our single trusted proxy appends. Earlier values are
+ * whatever the client sent and can be forged to dodge the limit. Without a
+ * trusted proxy nothing in the request identifies the client reliably, so
+ * everyone shares one key: stricter, but it cannot be bypassed.
+ */
+export function clientKeyFor(request: Request): string {
+  if (!trustProxy) return UNIDENTIFIED_CLIENT;
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  return forwardedFor?.split(",").at(-1)?.trim() || UNIDENTIFIED_CLIENT;
+}
 
 /** What every short URL starts with. Shown to people before they create one. */
 export const shortUrlBase = `${publicOrigin}/s/`;

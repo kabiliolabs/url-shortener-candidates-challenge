@@ -50,6 +50,7 @@ There are two `.env` files because two tools read them: the web app loads the ro
 | -------------- | --------------------------------------------------------------------------- |
 | `PUBLIC_URL`   | Origin used to build short URLs. Port 5173 in development, 3000 in Docker   |
 | `DATABASE_URL` | PostgreSQL connection string. The examples match the `db` service's values  |
+| `TRUST_PROXY`  | `true` only behind a single reverse proxy. See [Abuse protection](#abuse-protection) |
 
 Database scripts, run with `pnpm --filter @url-shortener/engine <script>`:
 
@@ -58,6 +59,15 @@ Database scripts, run with `pnpm --filter @url-shortener/engine <script>`:
 | `db:migrate`  | Creates a migration from schema changes and applies it (development)     |
 | `db:deploy`   | Applies pending migrations without creating new ones                     |
 | `db:generate` | Regenerates the Prisma client after a schema change                      |
+
+## Abuse protection
+
+- **Rate limit:** creating short URLs is limited to 10 requests per minute per client. Beyond that the app answers `429` with a `Retry-After` header. Every attempt counts, including rejected input.
+- **Who a client is:** with `TRUST_PROXY=true`, the last value of `X-Forwarded-For`, which is the one a single trusted proxy appends. Earlier values come from the client and can be forged. With `TRUST_PROXY=false` (the default, and what Docker Compose uses, since nothing sits in front of the app) the header is ignored and all clients share one limit. When trying the app locally this means 10 creations per minute in total.
+- **Input validation:** only `http` and `https` URLs up to 2048 characters are accepted, and the app's own short URLs cannot be shortened again.
+- **Short codes:** 7 random base62 characters from a cryptographically secure generator, so existing links cannot be found by guessing.
+
+The limiter keeps its counters in memory: they reset when the app restarts and are not shared between instances. A deployment with several instances would move them to a shared store such as Redis.
 
 ## Tests
 
