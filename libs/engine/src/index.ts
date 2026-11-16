@@ -1,8 +1,10 @@
 export type { ShortUrl } from "./domain/short-url";
 export type { ShortUrlRepository } from "./domain/short-url-repository";
 export type { ShortCodeGenerator } from "./domain/short-code-generator";
+export { OriginalUrl } from "./domain/original-url";
 export {
   CodeGenerationFailed,
+  InvalidUrlError,
   ShortCodeAlreadyExists,
   ShortUrlNotFound,
 } from "./domain/errors";

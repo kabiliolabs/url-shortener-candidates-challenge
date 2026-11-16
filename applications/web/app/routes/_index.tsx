@@ -1,6 +1,6 @@
-import { Form, useActionData } from "react-router";
+import { data, Form, useActionData } from "react-router";
 import type { Route } from "./+types/_index";
-import { CodeGenerationFailed } from "@url-shortener/engine";
+import { InvalidUrlError } from "@url-shortener/engine";
 import { shortenUrl, shortUrlFor } from "~/services.server";
 
 export function loader() {
@@ -9,22 +9,47 @@ export function loader() {
   };
 }
 
+// Every outcome has the same shape, so the component never has to guess which
+// keys exist. `invalidUrl` is true only when the input itself was rejected, so
+// the form can mark the field as invalid; a server failure leaves it false.
+type ActionResult = {
+  shortenedUrl: string | null;
+  error: string | null;
+  invalidUrl: boolean;
+};
+
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
-
-  if (!url) {
-    return { error: "URL is required" };
-  }
+  const field = formData.get("url");
+  // A missing field or a file upload is treated as empty input, which the
+  // domain rejects with its own message.
+  const rawUrl = typeof field === "string" ? field : "";
 
   try {
-    const shortUrl = await shortenUrl.execute(url);
-    return { shortenedUrl: shortUrlFor(shortUrl.code) };
+    const shortUrl = await shortenUrl.execute(rawUrl);
+    return data<ActionResult>({
+      shortenedUrl: shortUrlFor(shortUrl.code),
+      error: null,
+      invalidUrl: false,
+    });
   } catch (error) {
-    if (error instanceof CodeGenerationFailed) {
-      return { error: "Could not create a short URL. Please try again." };
+    if (error instanceof InvalidUrlError) {
+      return data<ActionResult>(
+        { shortenedUrl: null, error: error.message, invalidUrl: true },
+        { status: 400 },
+      );
     }
-    throw error;
+    // Returned instead of rethrown so the form stays on screen. The details go
+    // to the log only: database errors can reveal internals.
+    console.error("Failed to shorten URL", error);
+    return data<ActionResult>(
+      {
+        shortenedUrl: null,
+        error: "Something went wrong. Please try again.",
+        invalidUrl: false,
+      },
+      { status: 500 },
+    );
   }
 }
 

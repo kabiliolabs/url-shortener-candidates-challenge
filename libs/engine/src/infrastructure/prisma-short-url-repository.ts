@@ -1,5 +1,6 @@
 import type { PrismaClient, ShortUrl as ShortUrlRow } from "@prisma/client";
 import { ShortCodeAlreadyExists } from "../domain/errors";
+import type { OriginalUrl } from "../domain/original-url";
 import type { ShortUrl } from "../domain/short-url";
 import type { ShortUrlRepository } from "../domain/short-url-repository";
 
@@ -10,10 +11,10 @@ export class PrismaShortUrlRepository implements ShortUrlRepository {
   // module never opens a database connection.
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(code: string, originalUrl: string): Promise<ShortUrl> {
+  async create(code: string, originalUrl: OriginalUrl): Promise<ShortUrl> {
     try {
       const row = await this.prisma.shortUrl.create({
-        data: { code, originalUrl },
+        data: { code, originalUrl: originalUrl.value },
       });
       return toShortUrl(row);
     } catch (error) {

@@ -1,4 +1,5 @@
 import { ShortCodeAlreadyExists } from "../domain/errors";
+import type { OriginalUrl } from "../domain/original-url";
 import type { ShortUrl } from "../domain/short-url";
 import type { ShortUrlRepository } from "../domain/short-url-repository";
 
@@ -6,9 +7,14 @@ import type { ShortUrlRepository } from "../domain/short-url-repository";
 export class InMemoryShortUrlRepository implements ShortUrlRepository {
   private readonly shortUrls = new Map<string, ShortUrl>();
 
-  async create(code: string, originalUrl: string): Promise<ShortUrl> {
+  async create(code: string, originalUrl: OriginalUrl): Promise<ShortUrl> {
     if (this.shortUrls.has(code)) throw new ShortCodeAlreadyExists(code);
-    const shortUrl = { code, originalUrl, clicks: 0, createdAt: new Date() };
+    const shortUrl = {
+      code,
+      originalUrl: originalUrl.value,
+      clicks: 0,
+      createdAt: new Date(),
+    };
     this.shortUrls.set(code, shortUrl);
     return shortUrl;
   }

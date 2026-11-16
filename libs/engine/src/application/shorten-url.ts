@@ -1,4 +1,5 @@
 import { CodeGenerationFailed, ShortCodeAlreadyExists } from "../domain/errors";
+import { OriginalUrl } from "../domain/original-url";
 import type { ShortCodeGenerator } from "../domain/short-code-generator";
 import type { ShortUrl } from "../domain/short-url";
 import type { ShortUrlRepository } from "../domain/short-url-repository";
@@ -9,12 +10,21 @@ import type { ShortUrlRepository } from "../domain/short-url-repository";
 const MAX_ATTEMPTS = 5;
 
 export class ShortenUrl {
+  /**
+   * @param blockedHosts hosts that cannot be shortened. The app passes its own,
+   * so a short URL cannot point at another short URL and build redirect chains
+   * that hide the real destination.
+   */
   constructor(
     private readonly repository: ShortUrlRepository,
     private readonly codes: ShortCodeGenerator,
+    private readonly blockedHosts: readonly string[],
   ) {}
 
-  async execute(originalUrl: string): Promise<ShortUrl> {
+  async execute(rawUrl: string): Promise<ShortUrl> {
+    // Validated once, before the loop: an invalid URL is not worth a retry.
+    const originalUrl = OriginalUrl.create(rawUrl, this.blockedHosts);
+
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       try {
         return await this.repository.create(this.codes.generate(), originalUrl);

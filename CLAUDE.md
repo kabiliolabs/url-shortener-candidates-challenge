@@ -31,10 +31,8 @@ docker compose up --build    # production on http://localhost:3000 (`up -d db` f
 
 ## How to work
 
-- Always plan first and wait for approval before editing.
-- One concern per change.
-- Never commit or push.
-- Ask before adding a dependency.
+- Always plan first and wait for approval before editing. One concern per change.
+- Never commit or push. Ask before adding a dependency.
 - Prisma is pinned to 6.x. Do not upgrade to 7 or 8.
 - Never edit an applied migration; create a new one.
 - Code, comments and commit messages in English.
@@ -45,12 +43,14 @@ docker compose up --build    # production on http://localhost:3000 (`up -d db` f
 - `libs/engine` holds three layers: domain, application and infrastructure.
 - Domain imports nothing from Prisma, React Router or infrastructure.
 - Use cases depend on interfaces (ports), never on concrete implementations.
+- Validation lives in value objects (`OriginalUrl`) and ports take them instead of strings; routes only map domain errors to HTTP status codes.
 - Importing the engine has no side effects: no `process.env` reads, no client instances.
 - The web app reads the configuration and wires everything in a single composition root file, `applications/web/app/services.server.ts`. Routes import only from it.
 
 ## Correctness rules
 
 - Short code uniqueness is enforced by a database UNIQUE constraint plus retry, never check-then-insert.
+- Detect Prisma errors by `error.code`, never `instanceof`: the generated client throws the CommonJS error classes, and ESM imports from `@prisma/client/runtime/library` get different `.mjs` copies.
 - Click counting is atomic in the database.
 - Unknown short codes return 404.
 

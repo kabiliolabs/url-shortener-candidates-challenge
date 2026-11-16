@@ -27,7 +27,12 @@ function readPublicOrigin(): string {
 const publicOrigin = readPublicOrigin();
 const repository = new PrismaShortUrlRepository(prisma);
 
-export const shortenUrl = new ShortenUrl(repository, new RandomCodeGenerator());
+export const shortenUrl = new ShortenUrl(
+  repository,
+  new RandomCodeGenerator(),
+  // Our own host is blocked so nobody can shorten one of our short URLs.
+  [new URL(publicOrigin).host],
+);
 export const resolveShortUrl = new ResolveShortUrl(repository);
 export const listShortUrls = new ListShortUrls(repository);
 
