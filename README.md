@@ -59,6 +59,18 @@ Database scripts, run with `pnpm --filter @url-shortener/engine <script>`:
 | `db:deploy`   | Applies pending migrations without creating new ones                     |
 | `db:generate` | Regenerates the Prisma client after a schema change                      |
 
+## Tests
+
+```bash
+pnpm test
+```
+
+Unit tests run with [Vitest](https://vitest.dev/) and live next to the code in `libs/engine/src` as `*.test.ts`. They cover the use cases and the URL validation against an in-memory repository, so they need no database. To run a single file:
+
+```bash
+pnpm --filter @url-shortener/engine test shorten-url
+```
+
 ## Docker Setup
 
 ```bash

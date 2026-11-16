@@ -16,7 +16,7 @@ Take-home challenge: refactor a deliberately flawed URL shortener. Requirements 
 ```bash
 pnpm install && cp .env.example .env
 pnpm dev                     # web on http://localhost:5173
-pnpm build && pnpm typecheck
+pnpm build && pnpm typecheck && pnpm test
 pnpm clean                   # clean:deep also removes node_modules
 pnpm --filter web <script>   # one package (the other is @url-shortener/engine)
 pnpm --filter @url-shortener/engine db:migrate   # also db:deploy, db:generate
@@ -25,7 +25,7 @@ docker compose up --build    # production on http://localhost:3000 (`up -d db` f
 
 ## Structure
 
-- `libs/engine` (`@url-shortener/engine`): everything that is not UI. Consumed as TypeScript source (`main` is `src/index.ts`, bundled by Vite through `ssr.noExternal`), so its `dist/` is never read.
+- `libs/engine` (`@url-shortener/engine`): everything that is not UI. Consumed as TypeScript source (`main` is `src/index.ts`, bundled by Vite through `ssr.noExternal`), so it has no build step. Unit tests sit next to the code as `*.test.ts`.
 - `applications/web`: React Router v7 framework mode with SSR. Routes are registered in `app/routes.ts`; loaders and actions are the only server entry points.
 - Environment: the root `.env` is loaded into `process.env` in development; the Prisma CLI reads `libs/engine/.env` instead. Docker ignores `.env*`, so runtime configuration goes under `environment` in `docker-compose.yml`.
 
@@ -56,4 +56,4 @@ docker compose up --build    # production on http://localhost:3000 (`up -d db` f
 
 ## Definition of done
 
-`pnpm typecheck` passes, tests pass, and the app runs with `docker compose up --build`. No test runner is configured yet; document the test commands here when one is added.
+`pnpm typecheck` passes, `pnpm test` passes, and the app runs with `docker compose up --build`. Tests are Vitest unit tests in `libs/engine`, with no database; run one file with `pnpm --filter @url-shortener/engine test shorten-url`.

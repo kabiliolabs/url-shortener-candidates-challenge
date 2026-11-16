@@ -47,8 +47,9 @@ export class PrismaShortUrlRepository implements ShortUrlRepository {
 }
 
 // Checked by error code instead of `instanceof PrismaClientKnownRequestError`:
-// if the bundler ends up with a second copy of the Prisma runtime, the class
-// identity differs and `instanceof` is silently false.
+// the generated client throws the CommonJS error classes, and ESM imports from
+// `@prisma/client/runtime/library` get different `.mjs` copies, so `instanceof`
+// is silently false.
 function isUniqueConstraintViolation(error: unknown): boolean {
   return (
     typeof error === "object" &&
