@@ -11,10 +11,15 @@
     "typecheck": "tsc --noEmit"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./domain": "./src/domain/index.ts"
   },
   "devDependencies": {
     "@types/node": "^22.19.7",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "zod": "^4.6.7"
   }
 }

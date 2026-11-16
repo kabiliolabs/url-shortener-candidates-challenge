@@ -6,11 +6,18 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "test": "vitest run",
     "clean": "turbo run clean && rm -rf .turbo",
     "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"
   },
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
-    "turbo": "^2.7.4"
+    "jsdom": "^31.0.1",
+    "prisma": "6.19.3",
+    "turbo": "^2.7.4",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3"
   }
 }

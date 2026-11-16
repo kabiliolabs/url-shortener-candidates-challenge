@@ -1,15 +1,19 @@
 import { redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import {
+  shortenerApp,
+  toErrorResponse,
+  withSecurityHeaders,
+} from "@url-shortener/engine";
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const { code } = params;
 
-  const url = shortenedUrls.get(code);
-
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+  try {
+    const shortUrl = await shortenerApp.resolveAndTrackClick.execute(code);
+    // Never 301: browsers cache it and skip the server, undercounting clicks.
+    return withSecurityHeaders(redirect(shortUrl.originalUrl, 302), request);
+  } catch (error) {
+    throw withSecurityHeaders(toErrorResponse(error), request);
   }
-
-  return redirect(url);
 }

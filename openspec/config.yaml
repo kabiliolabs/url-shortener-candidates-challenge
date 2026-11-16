@@ -1,0 +1,54 @@
+schema: spec-driven
+
+context: |
+  Monorepo: pnpm workspaces + Turbo. Package manager: pnpm 10.20.0 (corepack).
+  Apps: applications/web (React Router v7, SSR, Vite 7, Tailwind v4, TypeScript, React 19).
+  Libs: libs/engine (workspace package "@url-shortener/engine").
+  Persistence: Prisma ORM with SQLite, backed by a Docker-mounted volume for durability.
+  The whole stack must run with a single `docker compose up --build` (no manual steps).
+  Language for all code, specs, comments, and commit messages: English.
+  Keep the existing stack (pnpm/Turbo/React Router v7/Vite/Tailwind) unless a change
+  explicitly justifies swapping a piece.
+
+  Target architecture (pragmatic clean architecture, not DDD-heavy — ~2h budget):
+    - domain: ShortUrl entity; domain errors (InvalidUrlError, ShortUrlNotFoundError,
+      CodeGenerationError); UrlRepository and CodeGenerator interfaces. No framework
+      or I/O dependencies.
+    - application: use cases depending only on domain interfaces — shortenUrl,
+      resolveAndTrackClick, listUrlsWithStats.
+    - infrastructure: PrismaUrlRepository, HTTP controllers/routes (React Router
+      loaders/actions), error-handling middleware, rate limiter.
+    - composition root: one place wiring concrete infrastructure into the use cases.
+    - Route loaders/actions must contain no business logic beyond calling a use case
+      and mapping its result/errors to an HTTP response.
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
