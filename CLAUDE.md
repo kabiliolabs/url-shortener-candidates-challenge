@@ -45,7 +45,7 @@ docker compose up --build    # production on http://localhost:3000 (`up -d db` f
 - Use cases depend on interfaces (ports), never on concrete implementations.
 - Validation lives in value objects (`OriginalUrl`) and ports take them instead of strings; routes only map domain errors to HTTP status codes.
 - Importing the engine has no side effects: no `process.env` reads, no client instances.
-- The web app reads the configuration and wires everything in a single composition root file, `applications/web/app/services.server.ts`. Routes import only from it.
+- The web app reads the configuration and wires everything in a single composition root file, `applications/web/app/services.server.ts`. Routes get the use cases only from it.
 
 ## Correctness rules
 
