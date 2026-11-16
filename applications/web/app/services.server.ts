@@ -36,6 +36,9 @@ export const shortenUrl = new ShortenUrl(
 export const resolveShortUrl = new ResolveShortUrl(repository);
 export const listShortUrls = new ListShortUrls(repository);
 
+/** What every short URL starts with. Shown to people before they create one. */
+export const shortUrlBase = `${publicOrigin}/s/`;
+
 export function shortUrlFor(code: string): string {
-  return `${publicOrigin}/s/${code}`;
+  return shortUrlBase + code;
 }

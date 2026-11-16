@@ -16,3 +16,11 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw error;
   }
 }
+
+// Never rendered: the loader always redirects or throws. It exists because a
+// route without a default export is a resource route, and React Router answers
+// a thrown 404 from a resource route as plain text, skipping the root
+// ErrorBoundary. With it, an unknown code gets the styled 404 page.
+export default function ShortUrlRedirect() {
+  return null;
+}
