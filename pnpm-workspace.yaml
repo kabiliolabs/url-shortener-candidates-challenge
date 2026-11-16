@@ -1,3 +1,11 @@
 packages:
   - "applications/*"
   - "libs/*"
+
+# pnpm 10 skips dependency install scripts unless they are listed here. Prisma
+# uses them to download its engines, and the migration engine must already be in
+# the Docker image: otherwise it is fetched when the container starts.
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - "prisma"

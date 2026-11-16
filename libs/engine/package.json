@@ -7,14 +7,21 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist tsconfig.tsbuildinfo .turbo",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit"
   },
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@prisma/client": "6.19.3"
+  },
   "devDependencies": {
     "@types/node": "^22.19.7",
+    "prisma": "6.19.3",
     "typescript": "^5.9.3"
   }
 }

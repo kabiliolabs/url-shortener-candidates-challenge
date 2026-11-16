@@ -1,7 +1,6 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 Take-home challenge: refactor a deliberately flawed URL shortener. Requirements are in `CHALLENGE_DESCRIPTION.md`; decisions and AI usage are written up in `CHALLENGE_SUBMISSION.md`.
 
 ## Domain language
@@ -17,18 +16,18 @@ Take-home challenge: refactor a deliberately flawed URL shortener. Requirements 
 ```bash
 pnpm install && cp .env.example .env
 pnpm dev                     # web on http://localhost:5173
-pnpm build
-pnpm typecheck
+pnpm build && pnpm typecheck
 pnpm clean                   # clean:deep also removes node_modules
 pnpm --filter web <script>   # one package (the other is @url-shortener/engine)
-docker compose up --build    # production build on http://localhost:3000
+pnpm --filter @url-shortener/engine db:migrate   # also db:deploy, db:generate
+docker compose up --build    # production on http://localhost:3000 (`up -d db` for PostgreSQL only)
 ```
 
 ## Structure
 
 - `libs/engine` (`@url-shortener/engine`): everything that is not UI. Consumed as TypeScript source (`main` is `src/index.ts`, bundled by Vite through `ssr.noExternal`), so its `dist/` is never read.
 - `applications/web`: React Router v7 framework mode with SSR. Routes are registered in `app/routes.ts`; loaders and actions are the only server entry points.
-- Environment: one `.env` at the repository root, loaded into `process.env` in development. Docker ignores `.env*`, so runtime configuration goes under `environment` in `docker-compose.yml`.
+- Environment: the root `.env` is loaded into `process.env` in development; the Prisma CLI reads `libs/engine/.env` instead. Docker ignores `.env*`, so runtime configuration goes under `environment` in `docker-compose.yml`.
 
 ## How to work
 
@@ -36,6 +35,8 @@ docker compose up --build    # production build on http://localhost:3000
 - One concern per change.
 - Never commit or push.
 - Ask before adding a dependency.
+- Prisma is pinned to 6.x. Do not upgrade to 7 or 8.
+- Never edit an applied migration; create a new one.
 - Code, comments and commit messages in English.
 - Comments explain why, not what. No tutorial-style labels ("Step 1", "Domain layer:").
 
