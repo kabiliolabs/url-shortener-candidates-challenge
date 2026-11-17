@@ -7,7 +7,7 @@ Shortens URLs, redirects short codes to the original URL and counts clicks.
 Requires Docker with Compose v2. From a clean clone:
 
 ```bash
-git clone https://github.com/kabiliolabs/url-shortener-candidates-challenge.git
+git clone https://github.com/laia89/url-shortener-candidates-challenge.git
 cd url-shortener-candidates-challenge
 git checkout refactor/laia-chorro
 docker compose up --build
