@@ -1,5 +1,6 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -8,20 +9,8 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { Button } from "~/components/ui/button";
 import "./app.css";
-
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
-];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,27 +35,30 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
+  const isNotFound = isRouteErrorResponse(error) && error.status === 404;
+  // The stack is only shown in development: in production it would expose
+  // internals to whoever triggers the error.
+  const stack =
+    import.meta.env.DEV && error instanceof Error ? error.stack : undefined;
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start justify-center gap-4 px-4 py-12">
+      <p className="font-mono text-sm text-muted-foreground">
+        {isNotFound ? "404" : "Error"}
+      </p>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        {isNotFound ? "This link doesn't exist" : "Something went wrong"}
+      </h1>
+      <p className="text-muted-foreground">
+        {isNotFound
+          ? "The short link may be mistyped, or it was never created."
+          : "An unexpected error occurred. Please try again."}
+      </p>
+      <Button asChild size="lg">
+        <Link to="/">Back to home</Link>
+      </Button>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="w-full overflow-x-auto rounded-lg border p-4 text-xs">
           <code>{stack}</code>
         </pre>
       )}

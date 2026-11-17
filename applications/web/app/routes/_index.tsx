@@ -1,32 +1,103 @@
-import { Form, useActionData } from "react-router";
+import { data } from "react-router";
 import type { Route } from "./+types/_index";
+import { InvalidUrlError } from "@url-shortener/engine";
+import { ShortenForm, type ShortenResult } from "~/components/shorten-form";
 import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
+  ShortUrlsTable,
+  type ShortUrlRow,
+} from "~/components/short-urls-table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import {
+  clientKeyFor,
+  creationRateLimiter,
+  listShortUrls,
+  shortenUrl,
+  shortUrlBase,
+  shortUrlFor,
+} from "~/services.server";
 
-export function loader() {
-  return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
-  };
+export async function loader() {
+  return { shortUrlBase, shortUrls: await loadShortUrls() };
+}
+
+// The list is secondary to the form. If it cannot be loaded the page still
+// renders, with null telling the component to say so instead of crashing.
+async function loadShortUrls(): Promise<ShortUrlRow[] | null> {
+  try {
+    const shortUrls = await listShortUrls.execute();
+    return shortUrls.map((shortUrl) => ({
+      ...shortUrl,
+      shortUrl: shortUrlFor(shortUrl.code),
+    }));
+  } catch (error) {
+    console.error("Failed to list short URLs", error);
+    return null;
+  }
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get("url") as string;
-
-  if (!url) {
-    return { error: "URL is required" };
+  // Checked first, so every attempt counts, valid or not: otherwise the limit
+  // could be dodged by sending input that fails validation.
+  const limit = creationRateLimiter.tryConsume(clientKeyFor(request));
+  if (!limit.allowed) {
+    return data<ShortenResult>(
+      {
+        shortenedUrl: null,
+        error: `Too many links created. Try again in ${limit.retryAfterSeconds} seconds.`,
+        invalidUrl: false,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limit.retryAfterSeconds) },
+      },
+    );
   }
 
-  const shortCode = generateShortCode();
+  const formData = await request.formData();
+  const field = formData.get("url");
+  // A missing field or a file upload is treated as empty input, which the
+  // domain rejects with its own message.
+  const rawUrl = typeof field === "string" ? field : "";
 
-  shortenedUrls.set(shortCode, url);
+  try {
+    const shortUrl = await shortenUrl.execute(rawUrl);
+    return data<ShortenResult>({
+      shortenedUrl: shortUrlFor(shortUrl.code),
+      error: null,
+      invalidUrl: false,
+    });
+  } catch (error) {
+    if (error instanceof InvalidUrlError) {
+      return data<ShortenResult>(
+        { shortenedUrl: null, error: error.message, invalidUrl: true },
+        { status: 400 },
+      );
+    }
+    // Returned instead of rethrown so the form stays on screen. The details go
+    // to the log only: database errors can reveal internals.
+    console.error("Failed to shorten URL", error);
+    return data<ShortenResult>(
+      {
+        shortenedUrl: null,
+        error: "Something went wrong. Please try again.",
+        invalidUrl: false,
+      },
+      { status: 500 },
+    );
+  }
+}
 
-  return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
-  };
+// React Router drops headers set by an action from the page response unless
+// the route forwards them. Without this, Retry-After would only reach requests
+// made by the fetcher, not a plain form submission.
+export function headers({ actionHeaders }: Route.HeadersArgs) {
+  return actionHeaders;
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -37,62 +108,44 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { baseUrl } = loaderData;
-  const actionData = useActionData<typeof action>();
+  const { shortUrlBase, shortUrls } = loaderData;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
-      <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
-        <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
-          ~*~ URL Shortener ~*~
-        </h1>
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-12">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">URL Shortener</h1>
+        <p className="text-muted-foreground">
+          Paste a long link and get a short one you can share.
+        </p>
+      </header>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input
-            type="text"
-            name="url"
-            placeholder="Enter your URL here..."
-            required
-            className="w-full px-4 py-3 text-base bg-orange-200 border-4 border-blue-600 text-purple-800 placeholder-red-400 rounded focus:outline-none"
-          />
+      <Card>
+        <CardHeader>
+          <CardTitle>Shorten a link</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ShortenForm shortUrlBase={shortUrlBase} />
+        </CardContent>
+      </Card>
 
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-base bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
-            >
-              ★ SHORTEN IT ★
-            </button>
-            <p className="text-sm text-indigo-800 mt-3 text-center font-bold bg-cyan-200 p-2 border-2 border-dotted border-orange-500">
-              Your shortened URL will start with {baseUrl}
+      <Card>
+        <CardHeader>
+          <CardTitle>Latest links</CardTitle>
+          <CardDescription>
+            The most recently created links, newest first, with their clicks.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {shortUrls ? (
+            <ShortUrlsTable shortUrls={shortUrls} />
+          ) : (
+            <p role="alert" className="py-6 text-center text-sm">
+              The list couldn't be loaded right now. You can still shorten
+              links, and the list will be back when you reload the page.
             </p>
-          </div>
-        </Form>
-
-        {actionData?.shortenedUrl && (
-          <div className="mt-8 p-4 bg-violet-400 rounded-3xl border-4 border-double border-yellow-500 -rotate-1">
-            <p className="text-lg text-lime-300 mb-2 font-black uppercase">
-              Your shortened URL:
-            </p>
-            <a
-              href={actionData.shortenedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-200 break-all font-mono text-xl hover:text-blue-900 bg-pink-600 p-2 block"
-            >
-              {actionData.shortenedUrl}
-            </a>
-          </div>
-        )}
-
-        {actionData?.error && (
-          <div className="mt-8 p-4 bg-lime-500 rounded-none border-8 border-solid border-red-700">
-            <p className="text-2xl text-blue-800 font-black">
-              {actionData.error}
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }

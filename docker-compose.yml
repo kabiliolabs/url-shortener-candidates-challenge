@@ -1,4 +1,22 @@
 services:
+  db:
+    image: postgres:17-alpine
+    # Local-only credentials, kept in plain text so the setup needs no extra step.
+    environment:
+      - POSTGRES_USER=shortener
+      - POSTGRES_PASSWORD=shortener
+      - POSTGRES_DB=shortener
+    # Published so `pnpm dev` and the Prisma CLI on the host use this same database.
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shortener -d shortener"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   web:
     build:
       context: .
@@ -8,3 +26,12 @@ services:
     environment:
       - NODE_ENV=production
       - PUBLIC_URL=http://localhost:3000
+      - DATABASE_URL=postgresql://shortener:shortener@db:5432/shortener?schema=public
+    # Migrations run when the container starts, so the database must accept
+    # connections first: "started" is not enough.
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
