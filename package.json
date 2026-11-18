@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "db:generate": "pnpm --filter @url-shortener/engine db:generate",
+    "db:migrate": "pnpm --filter @url-shortener/engine db:migrate",
     "typecheck": "turbo typecheck",
     "clean": "turbo run clean && rm -rf .turbo",
     "clean:deep": "pnpm run clean && pnpm -r exec rm -rf node_modules && rm -rf node_modules"

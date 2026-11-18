@@ -141,5 +141,14 @@ vite.config.ts.timestamp-*
 # Turbo cache
 .turbo
 
+# Prisma generated client
+**/src/generated/
+**/generated/
+
+# SQLite databases
+data/
+*.db
+*.db-journal
+
 # Claude code
 .claude/settings.local.json

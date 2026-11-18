@@ -17,12 +17,14 @@ url-shortener/
 | [TypeScript](https://www.typescriptlang.org/) | Typed superset of JavaScript for catching errors at compile time                                  |
 | [Tailwind CSS](https://tailwindcss.com/)      | Utility-first CSS framework for rapid UI development                                              |
 | [Vite](https://vite.dev/)                     | Fast build tool and dev server with hot module replacement                                        |
+| [Prisma 7](https://www.prisma.io/)            | Type-safe ORM. Stores shortened URLs in a SQLite file                                              |
 
 ## Local Setup
 
 ```bash
 pnpm install
 cp .env.example .env
+pnpm db:migrate
 pnpm dev
 ```
 

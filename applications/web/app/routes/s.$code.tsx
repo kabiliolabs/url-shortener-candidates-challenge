@@ -1,15 +1,27 @@
-import { redirect } from "react-router";
+import { data, redirect } from "react-router";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
+import { redirectUrlUseCase, UrlNotFoundError } from "@url-shortener/engine";
+import { ErrorPage } from "~/components/error-page";
 
-export function loader({ params }: Route.LoaderArgs) {
-  const { code } = params;
+export async function loader({ params }: Route.LoaderArgs) {
+  try {
+    const shortened = await redirectUrlUseCase.execute(params.code);
+    return redirect(shortened.originalUrl);
+  } catch (error) {
+    if (error instanceof UrlNotFoundError) {
+      return data({ notFound: true }, { status: 404 });
+    }
 
-  const url = shortenedUrls.get(code);
-
-  if (!url) {
-    throw new Response("Not Found", { status: 404 });
+    throw error;
   }
+}
 
-  return redirect(url);
+export default function ShortCodeRedirect({ params }: Route.ComponentProps) {
+  return (
+    <ErrorPage
+      status={404}
+      title="Page not found"
+      message={`The short link "${params.code}" doesn't exist or has been deleted.`}
+    />
+  );
 }

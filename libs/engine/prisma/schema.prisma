@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model ShortenedUrl {
+  id          String    @id @default(cuid())
+  originalUrl String
+  shortCode   String    @unique
+  clickCount  Int       @default(0)
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+
+  @@map("shortened_urls")
+}
