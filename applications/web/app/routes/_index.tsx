@@ -1,31 +1,30 @@
+import { shortenUrl } from "@url-shortener/engine";
 import { Form, useActionData } from "react-router";
+import { shortLinkRepository } from "~/prisma-short-link-repository.server";
+import { shortLinkFor, shortLinkPrefix } from "~/public-url.server";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
 
 export function loader() {
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl: shortLinkPrefix(),
   };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const url = formData.get("url");
 
-  if (!url) {
+  if (typeof url !== "string") {
     return { error: "URL is required" };
   }
 
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
+  const result = await shortenUrl(shortLinkRepository, url);
+  if (!result.ok) {
+    return { error: result.message };
+  }
 
   return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
+    shortenedUrl: shortLinkFor(result.code),
   };
 }
 
