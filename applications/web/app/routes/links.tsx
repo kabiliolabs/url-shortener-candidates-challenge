@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { listShortLinks } from "@url-shortener/engine";
 import { Link, useRevalidator } from "react-router";
-import { shortLinkRepository } from "~/prisma-short-link-repository.server";
+import { shortLinkRepository } from "~/infrastructure/prisma/prisma-short-link-repository.server";
 import { shortLinkFor } from "~/public-url.server";
 import type { Route } from "./+types/links";
 

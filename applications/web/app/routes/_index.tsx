@@ -1,6 +1,6 @@
 import { shortenUrl } from "@url-shortener/engine";
 import { Form, Link, useActionData } from "react-router";
-import { shortLinkRepository } from "~/prisma-short-link-repository.server";
+import { shortLinkRepository } from "~/infrastructure/prisma/prisma-short-link-repository.server";
 import { shortLinkFor, shortLinkPrefix } from "~/public-url.server";
 import type { Route } from "./+types/_index";
 

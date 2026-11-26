@@ -1,10 +1,15 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import {
   codeCollisionError,
   type NewShortLink,
   type ShortLink,
   type ShortLinkRepository,
 } from "@url-shortener/engine";
+import {
+  isMissingRecord,
+  isUniqueViolation,
+  uniqueTarget,
+} from "./prisma-errors.server";
 import { prisma } from "./prisma.server";
 
 function toShortLink(row: {
@@ -21,30 +26,6 @@ function toShortLink(row: {
     clicks: row.clicks,
     createdAt: row.createdAt,
   };
-}
-
-function isUniqueViolation(
-  error: unknown,
-): error is Prisma.PrismaClientKnownRequestError {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2002"
-  );
-}
-
-function uniqueTarget(error: Prisma.PrismaClientKnownRequestError): string[] {
-  const target = error.meta?.target;
-  if (!Array.isArray(target)) {
-    return [];
-  }
-  return target.filter((item): item is string => typeof item === "string");
-}
-
-function isMissingRecord(error: unknown): boolean {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2025"
-  );
 }
 
 export class PrismaShortLinkRepository implements ShortLinkRepository {

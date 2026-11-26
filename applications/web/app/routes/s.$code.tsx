@@ -1,6 +1,6 @@
 import { resolveCode } from "@url-shortener/engine";
 import { redirect } from "react-router";
-import { shortLinkRepository } from "~/prisma-short-link-repository.server";
+import { shortLinkRepository } from "~/infrastructure/prisma/prisma-short-link-repository.server";
 import type { Route } from "./+types/s.$code";
 
 export async function loader({ params }: Route.LoaderArgs) {
