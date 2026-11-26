@@ -87,4 +87,4 @@ Closed scope: no users, no channels, no rate limit, no bot filtering.
 - Tests green.
 - Submission with an AI section that stands on its own and points to `docs/decisions.md`.
 - Submission states that the counter counts GETs, bots and unfurlers included.
-- Submission states the real time spent and that the design was closed in a previous session.
+- Submission states that the design was closed in a previous session.
