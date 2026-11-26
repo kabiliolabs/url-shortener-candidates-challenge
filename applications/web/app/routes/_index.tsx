@@ -1,31 +1,30 @@
-import { Form, useActionData } from "react-router";
+import { shortenUrl } from "@url-shortener/engine";
+import { Form, Link, useActionData } from "react-router";
+import { shortLinkRepository } from "~/infrastructure/prisma/prisma-short-link-repository.server";
+import { shortLinkFor, shortLinkPrefix } from "~/public-url.server";
 import type { Route } from "./+types/_index";
-import {
-  baseUrl,
-  shortenedUrls,
-  generateShortCode,
-} from "@url-shortener/engine";
 
-export function loader() {
+export async function loader() {
   return {
-    baseUrl: baseUrl ? baseUrl + "/s/" : "-",
+    baseUrl: shortLinkPrefix(),
   };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const url = formData.get("url") as string;
+  const url = formData.get("url");
 
-  if (!url) {
+  if (typeof url !== "string") {
     return { error: "URL is required" };
   }
 
-  const shortCode = generateShortCode();
-
-  shortenedUrls.set(shortCode, url);
+  const result = await shortenUrl(shortLinkRepository, url);
+  if (!result.ok) {
+    return { error: result.message };
+  }
 
   return {
-    shortenedUrl: `${baseUrl}/s/${shortCode}`,
+    shortenedUrl: shortLinkFor(result.code),
   };
 }
 
@@ -41,7 +40,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const actionData = useActionData<typeof action>();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300">
+    <main className="min-h-screen flex flex-col items-center justify-center gap-8 bg-gradient-to-br from-lime-400 via-pink-500 to-cyan-300 py-12">
       <div className="bg-yellow-300 p-12 rounded-none border-8 border-dashed border-purple-600 w-full max-w-lg rotate-1 shadow-2xl shadow-red-500">
         <h1 className="text-4xl font-mono italic text-center mb-8 text-fuchsia-600 underline decoration-wavy decoration-green-500 tracking-widest">
           ~*~ URL Shortener ~*~
@@ -92,6 +91,16 @@ export default function Index({ loaderData }: Route.ComponentProps) {
             </p>
           </div>
         )}
+
+        <div className="mt-8 flex justify-center">
+          <Link
+            to="/links"
+            prefetch="none"
+            className="px-4 py-1.5 text-sm bg-red-500 hover:bg-lime-500 text-yellow-200 border-4 border-teal-400 rounded-full skew-x-3 cursor-pointer"
+          >
+            ★ LATEST LINKS ★
+          </Link>
+        </div>
       </div>
     </main>
   );

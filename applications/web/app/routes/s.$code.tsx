@@ -1,15 +1,19 @@
-import { redirect } from "react-router";
+import { resolveCode } from "@url-shortener/engine";
+import { data, redirect } from "react-router";
+import { NotFoundPage } from "~/not-found-page";
+import { shortLinkRepository } from "~/infrastructure/prisma/prisma-short-link-repository.server";
 import type { Route } from "./+types/s.$code";
-import { shortenedUrls } from "@url-shortener/engine";
 
-export function loader({ params }: Route.LoaderArgs) {
-  const { code } = params;
-
-  const url = shortenedUrls.get(code);
+export async function loader({ params }: Route.LoaderArgs) {
+  const url = await resolveCode(shortLinkRepository, params.code);
 
   if (!url) {
-    throw new Response("Not Found", { status: 404 });
+    return data(null, { status: 404 });
   }
 
-  return redirect(url);
+  return redirect(url, 302);
+}
+
+export default function UnknownCode() {
+  return <NotFoundPage />;
 }
