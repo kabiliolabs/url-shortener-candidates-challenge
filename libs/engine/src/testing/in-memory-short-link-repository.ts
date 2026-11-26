@@ -1,9 +1,9 @@
-import { codeCollisionError } from "../code-collision";
+import { codeCollisionError } from "../domain/code-collision";
 import type {
   NewShortLink,
   ShortLink,
   ShortLinkRepository,
-} from "../short-link-repository";
+} from "../ports/short-link-repository";
 
 export class InMemoryShortLinkRepository implements ShortLinkRepository {
   private readonly byUrl = new Map<string, ShortLink>();

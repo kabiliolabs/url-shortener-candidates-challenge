@@ -1,4 +1,4 @@
-import type { ShortLink, ShortLinkRepository } from "./short-link-repository";
+import type { ShortLink, ShortLinkRepository } from "../ports/short-link-repository";
 
 export const LIST_LIMIT = 20;
 

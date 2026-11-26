@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveCode } from "./resolve-code";
 import { shortenUrl } from "./shorten-url";
-import { InMemoryShortLinkRepository } from "./testing/in-memory-short-link-repository";
+import { InMemoryShortLinkRepository } from "../testing/in-memory-short-link-repository";
 
 describe("resolveCode", () => {
   it("returns the URL and increments clicks for an existing code", async () => {

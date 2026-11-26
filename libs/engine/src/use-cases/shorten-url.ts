@@ -1,7 +1,7 @@
-import { canonicalizeUrl } from "./canonicalize-url";
-import { isCodeCollision } from "./code-collision";
-import { generateCode } from "./generate-code";
-import type { ShortLinkRepository } from "./short-link-repository";
+import { canonicalizeUrl } from "../domain/canonicalize-url";
+import { isCodeCollision } from "../domain/code-collision";
+import { generateCode } from "../domain/generate-code";
+import type { ShortLinkRepository } from "../ports/short-link-repository";
 
 const MAX_CODE_ATTEMPTS = 5;
 

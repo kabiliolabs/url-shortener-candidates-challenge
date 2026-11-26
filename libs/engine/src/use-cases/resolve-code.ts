@@ -1,4 +1,4 @@
-import type { ShortLinkRepository } from "./short-link-repository";
+import type { ShortLinkRepository } from "../ports/short-link-repository";
 
 export async function resolveCode(
   repository: ShortLinkRepository,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { shortenUrl } from "./shorten-url";
-import { InMemoryShortLinkRepository } from "./testing/in-memory-short-link-repository";
+import { InMemoryShortLinkRepository } from "../testing/in-memory-short-link-repository";
 
 describe("shortenUrl", () => {
   it("returns the same code when the same URL is shortened twice", async () => {

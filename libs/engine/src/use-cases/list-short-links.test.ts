@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LIST_LIMIT, listShortLinks } from "./list-short-links";
-import { InMemoryShortLinkRepository } from "./testing/in-memory-short-link-repository";
+import { InMemoryShortLinkRepository } from "../testing/in-memory-short-link-repository";
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => {
