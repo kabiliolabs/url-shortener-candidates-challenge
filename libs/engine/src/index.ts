@@ -1,6 +1,7 @@
 export { canonicalizeUrl, MAX_URL_LENGTH } from "./canonicalize-url";
 export { codeCollisionError, isCodeCollision } from "./code-collision";
 export { generateCode } from "./generate-code";
+export { LIST_LIMIT, listShortLinks } from "./list-short-links";
 export { resolveCode } from "./resolve-code";
 export { shortenUrl } from "./shorten-url";
 

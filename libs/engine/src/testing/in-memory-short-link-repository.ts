@@ -34,6 +34,12 @@ export class InMemoryShortLinkRepository implements ShortLinkRepository {
     return this.byUrl.get(url) ?? null;
   }
 
+  async list(limit: number): Promise<ShortLink[]> {
+    return [...this.byUrl.values()]
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+      .slice(0, limit);
+  }
+
   async incrementClicks(code: string): Promise<ShortLink | null> {
     const existing = this.byCode.get(code);
     if (!existing) {

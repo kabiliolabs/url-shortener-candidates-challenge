@@ -80,6 +80,14 @@ export class PrismaShortLinkRepository implements ShortLinkRepository {
     return row ? toShortLink(row) : null;
   }
 
+  async list(limit: number): Promise<ShortLink[]> {
+    const rows = await this.db.shortLink.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    });
+    return rows.map(toShortLink);
+  }
+
   async incrementClicks(code: string): Promise<ShortLink | null> {
     try {
       const row = await this.db.shortLink.update({

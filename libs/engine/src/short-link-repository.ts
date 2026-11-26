@@ -15,4 +15,5 @@ export interface ShortLinkRepository {
   create(link: NewShortLink): Promise<ShortLink>;
   findByUrl(url: string): Promise<ShortLink | null>;
   incrementClicks(code: string): Promise<ShortLink | null>;
+  list(limit: number): Promise<ShortLink[]>;
 }
