@@ -1,4 +1,5 @@
-export { canonicalizeUrl } from "./canonicalize-url";
+export { canonicalizeUrl, MAX_URL_LENGTH } from "./canonicalize-url";
+export { codeCollisionError, isCodeCollision } from "./code-collision";
 export { generateCode } from "./generate-code";
 export { resolveCode } from "./resolve-code";
 export { shortenUrl } from "./shorten-url";

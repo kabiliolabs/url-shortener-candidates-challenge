@@ -1,3 +1,4 @@
+import { codeCollisionError } from "../code-collision";
 import type {
   NewShortLink,
   ShortLink,
@@ -9,6 +10,14 @@ export class InMemoryShortLinkRepository implements ShortLinkRepository {
   private readonly byCode = new Map<string, ShortLink>();
 
   async create(link: NewShortLink): Promise<ShortLink> {
+    const existingUrl = this.byUrl.get(link.url);
+    if (existingUrl) {
+      return existingUrl;
+    }
+    if (this.byCode.has(link.code)) {
+      throw codeCollisionError();
+    }
+
     const created: ShortLink = {
       id: globalThis.crypto.randomUUID(),
       url: link.url,

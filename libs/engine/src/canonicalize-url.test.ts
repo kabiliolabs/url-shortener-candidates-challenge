@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { canonicalizeUrl } from "./canonicalize-url";
+import { canonicalizeUrl, MAX_URL_LENGTH } from "./canonicalize-url";
+
+function urlOfLength(length: number): string {
+  const prefix = "https://example.com/";
+  return prefix + "a".repeat(length - prefix.length);
+}
 
 describe("canonicalizeUrl", () => {
   it("trims the input and normalizes it with URL.href", () => {
@@ -30,6 +35,26 @@ describe("canonicalizeUrl", () => {
       ok: true,
       url: "http://example.com/",
     });
+  });
+
+  it.each(["https://user:pass@example.com", "https://user@example.com"])(
+    "rejects a URL with credentials %s",
+    (input) => {
+      const result = canonicalizeUrl(input);
+
+      expect(result).toEqual({
+        ok: false,
+        message: "URLs with a username or password can't be shortened.",
+      });
+    },
+  );
+
+  it("accepts a URL of MAX_URL_LENGTH and rejects one character more", () => {
+    expect(canonicalizeUrl(urlOfLength(MAX_URL_LENGTH))).toEqual({
+      ok: true,
+      url: urlOfLength(MAX_URL_LENGTH),
+    });
+    expect(canonicalizeUrl(urlOfLength(MAX_URL_LENGTH + 1)).ok).toBe(false);
   });
 
   it("preserves path, query and hash", () => {
